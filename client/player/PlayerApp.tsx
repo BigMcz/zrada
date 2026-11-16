@@ -1,0 +1,342 @@
+import { useState, type ReactNode } from 'react';
+import type { Intent, PlayerView } from '../../shared/types';
+import { MAX_NAME_LENGTH } from '../../shared/types';
+import { PlayerGrid } from '../components/PlayerGrid';
+import { RoleCard } from '../components/RoleCard';
+import { PrimaryButton, Screen } from '../components/Screen';
+import { initials, nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
+import { join, send, useConnection } from '../socket';
+
+export function PlayerApp() {
+  const { connected, view } = useConnection();
+
+  return (
+    <div className="phone">
+      {!connected && <div className="connection-bar">Obnovuji spojení…</div>}
+      <div className="rotate-hint">Otoč telefon na výšku</div>
+      {!view ? (
+        <Screen tag="Zrada">
+          <p className="muted center">Připojuji se ke hře…</p>
+        </Screen>
+      ) : view.kind === 'player' ? (
+        <PlayerGame view={view} />
+      ) : (
+        <JoinScreen open={view.kind === 'guest' && view.joinOpen} />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Vstup
+// ---------------------------------------------------------------------------
+
+function JoinScreen({ open }: { open: boolean }) {
+  const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  if (!open) {
+    return (
+      <Screen tag="Zrada">
+        <h1 className="title">Zrada</h1>
+        <p className="center">Hra už běží nebo je plná. Připojit se teď nejde.</p>
+      </Screen>
+    );
+  }
+
+  return (
+    <form
+      className="form-screen"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        const res = await join(name);
+        setBusy(false);
+        setError(res.ok ? null : res.error);
+      }}
+    >
+      <Screen
+        tag="Zrada"
+        action={
+          <PrimaryButton type="submit" disabled={busy || name.trim().length === 0}>
+            Vstoupit
+          </PrimaryButton>
+        }
+      >
+        <h1 className="title">Zrada</h1>
+        <div className="divider">✦</div>
+        <label className="field">
+          <span>Jak ti mají ostatní říkat?</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={MAX_NAME_LENGTH}
+            autoComplete="off"
+            autoCapitalize="words"
+            enterKeyHint="go"
+          />
+        </label>
+        {error && <p className="error">{error}</p>}
+      </Screen>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Hra
+// ---------------------------------------------------------------------------
+
+function useSend() {
+  const [error, setError] = useState<string | null>(null);
+  const run = async (intent: Intent) => {
+    const res = await send(intent);
+    setError(res.ok ? null : res.error);
+    return res.ok;
+  };
+  return { error, run };
+}
+
+/** Pečeť v rohu: roli si jde kdykoli znovu zobrazit. */
+function RoleCorner({ view, onOpen }: { view: PlayerView; onOpen: () => void }) {
+  if (!view.me.role) return null;
+  return (
+    <button type="button" className="seal-button" onClick={onOpen} aria-label="Zobrazit moji roli">
+      ✦
+    </button>
+  );
+}
+
+function PlayerGame({ view }: { view: PlayerView }) {
+  const [roleOpen, setRoleOpen] = useState(false);
+  const corner = <RoleCorner view={view} onOpen={() => setRoleOpen(true)} />;
+  const tag = phaseTag(view.phase, view.round);
+
+  let screen: ReactNode;
+  if (view.phase === 'LOBBY') screen = <Waiting view={view} tag={tag} />;
+  else if (view.phase === 'ENDED') screen = <Ended view={view} tag={tag} />;
+  else if (view.me.status !== 'ALIVE') screen = <Eliminated view={view} tag={tag} corner={corner} />;
+  else if (view.phase === 'ROLES') screen = <Roles view={view} tag={tag} corner={corner} />;
+  // key podle kola: nový kulatý stůl / noc začíná bez předvybraného hráče
+  else if (view.phase === 'VOTE') screen = <Vote key={view.round} view={view} tag={tag} corner={corner} />;
+  else if (view.phase === 'VOTE_RESULT') screen = <VoteResult view={view} tag={tag} corner={corner} />;
+  else if (view.phase === 'NIGHT') screen = <Night key={view.round} view={view} tag={tag} corner={corner} />;
+  else screen = <Morning view={view} tag={tag} corner={corner} />;
+
+  return (
+    <>
+      {screen}
+      {roleOpen && view.me.role && (
+        <div className="overlay" onClick={() => setRoleOpen(false)}>
+          <div className="overlay-panel" onClick={(e) => e.stopPropagation()}>
+            <RoleCard role={view.me.role} allies={view.allies} />
+            <button type="button" className="secondary" onClick={() => setRoleOpen(false)}>
+              Zavřít
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+interface ScreenProps {
+  view: PlayerView;
+  tag: string;
+  corner?: ReactNode;
+}
+
+function Waiting({ view, tag }: ScreenProps) {
+  return (
+    <Screen tag={tag}>
+      <div className="avatar big">{initials(view.me.name)}</div>
+      <p className="lead center">{view.me.name}</p>
+      <p className="center">Čekáme na začátek hry</p>
+      <p className="muted center">Připojených hráčů: {view.players.length}</p>
+      <div className="candle" aria-hidden />
+    </Screen>
+  );
+}
+
+function Roles({ view, tag, corner }: ScreenProps) {
+  const { error, run } = useSend();
+
+  if (view.me.sawRole) {
+    return (
+      <Screen tag={tag} corner={corner}>
+        <p className="lead center">Čekáme, až si roli prohlédnou ostatní.</p>
+        <p className="muted center">Svou roli si můžeš kdykoli znovu zobrazit pečetí vpravo nahoře.</p>
+        <div className="candle" aria-hidden />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen
+      tag={tag}
+      corner={corner}
+      action={<PrimaryButton onClick={() => run({ type: 'ackRole' })}>Viděl/a jsem svou roli</PrimaryButton>}
+    >
+      <p className="center">Tvoje role je tajná. Ujisti se, že se ti nikdo nedívá přes rameno.</p>
+      <RoleCard role={view.me.role!} allies={view.allies} />
+      {error && <p className="error">{error}</p>}
+    </Screen>
+  );
+}
+
+function aliveOthers(view: PlayerView) {
+  return view.players.filter((p) => p.status === 'ALIVE' && p.id !== view.me.id);
+}
+
+function Vote({ view, tag, corner }: ScreenProps) {
+  const { error, run } = useSend();
+  const [selected, setSelected] = useState<string | null>(view.myVote);
+  const changed = selected !== view.myVote;
+
+  return (
+    <Screen
+      tag={tag}
+      corner={corner}
+      action={
+        <PrimaryButton disabled={!selected || !changed} onClick={() => selected && run({ type: 'vote', targetId: selected })}>
+          {!selected
+            ? 'Vyber hráče'
+            : changed
+              ? `Vyhnat: ${nameOf(view.players, selected)}`
+              : 'Hlas odevzdán'}
+        </PrimaryButton>
+      }
+    >
+      <h2 className="question">Koho vyženeš?</h2>
+      <PlayerGrid players={aliveOthers(view)} selectedId={selected} onSelect={setSelected} />
+      <p className="hint">
+        {view.myVote
+          ? `Hlas odevzdán: ${nameOf(view.players, view.myVote)}. Dokud moderátor hlasování neuzavře, můžeš ho změnit.`
+          : 'Vyber jednoho hráče a potvrď.'}
+      </p>
+      {error && <p className="error">{error}</p>}
+    </Screen>
+  );
+}
+
+function lastRound(view: PlayerView) {
+  return view.history.find((h) => h.round === view.round);
+}
+
+function VoteResult({ view, tag, corner }: ScreenProps) {
+  const banishedId = lastRound(view)?.banishedId ?? null;
+  const banished = view.players.find((p) => p.id === banishedId);
+  return (
+    <Screen tag={tag} corner={corner}>
+      {banished ? (
+        <>
+          <p className="center">Kulatý stůl vyhnal</p>
+          <p className="headline center">{banished.name}</p>
+          <p className="center reveal">{banished.revealedRole && ROLE_LABEL[banished.revealedRole]}</p>
+        </>
+      ) : (
+        <p className="headline center">Nikdo nebyl vyhnán</p>
+      )}
+      <p className="muted center">Čekáme na moderátora.</p>
+    </Screen>
+  );
+}
+
+/**
+ * Noc: Věrný i Zrádce mají stejnou mřížku, stejný řádek pod ní a stejné tlačítko.
+ * Liší se jen otázka a to, co klepnutí na spoluzrádce udělá (nic).
+ */
+function Night({ view, tag, corner }: ScreenProps) {
+  const { error, run } = useSend();
+  const night = view.night!;
+  const [selected, setSelected] = useState<string | null>(night.myPick);
+  const changed = selected !== night.myPick;
+  const isTraitor = view.me.role === 'TRAITOR';
+
+  const hint =
+    night.hint.kind === 'ALLY'
+      ? `Spojenec volí: ${night.hint.picks.map((p) => nameOf(view.players, p.targetId)).join(', ')}`
+      : `Tvá volba: ${nameOf(view.players, night.hint.targetId)}`;
+
+  return (
+    <Screen
+      tag={tag}
+      corner={corner}
+      action={
+        <PrimaryButton
+          disabled={!selected || !changed}
+          onClick={() => selected && run({ type: 'nightPick', targetId: selected })}
+        >
+          {!selected ? 'Vyber hráče' : changed ? `Potvrdit: ${nameOf(view.players, selected)}` : 'Potvrzeno'}
+        </PrimaryButton>
+      }
+    >
+      <h2 className="question">{isTraitor ? 'Koho tuto noc umlčíte?' : 'Kdo je podle tebe Zrádce?'}</h2>
+      <PlayerGrid players={aliveOthers(view)} selectedId={selected} onSelect={setSelected} blocked={night.blocked} />
+      <p className="hint">{hint}</p>
+      {error && <p className="error">{error}</p>}
+    </Screen>
+  );
+}
+
+function Morning({ view, tag, corner }: ScreenProps) {
+  const murderedId = lastRound(view)?.murderedId ?? null;
+  return (
+    <Screen tag={tag} corner={corner}>
+      <p className="center">Tuto noc zemřel/a</p>
+      <p className="headline center">{nameOf(view.players, murderedId)}</p>
+      <p className="muted center">Čekáme na moderátora.</p>
+    </Screen>
+  );
+}
+
+/** Co se právě děje, pro vyřazené hráče. */
+function currentEvent(view: PlayerView): string {
+  const round = lastRound(view);
+  if (view.phase === 'VOTE_RESULT') {
+    return round?.banishedId ? `Kulatý stůl vyhnal: ${nameOf(view.players, round.banishedId)}` : 'Nikdo nebyl vyhnán.';
+  }
+  if (view.phase === 'MORNING') return `Tuto noc zemřel/a: ${nameOf(view.players, round?.murderedId)}`;
+  if (view.phase === 'VOTE') return 'Hráči hlasují, koho vyženou.';
+  if (view.phase === 'NIGHT') return 'Je noc.';
+  return '';
+}
+
+function Eliminated({ view, tag, corner }: ScreenProps) {
+  return (
+    <Screen tag={tag} corner={corner}>
+      <p className="headline center">Vypadl/a jsi ze hry</p>
+      <p className="center">
+        {view.me.status === 'BANISHED' ? 'Kulatý stůl tě vyhnal.' : 'Tuto noc tě Zrádci umlčeli.'}
+      </p>
+      <p className="hint center">{currentEvent(view)}</p>
+      <PlayerList view={view} />
+    </Screen>
+  );
+}
+
+function Ended({ view, tag }: ScreenProps) {
+  return (
+    <Screen tag={tag}>
+      <p className="center">Vyhráli</p>
+      <p className="headline center">{view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}</p>
+      <PlayerList view={view} />
+    </Screen>
+  );
+}
+
+function PlayerList({ view }: { view: PlayerView }) {
+  return (
+    <ul className="player-list">
+      {view.players.map((p) => (
+        <li key={p.id} className={p.status === 'ALIVE' ? '' : 'out'}>
+          <span>{p.name}</span>
+          <span className="muted">
+            {p.revealedRole ? `${ROLE_LABEL[p.revealedRole]} · ` : ''}
+            {STATUS_LABEL[p.status]}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}

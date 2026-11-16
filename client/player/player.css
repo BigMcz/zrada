@@ -1,0 +1,396 @@
+/* Telefon hráče. Plný vizuální styl (písma, pečeť, animace) přijde v kroku 7. */
+
+.phone {
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.form-screen {
+  display: contents;
+}
+
+/* --- Kostra obrazovky --- */
+
+.screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px max(20px, env(safe-area-inset-bottom));
+}
+
+.screen-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+}
+
+.phase-tag {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.screen-action {
+  padding-top: 12px;
+}
+
+/* --- Text --- */
+
+.title {
+  margin: 0;
+  text-align: center;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 44px;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+}
+
+.divider {
+  text-align: center;
+  color: var(--gold);
+}
+
+.question {
+  /* Vždy místo na dva řádky: noční otázky Věrného a Zrádce jsou různě dlouhé
+     a rozložení obrazovky se podle toho nesmí posunout. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.6em;
+  margin: 0;
+  line-height: 1.25;
+  text-align: center;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.headline {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.lead {
+  font-size: 20px;
+  margin: 0;
+}
+
+.center {
+  text-align: center;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.hint {
+  margin: 0;
+  min-height: 1.5em;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.error {
+  margin: 0;
+  text-align: center;
+  color: var(--error);
+}
+
+.reveal {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* --- Tlačítka --- */
+
+.primary {
+  width: 100%;
+  min-height: 64px;
+  border: none;
+  border-radius: 14px;
+  background: var(--gold);
+  color: #1a140a;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.secondary {
+  width: 100%;
+  min-height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.seal-button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gold-dim, #8c6e26);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--gold);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* --- Formulář --- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field input {
+  min-height: 56px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  user-select: text;
+}
+
+.field input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+/* --- Mřížka hráčů --- */
+
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 8px;
+}
+
+.portrait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 8px 4px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.avatar.big {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto;
+  font-size: 30px;
+}
+
+.portrait.selected .avatar {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(212, 169, 60, 0.35);
+}
+
+.portrait.selected .portrait-name {
+  color: var(--gold);
+}
+
+.portrait-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+/* --- Karta role --- */
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 220px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-2);
+  text-align: center;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+
+.role-card .seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #7a1f1a;
+  color: var(--gold);
+  font-size: 34px;
+}
+
+.role-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.role-line {
+  min-height: 3em;
+  color: var(--text);
+}
+
+/* --- Seznam hráčů (vyřazení, konec) --- */
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.player-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.player-list li.out > span:first-child {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* --- Překryvná vrstva s rolí --- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.overlay-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 440px;
+}
+
+/* --- Svíčka (indikátor, že aplikace žije) --- */
+
+.candle {
+  width: 12px;
+  height: 22px;
+  margin: 12px auto 0;
+  border-radius: 50% 50% 40% 40%;
+  background: var(--gold);
+  box-shadow: 0 0 18px rgba(212, 169, 60, 0.6);
+  animation: flicker 1.8s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleY(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candle {
+    animation: none;
+  }
+}
+
+/* --- Spojení a orientace --- */
+
+.connection-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 6px;
+  background: var(--surface-2);
+  color: var(--warn);
+  font-size: 14px;
+  text-align: center;
+}
+
+.rotate-hint {
+  display: none;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-size: 20px;
+  }
+}
