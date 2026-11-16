@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import type { Intent, PlayerView } from '../../shared/types';
+import type { Intent, PlayerView, Role } from '../../shared/types';
 import { MAX_NAME_LENGTH } from '../../shared/types';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
@@ -232,7 +232,9 @@ function VoteResult({ view, tag, corner }: ScreenProps) {
         <>
           <p className="center">Kulatý stůl vyhnal</p>
           <p className="headline center">{banished.name}</p>
-          <p className="center reveal">{banished.revealedRole && ROLE_LABEL[banished.revealedRole]}</p>
+          <p className={`center reveal ${roleClass(banished.revealedRole)}`}>
+            {banished.revealedRole && ROLE_LABEL[banished.revealedRole]}
+          </p>
         </>
       ) : (
         <p className="headline center">Nikdo nebyl vyhnán</p>
@@ -319,10 +321,15 @@ function Ended({ view, tag }: ScreenProps) {
   return (
     <Screen tag={tag}>
       <p className="center">Vyhráli</p>
-      <p className="headline center">{view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}</p>
+      <p className={`headline center ${roleClass(view.winner)}`}>{view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}</p>
       <PlayerList view={view} />
     </Screen>
   );
+}
+
+/** Barva jen pro veřejně odhalenou roli (vyhnaný hráč, konec hry). */
+function roleClass(role: Role | undefined): string {
+  return role === 'TRAITOR' ? 'role-traitor' : role === 'LOYAL' ? 'role-loyal' : '';
 }
 
 function PlayerList({ view }: { view: PlayerView }) {
@@ -332,7 +339,7 @@ function PlayerList({ view }: { view: PlayerView }) {
         <li key={p.id} className={p.status === 'ALIVE' ? '' : 'out'}>
           <span>{p.name}</span>
           <span className="muted">
-            {p.revealedRole ? `${ROLE_LABEL[p.revealedRole]} · ` : ''}
+            {p.revealedRole && <span className={roleClass(p.revealedRole)}>{ROLE_LABEL[p.revealedRole]} · </span>}
             {STATUS_LABEL[p.status]}
           </span>
         </li>

@@ -1,4 +1,13 @@
-/* Základní barvy z návrhu designu; plný vzhled přijde v kroku 7. */
+/* Design systém „noc na hradě“ podle DOC/zradci-design.md.
+   Písma jsou přibalená v aplikaci (@fontsource), hra tak funguje i bez internetu. */
+@import '@fontsource/cormorant-garamond/500.css';
+@import '@fontsource/cormorant-garamond/600.css';
+@import '@fontsource/cormorant-garamond/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
 :root {
   --bg: #0f0d0b;
   --surface: #1b1815;
@@ -8,9 +17,21 @@
   --text-muted: #9a9183;
   --gold: #d4a93c;
   --gold-dim: #8c6e26;
+  --gold-glow: rgba(212, 169, 60, 0.35);
+
+  /* Jen pro veřejně odhalené role a konzoli moderátora – nikdy pro vlastní roli na telefonu. */
+  --blood: #a3271f;
+  --loyal: #5e8c6a;
+  --traitor-text: #e0857c;
+  --loyal-text: #8fc29c;
+
   --ok: #6fa36f;
   --warn: #d9822b;
   --error: #e06c5f;
+
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
   color-scheme: dark;
 }
 
@@ -24,5 +45,29 @@ body {
   min-height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  /* Teplé světlo svíčky shora, stejné pro všechny obrazovky. */
+  background: radial-gradient(120% 60% at 50% 0%, #241c13 0%, var(--bg) 60%) fixed, var(--bg);
+}
+
+.role-traitor {
+  color: var(--traitor-text);
+}
+
+.role-loyal {
+  color: var(--loyal-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
 }

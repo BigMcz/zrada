@@ -14,7 +14,7 @@
 }
 
 .console-message h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   color: var(--gold);
 }
 
@@ -32,7 +32,7 @@
 
 .console-brand {
   margin-right: 18px;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 22px;
   letter-spacing: 0.2em;
   color: var(--gold);
@@ -178,7 +178,7 @@ button.link:hover {
 
 .qr-caption {
   margin: 20px 0 4px;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 28px;
 }
 
@@ -282,12 +282,12 @@ button.link:hover {
 
 .role-badge.loyal {
   background: rgba(94, 140, 106, 0.25);
-  color: #8fc29c;
+  color: var(--loyal-text);
 }
 
 .role-badge.traitor {
   background: rgba(163, 39, 31, 0.3);
-  color: #e0857c;
+  color: var(--traitor-text);
 }
 
 .role-badge.hidden {
@@ -313,7 +313,7 @@ button.link:hover {
 
 .phase-panel h1 {
   margin: 0 0 12px;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 34px;
   color: var(--gold);
 }
@@ -341,16 +341,16 @@ button.link:hover {
 
 .winner {
   margin: 4px 0 28px;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 56px;
 }
 
 .winner.loyal {
-  color: #8fc29c;
+  color: var(--loyal-text);
 }
 
 .winner.traitor {
-  color: #e0857c;
+  color: var(--traitor-text);
 }
 
 .console-players.final {
