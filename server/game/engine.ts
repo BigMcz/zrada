@@ -1,4 +1,4 @@
-import { MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS } from '../../shared/types.js';
+import { MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Intent } from '../../shared/types.js';
 import type { Rng } from './random.js';
 import { assignRoles, checkWinner, isValidTraitorCount, resolveNight, tallyVotes } from './rules.js';
 import type { GameState, Player } from './state.js';
@@ -6,20 +6,11 @@ import type { GameState, Player } from './state.js';
 /** Kdo akci posílá. Ověření (token, klíč moderátora) dělá server, ne jádro. */
 export type Actor = { kind: 'moderator' } | { kind: 'player'; playerId: string } | { kind: 'guest' };
 
-/** Úmysly klientů. Jádro je ověří a teprve pak změní stav. */
-export type Action =
-  // id a token vygeneruje server, aby jádro zůstalo bez vedlejších efektů
-  | { type: 'join'; name: string; playerId: string; token: string }
-  | { type: 'kick'; playerId: string }
-  | { type: 'startGame'; traitorCount: number }
-  | { type: 'ackRole' }
-  | { type: 'startVote' }
-  | { type: 'vote'; targetId: string }
-  | { type: 'closeVote' }
-  | { type: 'startNight' }
-  | { type: 'nightPick'; targetId: string }
-  | { type: 'endNight' }
-  | { type: 'newGame' };
+/**
+ * Úmysly klientů a připojení nového hráče. Jádro je ověří a teprve pak změní stav.
+ * U `join` vygeneruje id a token server, aby jádro zůstalo bez vedlejších efektů.
+ */
+export type Action = Intent | { type: 'join'; name: string; playerId: string; token: string };
 
 export type ApplyResult = { ok: true; state: GameState } | { ok: false; error: string };
 

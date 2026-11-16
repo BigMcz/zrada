@@ -108,16 +108,61 @@ export interface ModeratorView {
   /** Jen v noci: zda už všichni živí Zrádci vybrali oběť. */
   traitorsDone?: boolean;
   winner?: Winner;
+  /** Adresa pro připojení hráčů (pro QR kód); doplní server. */
+  joinUrl?: string;
 }
 
-export interface ServerStats {
-  connected: number;
+/** Pohled zařízení, které ještě není ve hře. */
+export interface GuestView {
+  kind: 'guest';
+  /** Zda se dá připojit (jen v lobby a když hra není plná). */
+  joinOpen: boolean;
 }
+
+export type View = PlayerView | ModeratorView | GuestView;
+
+// ---------------------------------------------------------------------------
+// Zprávy mezi klientem a serverem
+// ---------------------------------------------------------------------------
+
+/** Úmysly, které klient posílá. Kdo je posílá, určí server podle připojení, ne podle zprávy. */
+export type Intent =
+  // hráč
+  | { type: 'ackRole' }
+  | { type: 'vote'; targetId: string }
+  | { type: 'nightPick'; targetId: string }
+  // moderátor
+  | { type: 'kick'; playerId: string }
+  | { type: 'startGame'; traitorCount: number }
+  | { type: 'startVote' }
+  | { type: 'closeVote' }
+  | { type: 'startNight' }
+  | { type: 'endNight' }
+  | { type: 'newGame' };
+
+export type Result = { ok: true } | { ok: false; error: string };
+
+export interface HelloRequest {
+  /** Token hráče uložený v prohlížeči. */
+  token?: string;
+  /** Klíč moderátora z adresy /moderator?key=… */
+  moderatorKey?: string;
+}
+
+export type HelloResult =
+  | { as: 'player'; playerId: string }
+  | { as: 'moderator' }
+  /** `forgetToken`: token už neplatí (hráč byl odebrán), klient ho má smazat. */
+  | { as: 'guest'; forgetToken: boolean; error?: string };
+
+export type JoinResult = { ok: true; token: string; playerId: string } | { ok: false; error: string };
 
 export interface ServerToClientEvents {
-  stats: (stats: ServerStats) => void;
+  view: (view: View) => void;
 }
 
 export interface ClientToServerEvents {
-  ping: (reply: (serverTime: number) => void) => void;
+  hello: (req: HelloRequest, reply: (res: HelloResult) => void) => void;
+  join: (name: string, reply: (res: JoinResult) => void) => void;
+  intent: (intent: Intent, reply: (res: Result) => void) => void;
 }
