@@ -1,7 +1,8 @@
 // Pomůcky pro testy herního jádra.
-import type { Role } from '../../shared/types.js';
+import { recommendedTraitors, type Role } from '../../shared/types.js';
 import { apply, type Action, type Actor } from './engine.js';
-import { seededRng, type Rng } from './random.js';
+import { pick, seededRng, type Rng } from './random.js';
+import { alive, aliveWithRole } from './rules.js';
 import { createGame, type GameState } from './state.js';
 
 export const MOD: Actor = { kind: 'moderator' };
@@ -38,5 +39,59 @@ export function startedWith(playerCount: number, traitorIds: string[]): GameStat
   const names = Array.from({ length: playerCount }, (_, i) => `Hráč ${i + 1}`);
   const state = must(lobby(names), MOD, { type: 'startGame', traitorCount: traitorIds.length });
   for (const p of state.players) p.role = (traitorIds.includes(p.id) ? 'TRAITOR' : 'LOYAL') as Role;
+  return state;
+}
+
+/**
+ * Celá hra s boty: všichni hrají náhodně, část hráčů občas nehlasuje nebo v noci nevybere.
+ * `onState` dostane stav po každé akci (pro testy utajení). Vrací konečný stav.
+ */
+export function playRandomGame(playerCount: number, rng: Rng, onState: (s: GameState) => void = () => {}): GameState {
+  const names = Array.from({ length: playerCount }, (_, i) => `Bot ${i + 1}`);
+  let state = lobby(names);
+  const step = (actor: Actor, action: Action) => {
+    state = must(state, actor, action, rng);
+    onState(state);
+  };
+
+  onState(state);
+  step(MOD, { type: 'startGame', traitorCount: recommendedTraitors(playerCount) });
+  for (const p of state.players) step(as(p.id), { type: 'ackRole' });
+  step(MOD, { type: 'startVote' });
+
+  let phases = 0;
+  while (state.phase !== 'ENDED') {
+    if (++phases > 200) throw new Error('Hra se zasekla');
+
+    switch (state.phase) {
+      case 'VOTE': {
+        for (const voter of alive(state)) {
+          if (rng.int(5) === 0) continue;
+          const targets = alive(state).filter((p) => p.id !== voter.id);
+          step(as(voter.id), { type: 'vote', targetId: pick(rng, targets).id });
+        }
+        step(MOD, { type: 'closeVote' });
+        break;
+      }
+      case 'VOTE_RESULT':
+        step(MOD, { type: 'startNight' });
+        break;
+      case 'NIGHT': {
+        for (const p of alive(state)) {
+          if (rng.int(4) === 0) continue;
+          const targets =
+            p.role === 'TRAITOR' ? aliveWithRole(state, 'LOYAL') : alive(state).filter((o) => o.id !== p.id);
+          step(as(p.id), { type: 'nightPick', targetId: pick(rng, targets).id });
+        }
+        step(MOD, { type: 'endNight' });
+        break;
+      }
+      case 'MORNING':
+        step(MOD, { type: 'startVote' });
+        break;
+      default:
+        throw new Error(`Nečekaná fáze ${state.phase}`);
+    }
+  }
   return state;
 }
