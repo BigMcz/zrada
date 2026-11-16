@@ -1,0 +1,54 @@
+import type { Phase, PlayerStatus, Role, Winner } from '../../shared/types.js';
+
+/**
+ * Úplný stav hry. Existuje jen na serveru a nikdy se neposílá klientům celý;
+ * klienti dostávají jen pohledy z views.ts (krok 3).
+ */
+export interface Player {
+  /** Veřejné id, používá se pro hlasování a v pohledech ostatních. */
+  id: string;
+  /** Tajný token, zná ho jen telefon hráče. */
+  token: string;
+  name: string;
+  /** Přidělena při rozdání rolí, v lobby chybí. */
+  role?: Role;
+  status: PlayerStatus;
+  sawRole: boolean;
+}
+
+export interface RoundResult {
+  round: number;
+  /** Kdo byl u kulatého stolu vyhnán; null = nikdo nehlasoval. */
+  banishedId: string | null;
+  /** Kdo zemřel v noci; null = noc tohoto kola ještě neproběhla. */
+  murderedId: string | null;
+}
+
+export interface GameState {
+  phase: Phase;
+  /** 0 v lobby, od rozdání rolí 1, 2, … */
+  round: number;
+  traitorCount: number;
+  players: Player[];
+  /** Hlasy u kulatého stolu v aktuálním kole: voterId → targetId. */
+  votes: Record<string, string>;
+  /** Volby Zrádců v aktuální noci: traitorId → targetId. */
+  nightPicks: Record<string, string>;
+  /** Tipy Věrných v aktuální noci, nikam se nepočítají: loyalId → targetId. */
+  nightTips: Record<string, string>;
+  history: RoundResult[];
+  winner?: Winner;
+}
+
+export function createGame(): GameState {
+  return {
+    phase: 'LOBBY',
+    round: 0,
+    traitorCount: 0,
+    players: [],
+    votes: {},
+    nightPicks: {},
+    nightTips: {},
+    history: [],
+  };
+}

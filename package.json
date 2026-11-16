@@ -8,7 +8,9 @@
     "dev": "node --watch-path=server --watch-path=shared --watch-preserve-output --import tsx server/index.ts",
     "build": "vite build",
     "start": "tsx server/index.ts --prod",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "express": "^4.22.3",
@@ -25,6 +27,7 @@
     "@vitejs/plugin-react": "^6.3.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^8.3.8"
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
   }
 }
