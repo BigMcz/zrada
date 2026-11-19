@@ -60,6 +60,35 @@ export function resolveNight(state: GameState, rng: Rng): string | null {
   return loyal.length > 0 ? pick(rng, loyal) : null;
 }
 
+/** Duch, který tipuje: vyřazený Věrný. Vyhnaný Zrádce zná spoluzrádce, a proto netipuje. */
+export function isTippingGhost(p: Player): boolean {
+  return p.status !== 'ALIVE' && p.role === 'LOYAL';
+}
+
+/**
+ * Uzavře tipy duchů v aktuálním kole: 1 bod za tip na skutečného Zrádce.
+ * Body jsou vidět až na konci hry. Tipy se přesunou do logu a vymažou.
+ */
+export function awardGhostTips(state: GameState): void {
+  for (const ghost of state.players) {
+    const targetId = state.ghostTips[ghost.id];
+    if (targetId === undefined) continue;
+    state.ghostTipLog.push({ round: state.round, ghostId: ghost.id, targetId });
+    const target = state.players.find((p) => p.id === targetId);
+    if (target?.role === 'TRAITOR') {
+      state.points.push({ playerId: ghost.id, amount: 1, reason: 'GHOST_TIP', round: state.round, visible: 'END' });
+    }
+  }
+  state.ghostTips = {};
+}
+
+/** Součet bodů hráče; `includeHidden` započítá i body viditelné až na konci. */
+export function pointsOf(state: GameState, playerId: string, includeHidden: boolean): number {
+  return state.points
+    .filter((e) => e.playerId === playerId && (includeHidden || e.visible === 'NOW'))
+    .reduce((sum, e) => sum + e.amount, 0);
+}
+
 /** 0 živých Zrádců = vyhrávají Věrní; živých Zrádců ≥ živých Věrných = vyhrávají Zrádci. */
 export function checkWinner(state: GameState): Winner | undefined {
   const traitors = aliveWithRole(state, 'TRAITOR').length;

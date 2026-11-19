@@ -1,4 +1,4 @@
-import type { Phase, PlayerStatus, Role, Winner } from '../../shared/types.js';
+import type { Phase, PlayerStatus, PointReason, Role, Winner } from '../../shared/types.js';
 
 /**
  * Úplný stav hry. Existuje jen na serveru a nikdy se neposílá klientům celý;
@@ -24,6 +24,25 @@ export interface RoundResult {
   murderedId: string | null;
 }
 
+/**
+ * Osobní body hráče. Zatím jen za tipy duchů, později i z miniher.
+ * `visible: 'END'` = hráč položku uvidí až na konci hry (tipy duchů by jinak prozradily Zrádce).
+ */
+export interface PointEntry {
+  playerId: string;
+  amount: number;
+  reason: PointReason;
+  round: number;
+  visible: 'NOW' | 'END';
+}
+
+/** Vyhodnocený tip ducha z jednoho kola. */
+export interface GhostTipRecord {
+  round: number;
+  ghostId: string;
+  targetId: string;
+}
+
 export interface GameState {
   phase: Phase;
   /** 0 v lobby, od rozdání rolí 1, 2, … */
@@ -37,6 +56,11 @@ export interface GameState {
   /** Tipy Věrných v aktuální noci, nikam se nepočítají: loyalId → targetId. */
   nightTips: Record<string, string>;
   history: RoundResult[];
+  /** Tipy duchů v aktuálním kole: ghostId → targetId. */
+  ghostTips: Record<string, string>;
+  /** Tipy duchů z uzavřených kol (pro počet tipů a kontrolu bodů). */
+  ghostTipLog: GhostTipRecord[];
+  points: PointEntry[];
   winner?: Winner;
 }
 
@@ -50,5 +74,8 @@ export function createGame(): GameState {
     nightPicks: {},
     nightTips: {},
     history: [],
+    ghostTips: {},
+    ghostTipLog: [],
+    points: [],
   };
 }

@@ -15,6 +15,12 @@ export type PlayerStatus = 'ALIVE' | 'BANISHED' | 'MURDERED';
 
 export type Winner = Role;
 
+/** Důvod připsání osobních bodů; minihry přidají další. */
+export type PointReason = 'GHOST_TIP';
+
+/** Fáze, ve kterých duch může tipovat Zrádce. */
+export const GHOST_TIP_PHASES: readonly Phase[] = ['VOTE', 'VOTE_RESULT', 'NIGHT'];
+
 export const MIN_PLAYERS = 4;
 export const MAX_PLAYERS = 10;
 export const MAX_NAME_LENGTH = 20;
@@ -53,6 +59,17 @@ export type NightHint =
   /** Všichni ostatní: vlastní volba. */
   | { kind: 'OWN'; targetId: string | null };
 
+/** Řádek žebříčku duchů. */
+export interface GhostRank {
+  id: string;
+  /** Body za tipy; na telefonech jen na konci hry, moderátor vždy. */
+  points: number;
+  /** Kolik kol duch tipoval. */
+  tipsGiven: number;
+  /** false = vyhnaný Zrádce, netipuje. */
+  canTip: boolean;
+}
+
 export interface PlayerView {
   kind: 'player';
   phase: Phase;
@@ -80,6 +97,20 @@ export interface PlayerView {
     blocked: string[];
     hint: NightHint;
   };
+  /** Moje osobní body, které už smím vidět (body za tipy duchů až na konci hry). */
+  myPoints: number;
+  /** Jen pro vyřazené hráče (duchy). */
+  ghost?: {
+    /** false = vyhnaný Zrádce, jen sleduje. */
+    canTip: boolean;
+    /** Zda se teď dá tipovat (kulatý stůl až noc). */
+    tipOpen: boolean;
+    /** Můj tip v aktuálním kole. */
+    myTip: string | null;
+    tipsGiven: number;
+  };
+  /** Žebříček duchů; jen na konci hry. */
+  ghostBoard?: GhostRank[];
   winner?: Winner;
 }
 
@@ -97,6 +128,13 @@ export interface ModeratorPlayer {
   done?: boolean;
 }
 
+export interface ModeratorGhost extends GhostRank {
+  /** Koho duch tipuje v aktuálním kole. */
+  tip: string | null;
+  /** Zda tip míří na Zrádce (moderátor role zná). */
+  tipOnTraitor: boolean | null;
+}
+
 export interface ModeratorView {
   kind: 'moderator';
   phase: Phase;
@@ -107,6 +145,8 @@ export interface ModeratorView {
   history: PublicRoundResult[];
   /** Jen v noci: zda už všichni živí Zrádci vybrali oběť. */
   traitorsDone?: boolean;
+  /** Žebříček duchů s aktuálními tipy; moderátor ho vidí po celou hru. */
+  ghosts: ModeratorGhost[];
   winner?: Winner;
   /** Adresa pro připojení hráčů (pro QR kód); doplní server. */
   joinUrl?: string;
@@ -131,6 +171,7 @@ export type Intent =
   | { type: 'ackRole' }
   | { type: 'vote'; targetId: string }
   | { type: 'nightPick'; targetId: string }
+  | { type: 'ghostTip'; targetId: string }
   // moderátor
   | { type: 'kick'; playerId: string }
   | { type: 'startGame'; traitorCount: number }

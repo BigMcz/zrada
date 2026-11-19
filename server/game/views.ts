@@ -1,11 +1,15 @@
 import {
+  GHOST_TIP_PHASES,
   recommendedTraitors,
+  type GhostRank,
+  type ModeratorGhost,
   type ModeratorView,
   type NightHint,
   type PlayerView,
   type PublicPlayer,
   type PublicRoundResult,
 } from '../../shared/types.js';
+import { isTippingGhost, pointsOf } from './rules.js';
 import type { GameState, Player } from './state.js';
 
 /*
@@ -13,6 +17,24 @@ import type { GameState, Player } from './state.js';
  * Každé pole se sem kopíruje výslovně (žádné ...spread), aby se do pohledu omylem
  * nedostala role nebo token, které ve stavu přibudou později.
  */
+
+function tipsGiven(state: GameState, ghostId: string): number {
+  const closed = state.ghostTipLog.filter((t) => t.ghostId === ghostId).length;
+  return closed + (ghostId in state.ghostTips ? 1 : 0);
+}
+
+/** Duchové seřazení podle bodů (pak podle pořadí připojení). Body se počítají včetně skrytých. */
+function ghostRanks(state: GameState): GhostRank[] {
+  return state.players
+    .filter((p) => p.status !== 'ALIVE' && p.role)
+    .map((p) => ({
+      id: p.id,
+      points: pointsOf(state, p.id, true),
+      tipsGiven: tipsGiven(state, p.id),
+      canTip: isTippingGhost(p),
+    }))
+    .sort((a, b) => b.points - a.points);
+}
 
 function publicHistory(state: GameState): PublicRoundResult[] {
   return state.history.map((h) => ({ round: h.round, banishedId: h.banishedId, murderedId: h.murderedId }));
@@ -66,11 +88,26 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
     players: state.players.map((p) => publicPlayer(state, p)),
     history: publicHistory(state),
     myVote: state.phase === 'VOTE' ? (state.votes[me.id] ?? null) : null,
+    // Skryté body (tipy duchů) až na konci hry, jinak by duch poznal Zrádce.
+    myPoints: pointsOf(state, me.id, state.phase === 'ENDED'),
   };
   if (me.role) view.me.role = me.role;
 
   const night = nightPart(state, me);
   if (night) view.night = night;
+
+  if (me.status !== 'ALIVE') {
+    view.ghost = {
+      canTip: isTippingGhost(me),
+      tipOpen: isTippingGhost(me) && GHOST_TIP_PHASES.includes(state.phase),
+      myTip: state.ghostTips[me.id] ?? null,
+      tipsGiven: tipsGiven(state, me.id),
+    };
+  }
+  if (state.phase === 'ENDED') {
+    const board = ghostRanks(state);
+    if (board.length > 0) view.ghostBoard = board;
+  }
   if (state.winner) view.winner = state.winner;
   return view;
 }
@@ -98,6 +135,11 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     recommendedTraitors: recommendedTraitors(state.players.length),
     players,
     history: publicHistory(state),
+    ghosts: ghostRanks(state).map((g): ModeratorGhost => {
+      const tip = state.ghostTips[g.id] ?? null;
+      const target = state.players.find((p) => p.id === tip);
+      return { ...g, tip, tipOnTraitor: target ? target.role === 'TRAITOR' : null };
+    }),
   };
 
   if (state.phase === 'NIGHT') {

@@ -27,7 +27,7 @@ export interface HubOptions {
   rng?: Rng;
 }
 
-const PLAYER_INTENTS = new Set(['ackRole', 'vote', 'nightPick']);
+const PLAYER_INTENTS = new Set(['ackRole', 'vote', 'nightPick', 'ghostTip']);
 const MODERATOR_INTENTS = new Set(['kick', 'startGame', 'startVote', 'closeVote', 'startNight', 'endNight', 'newGame']);
 
 /** Zpráva od klienta je nedůvěryhodná: propustí jen známé typy se správnými poli. */
@@ -45,6 +45,7 @@ export function parseIntent(raw: unknown): Intent | null {
       return { type: r.type };
     case 'vote':
     case 'nightPick':
+    case 'ghostTip':
       return isId(r.targetId) ? { type: r.type, targetId: r.targetId } : null;
     case 'kick':
       return isId(r.playerId) ? { type: 'kick', playerId: r.playerId } : null;

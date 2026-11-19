@@ -1,6 +1,14 @@
-import { MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Intent } from '../../shared/types.js';
+import { GHOST_TIP_PHASES, MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Intent } from '../../shared/types.js';
 import type { Rng } from './random.js';
-import { assignRoles, checkWinner, isValidTraitorCount, resolveNight, tallyVotes } from './rules.js';
+import {
+  assignRoles,
+  awardGhostTips,
+  checkWinner,
+  isTippingGhost,
+  isValidTraitorCount,
+  resolveNight,
+  tallyVotes,
+} from './rules.js';
 import type { GameState, Player } from './state.js';
 
 /** Kdo akci posílá. Ověření (token, klíč moderátora) dělá server, ne jádro. */
@@ -67,6 +75,8 @@ function finishOr(state: GameState, next: GameState['phase']): void {
   if (winner) {
     state.winner = winner;
     state.phase = 'ENDED';
+    // Hra skončila uprostřed kola: tipy duchů z tohoto kola se vyhodnotí hned.
+    awardGhostTips(state);
   } else {
     state.phase = next;
   }
@@ -188,6 +198,16 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
       return;
     }
 
+    case 'ghostTip': {
+      if (!GHOST_TIP_PHASES.includes(state.phase)) fail(WRONG_PHASE);
+      const ghost = requirePlayer(state, actor);
+      if (!isTippingGhost(ghost)) fail(NOT_ALLOWED);
+      const target = state.players.find((p) => p.id === action.targetId);
+      if (!target || target.status !== 'ALIVE') fail(INVALID_TARGET);
+      state.ghostTips[ghost.id] = target.id;
+      return;
+    }
+
     case 'endNight': {
       requireModerator(actor);
       requirePhase(state, 'NIGHT');
@@ -196,6 +216,8 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
       if (murderedId) {
         state.players.find((p) => p.id === murderedId)!.status = 'MURDERED';
       }
+      // Kolo končí: tipy duchů se vyhodnotí (tip platí podle role, i když tipovaný mezitím vypadl).
+      awardGhostTips(state);
       finishOr(state, 'MORNING');
       return;
     }
@@ -215,6 +237,9 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
       state.nightPicks = {};
       state.nightTips = {};
       state.history = [];
+      state.ghostTips = {};
+      state.ghostTipLog = [];
+      state.points = [];
       delete state.winner;
       return;
     }

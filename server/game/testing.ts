@@ -2,7 +2,7 @@
 import { recommendedTraitors, type Role } from '../../shared/types.js';
 import { apply, type Action, type Actor } from './engine.js';
 import { pick, seededRng, type Rng } from './random.js';
-import { alive, aliveWithRole } from './rules.js';
+import { alive, aliveWithRole, isTippingGhost } from './rules.js';
 import { createGame, type GameState } from './state.js';
 
 export const MOD: Actor = { kind: 'moderator' };
@@ -59,12 +59,21 @@ export function playRandomGame(playerCount: number, rng: Rng, onState: (s: GameS
   for (const p of state.players) step(as(p.id), { type: 'ackRole' });
   step(MOD, { type: 'startVote' });
 
+  // Duchové (vyřazení Věrní) občas tipnou náhodného živého hráče.
+  const ghostsTip = () => {
+    for (const g of state.players.filter(isTippingGhost)) {
+      if (rng.int(3) === 0) continue;
+      step(as(g.id), { type: 'ghostTip', targetId: pick(rng, alive(state)).id });
+    }
+  };
+
   let phases = 0;
   while (state.phase !== 'ENDED') {
     if (++phases > 200) throw new Error('Hra se zasekla');
 
     switch (state.phase) {
       case 'VOTE': {
+        ghostsTip();
         for (const voter of alive(state)) {
           if (rng.int(5) === 0) continue;
           const targets = alive(state).filter((p) => p.id !== voter.id);
@@ -77,6 +86,7 @@ export function playRandomGame(playerCount: number, rng: Rng, onState: (s: GameS
         step(MOD, { type: 'startNight' });
         break;
       case 'NIGHT': {
+        ghostsTip();
         for (const p of alive(state)) {
           if (rng.int(4) === 0) continue;
           const targets =
