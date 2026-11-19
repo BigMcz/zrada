@@ -453,3 +453,26 @@
     font-size: 20px;
   }
 }
+
+.small {
+  font-size: 14px;
+}
+
+/* --- Duch --- */
+
+/* Duch má stejné komponenty, jen chladnou paletu místo zlaté. */
+.phone.ghost-mode {
+  --gold: var(--ghost);
+  --gold-dim: var(--ghost-dim);
+  --gold-glow: var(--ghost-glow);
+  background: radial-gradient(120% 60% at 50% 0%, #161b22 0%, transparent 60%);
+}
+
+.phone.ghost-mode .screen-body {
+  justify-content: flex-start;
+  padding-top: 20px;
+}
+
+.phone.ghost-mode .player-list {
+  margin-top: 12px;
+}

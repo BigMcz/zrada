@@ -25,6 +25,11 @@
   --traitor-text: #e0857c;
   --loyal-text: #8fc29c;
 
+  /* Duch: chladná, vybledlá modrá místo zlaté. Duchové jsou veřejně známí, nic neprozrazuje. */
+  --ghost: #8fa0b8;
+  --ghost-dim: #4f5b6b;
+  --ghost-glow: rgba(143, 160, 184, 0.3);
+
   --ok: #6fa36f;
   --warn: #d9822b;
   --error: #e06c5f;

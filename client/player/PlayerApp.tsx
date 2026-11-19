@@ -11,7 +11,7 @@ export function PlayerApp() {
   const { connected, view } = useConnection();
 
   return (
-    <div className="phone">
+    <div className={view?.kind === 'player' && view.ghost && view.phase !== 'ENDED' ? 'phone ghost-mode' : 'phone'}>
       {!connected && <div className="connection-bar">Obnovuji spojení…</div>}
       <div className="rotate-hint">Otoč telefon na výšku</div>
       {!view ? (
@@ -115,7 +115,8 @@ function PlayerGame({ view }: { view: PlayerView }) {
   let screen: ReactNode;
   if (view.phase === 'LOBBY') screen = <Waiting view={view} tag={tag} />;
   else if (view.phase === 'ENDED') screen = <Ended view={view} tag={tag} />;
-  else if (view.me.status !== 'ALIVE') screen = <Eliminated view={view} tag={tag} corner={corner} />;
+  // key podle kola: v novém kole začíná duch bez předvybraného hráče
+  else if (view.ghost) screen = <Ghost key={view.round} view={view} tag={`Duch · ${tag}`} corner={corner} />;
   else if (view.phase === 'ROLES') screen = <Roles view={view} tag={tag} corner={corner} />;
   // key podle kola: nový kulatý stůl / noc začíná bez předvybraného hráče
   else if (view.phase === 'VOTE') screen = <Vote key={view.round} view={view} tag={tag} corner={corner} />;
@@ -304,14 +305,63 @@ function currentEvent(view: PlayerView): string {
   return '';
 }
 
-function Eliminated({ view, tag, corner }: ScreenProps) {
+/**
+ * Duch = vyřazený hráč. Od kulatého stolu do konce noci tipuje, kdo je Zrádce.
+ * Jestli tipoval správně, se dozví až na konci hry.
+ */
+function Ghost({ view, tag, corner }: ScreenProps) {
+  const { error, run } = useSend();
+  const ghost = view.ghost!;
+  const [selected, setSelected] = useState<string | null>(ghost.myTip);
+  const changed = selected !== ghost.myTip;
+  const how = view.me.status === 'BANISHED' ? 'Kulatý stůl tě vyhnal.' : 'Zrádci tě umlčeli.';
+
+  if (!ghost.canTip) {
+    return (
+      <Screen tag={tag} corner={corner}>
+        <p className="headline center">Jsi duch</p>
+        <p className="center">Jako Zrádce netipuješ, jen sleduješ hru.</p>
+        <p className="hint center">{currentEvent(view)}</p>
+        <PlayerList view={view} />
+      </Screen>
+    );
+  }
+
+  if (!ghost.tipOpen) {
+    return (
+      <Screen tag={tag} corner={corner}>
+        <p className="headline center">Jsi duch</p>
+        <p className="center">{how}</p>
+        <p className="center">{currentEvent(view)}</p>
+        <p className="muted center">
+          Další tip můžeš dát od kulatého stolu. Odevzdané tipy: {ghost.tipsGiven}
+        </p>
+        <PlayerList view={view} />
+      </Screen>
+    );
+  }
+
+  const alivePlayers = view.players.filter((p) => p.status === 'ALIVE');
   return (
-    <Screen tag={tag} corner={corner}>
-      <p className="headline center">Vypadl/a jsi ze hry</p>
-      <p className="center">
-        {view.me.status === 'BANISHED' ? 'Kulatý stůl tě vyhnal.' : 'Tuto noc tě Zrádci umlčeli.'}
+    <Screen
+      tag={tag}
+      corner={corner}
+      action={
+        <PrimaryButton disabled={!selected || !changed} onClick={() => selected && run({ type: 'ghostTip', targetId: selected })}>
+          {!selected ? 'Vyber hráče' : changed ? `Tipnout: ${nameOf(view.players, selected)}` : 'Tip odevzdán'}
+        </PrimaryButton>
+      }
+    >
+      <p className="muted center">{currentEvent(view)}</p>
+      <h2 className="question">Kdo je podle tebe Zrádce?</h2>
+      <PlayerGrid players={alivePlayers} selectedId={selected} onSelect={setSelected} />
+      <p className="hint">
+        Tvůj tip v tomto kole: {nameOf(view.players, ghost.myTip)}
+        <br />
+        Odevzdané tipy: {ghost.tipsGiven}
       </p>
-      <p className="hint center">{currentEvent(view)}</p>
+      <p className="muted center small">Jestli jsi tipoval/a správně, se dozvíš až na konci hry.</p>
+      {error && <p className="error">{error}</p>}
       <PlayerList view={view} />
     </Screen>
   );
