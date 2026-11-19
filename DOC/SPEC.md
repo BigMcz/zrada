@@ -127,7 +127,7 @@ Podrobnější vizuální návrh je v [zradci-design.md](zradci-design.md). Pro 
 - Štít proti noční vraždě
 - Verbování Věrných na stranu Zrádců
 - Finálové hlasování „ukončit hru / vyhnat dalšího“
-- Režim duchů s body a žebříčkem pro vyřazené
+- ~~Režim duchů s body a žebříčkem pro vyřazené~~ – doplněno v části [Rozšíření 1: Duchové](#rozšíření-1-duchové)
 - Zvláštní velkou obrazovku pro projektor, odhalování hlasů jeden po druhém, animace a zvuky
 - Chat Zrádců (domlouvají se jinak, např. pohledem; při rozdílné volbě rozhodne los)
 - Druhé kolo hlasování při remíze (rozhodne rovnou los)
@@ -146,3 +146,82 @@ Podrobnější vizuální návrh je v [zradci-design.md](zradci-design.md). Pro 
 3. **Celá hra**: s 5 hráči a 1 Zrádcem jde odehrát hra od lobby až po obrazovku s vítězem. Vyhnaný i zavražděný hráč z ní správně vypadnou a nemohou dál hlasovat.
 4. **Správný konec**: hra sama skončí výhrou Věrných, jakmile je vyhnán poslední Zrádce, a výhrou Zrádců, jakmile jich je stejně nebo víc než Věrných.
 5. **Návrat**: když hráč během hry zavře prohlížeč a znovu otevře adresu, vrátí se jako stejný hráč do aktuální fáze.
+
+---
+
+## Rozšíření 1: Duchové
+
+19. 11. 2026 · doplněno po první verzi · dílčí cíle a pořadí vývoje viz [Kroky vývoje](#kroky-vývoje)
+
+### Cíl
+
+Vyřazení hráči se u stolu nemají nudit. Kdo vypadne, stane se **duchem**: dál sleduje hru a v každém kole tipuje, kdo je Zrádce. Za správné tipy sbírá body a na konci hry se vyhlásí žebříček duchů.
+
+### Pravidla
+
+- **Kdo je duch:** každý vyhnaný nebo v noci umlčený Věrný. Duch nehlasuje u kulatého stolu a v noci nevybírá oběť.
+- **Vyhnaný Zrádce netipuje.** Zná spoluzrádce, takže by tipoval vždy správně. Jeho role je po vyhnání veřejná, takže to, že netipuje, nic neprozradí. Je to duch bez tipování: jen sleduje hru.
+- **Tip:** duch v každém kole jednou vybere živého hráče, o kterém si myslí, že je Zrádce. Tipovat může od začátku kulatého stolu do konce noci a do té doby tip změnit. Ráno se tipovat nedá.
+- Kdo vypadl u kulatého stolu, tipuje už v noci téhož kola. Kdo vypadl v noci, tipuje od dalšího kola.
+- **Body:** 1 bod za každý tip, který ukázal na skutečného Zrádce. Za špatný nebo žádný tip se nic neodečítá. Tip se vyhodnotí podle role tipovaného hráče, i když ten hráč později v tomtéž kole vypadne.
+- Body za kolo se připíšou na konci noci. Když hra skončí dřív (u kulatého stolu), připíšou se při konci hry.
+
+### Utajení
+
+- **Duch se do konce hry nedozví, jestli tipoval správně.** Body za tipy uvidí až na konci hry. Kdyby je viděl hned, poznal by z nich Zrádce a mohl by to ostatním prozradit, protože sedí ve stejné místnosti.
+- Duch nevidí nic, co by neviděli všichni ostatní: žádné cizí role ani tipy ostatních duchů.
+- **Moderátor vidí vše:** u každého ducha jeho aktuální tip (koho tipuje) a průběžný žebříček duchů s body, po celou dobu hry.
+- Živí hráči tipy duchů nevidí. Žebříček duchů uvidí všichni až na konci hry.
+
+### Body hráčů
+
+Body za tipy duchů jsou **první druh osobních bodů hráče**. Minihry (viz [minihry-analyza.md](minihry-analyza.md)) budou později přidávat a ubírat další body a některé minihry je budou moci utrácet. Aplikace si proto u každého hráče pamatuje seznam připsaných bodů s důvodem (např. „tip ducha, 2. kolo“) a u každé položky, jestli je vidět hned, nebo až na konci hry. Body za tipy duchů jsou vždy „až na konci hry“.
+
+### Obrazovky
+
+**Telefon ducha** (nahrazuje obrazovku „Vypadl/a jsi ze hry“):
+
+| Kdy | Co je na obrazovce | Co se dá udělat |
+| --- | --- | --- |
+| Kulatý stůl, výsledek hlasování a noc | Nahoře štítek „Duch“ a fáze. „Kdo je podle tebe Zrádce?“, mřížka živých hráčů, řádek „Tvůj tip v tomto kole: Jméno“ a „Odevzdané tipy: 3“. | Vybrat hráče a potvrdit tlačítkem „Tipnout: Jméno“. Tip jde změnit do konce noci. |
+| Ráno | Kdo v noci zemřel a „Další tip můžeš dát od kulatého stolu.“ | Nic |
+| Kdykoli | Seznam hráčů se stavy jako dosud | Nic |
+| Vyhnaný Zrádce | „Jsi duch. Jako Zrádce netipuješ, jen sleduješ hru.“ a seznam hráčů | Nic |
+
+Duch má vlastní, chladnější barvu (vybledlá modrá místo zlaté), aby bylo na první pohled jasné, že už nehraje. Duchové jsou veřejně známí, takže to nic neprozrazuje.
+
+**Konzole moderátora** – nový panel **Duchové** pod seznamem hráčů:
+
+- žebříček duchů seřazený podle bodů (pořadí, jméno, body),
+- u každého ducha aktuální tip v tomto kole (jméno, nebo „… zatím netipoval“) a značka, zda míří na Zrádce,
+- vyhnaný Zrádce je v panelu uvedený s poznámkou „netipuje“.
+
+**Konec hry** (telefony všech i konzole): pod vítězem a seznamem rolí **žebříček duchů** s body. Pokud ve hře žádný duch nebyl, žebříček se nezobrazí.
+
+### Data navíc
+
+- Tipy duchů v aktuálním kole: kdo tipuje koho.
+- Body hráčů: seznam připsaných bodů (hráč, počet, důvod, kolo, vidět hned / až na konci).
+
+### Rozšíření NEobsahuje
+
+- Velkou obrazovku se žebříčkem duchů (přijde s minihrami)
+- Úlohy duchů v minihrách a „vítěze mezi duchy“ po minihře (přijde s minihrami)
+- Utrácení bodů a body z miniher (přijde s minihrami)
+- Bonusy za sérii správných tipů a jiná složitější bodování
+
+### Hotovo, když
+
+1. **Duch tipuje:** hráč vyhnaný u kulatého stolu může ještě v noci téhož kola tipnout živého hráče, tip změnit a v dalším kole tipnout znovu. Ráno tipovat nejde.
+2. **Utajení:** během hry duch na telefonu nevidí, jestli tipoval správně, ani žádnou cizí roli. Ověřují to automatické testy stejně jako u ostatních pohledů.
+3. **Moderátor:** v konzoli po celou hru vidí, koho každý duch tipuje, a průběžný žebříček duchů s body.
+4. **Konec hry:** všichni vidí žebříček duchů se správně sečtenými body (1 bod za každé kolo, ve kterém duch tipoval Zrádce).
+5. **Vyhnaný Zrádce** netipuje a v žebříčku nemá body.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| A | Pravidla duchů a body na serveru, pohledy pro hráče a moderátora, testy včetně utajení | Testy prochází |
+| B | Obrazovka ducha na telefonu | Ve hře v prohlížeči jde tipovat jako duch |
+| C | Panel Duchové v konzoli a žebříček na konci hry | Moderátor vidí tipy a body, na konci všichni vidí žebříček |
