@@ -4,10 +4,11 @@ Společenská hra pro 4–10 lidí v jedné místnosti, inspirovaná Městečkem
 
 Ukázkový projekt pro vibecoding kurz. Zadání a návrhy jsou ve složce [DOC](DOC/):
 
-- [SPEC.md](DOC/SPEC.md) – zadání první verze (platí přednostně)
+- [SPEC.md](DOC/SPEC.md) – zadání (platí přednostně): první verze, Rozšíření 1: Duchové, Rozšíření 2: Minihry
 - [architektura.md](DOC/architektura.md) – technické řešení a plán vývoje
 - [zradci-design.md](DOC/zradci-design.md) – návrh vzhledu
 - [zradci-analyza.md](DOC/zradci-analyza.md) – původní analýza nápadu
+- [minihry-analyza.md](DOC/minihry-analyza.md) – analýza miniher (7 her, rámec, rozhraní modulu)
 
 ## Spuštění
 
@@ -27,7 +28,7 @@ Server v terminálu vypíše dva odkazy:
 
 1. **Odkaz pro moderátora** otevři v prohlížeči na notebooku. Klíč v odkazu je při každém spuštění nový; bez něj se do konzole moderátora nikdo nedostane.
 2. Hráči naskenují **QR kód** z obrazovky moderátora (nebo otevřou adresu pro hráče), zadají jméno a jsou ve hře.
-3. Moderátor zvolí počet Zrádců a stiskne **Rozdat role**. Dál hru vede jedno velké tlačítko.
+3. Moderátor zvolí počet Zrádců, zapne nebo vypne minihry a stiskne **Rozdat role**. Dál hru vede jedno velké tlačítko.
 
 Telefony musí být na **stejné Wi-Fi** jako notebook.
 
@@ -39,7 +40,14 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 - **Ráno**: všichni se dozví, kdo zemřel.
 - Věrní vyhrají, když nezbude žádný Zrádce. Zrádci vyhrají, když jich je stejně nebo víc než Věrných.
 
-Celá pravidla jsou v [SPEC.md](DOC/SPEC.md).
+**Duchové:** kdo vypadne (vyhnaný nebo umlčený Věrný), stane se duchem. V každém kole tipuje, kdo je Zrádce (1 bod za správný tip), a v minihrách má vlastní úlohu. Body za tipy na Zrádce uvidí až na konci hry. Vyhnaný Zrádce netipuje.
+
+**Minihry:** po rozdání rolí a každé ráno moderátor zvolí **Spustit minihru**, nebo **Přeskočit minihru**. V minihře hráči soutěží o **štít** (chrání jednu noc před umlčením) a mění společný **poklad** (začíná na 1000). Vítěz minihry dostane +2 osobní body a štít může tajně darovat. Zatím jsou hotové dvě minihry:
+
+- **Tajná aukce** – tajné nabídky 0–10 žetonů, nejvyšší nabídka vyhrává štít, všechny nabídky se platí z pokladu.
+- **Rozdělit, nebo ukrást** – dva duelisté tajně volí Rozdělit / Ukrást, ostatní sázejí na výsledek.
+
+Na konci hry je poklad, žebříček hráčů podle osobních bodů a žebříček duchů. Celá pravidla jsou v [SPEC.md](DOC/SPEC.md).
 
 ## Když se telefony nepřipojí
 
@@ -61,16 +69,18 @@ Pevný klíč moderátora (např. pro předem připravený odkaz) nastavíš pro
 - [ ] `npm run dev` běží a jeden telefon otevře stránku hráče
 - [ ] Uspávání notebooku vypnuté, nabíječka připojená
 - [ ] Konzole moderátora se po rozdání rolí **nepromítá** – jsou na ní vidět role
-- [ ] Tlačítko **Skrýt role** v konzoli, když se moderátorovi někdo dívá přes rameno
+- [ ] Tlačítko **Skrýt role** v konzoli, když se moderátorovi někdo dívá přes rameno (skryje i štít a body duchů)
+- [ ] Minihry v lobby zapnuté, pokud se mají hrát (vypnuté = hra bez miniher)
 
 ## Vývoj
 
 ```bash
 npm run dev        # server + klient s automatickým obnovováním
-npm test           # testy pravidel, utajení rolí a serveru přes sockety
+npm test           # testy pravidel, utajení rolí, miniher a serveru přes sockety
 npm run typecheck  # kontrola typů
 npm run build      # produkční build klienta do dist/
 npm start          # spuštění z produkčního buildu (po npm run build)
+npm run e2e        # robot odehraje 5 celých her přes skutečný server a zkontroluje utajení, štít a body
 ```
 
 **Testování na jednom počítači:** všechny karty prohlížeče sdílejí úložiště, takže by byly stejným hráčem. Přidej do adresy číslo hráče – `http://localhost:3000/?hrac=1`, `?hrac=2` … – a každá karta bude jiný hráč.
@@ -85,10 +95,27 @@ server/
   game/engine.ts       jediný vstup do herní logiky (čisté funkce)
   game/rules.ts        rozdání rolí, vyhodnocení hlasování a noci, konec hry
   game/views.ts        co smí který hráč a moderátor vidět
+  minigames/
+    types.ts           rozhraní minihry (MinigameModule)
+    framework.ts       los, kroky minihry, štít, poklad, body
+    registry.ts        seznam miniher; modules.ts je registruje při startu
+    auction/           Tajná aukce
+    splitSteal/        Rozdělit, nebo ukrást
 client/
   player/              obrazovky telefonu hráče
   moderator/           konzole moderátora
-  components/          karta role, mřížka hráčů, kostra obrazovky
+  minigames/           obrazovky miniher (telefon, duch, moderátor) a jejich registr
+  components/          karta role, karta s pečetí, mřížka hráčů, odpočet, stopa, žebříčky
 ```
 
-Klient nikdy nedostane celý stav hry, jen svůj **pohled** spočítaný na serveru. Role ostatních hráčů se do telefonu nedostanou ani skrytě – hlídají to testy v `server/game/views.test.ts`.
+### Nová minihra
+
+Každá minihra je samostatný modul, takže ji může postavit jeden tým nezávisle na ostatních:
+
+1. Na serveru složka `server/minigames/<nazev>/` s modulem podle rozhraní `MinigameModule` (pravidla, tajná karta, vstupy hráčů a duchů, výsledek, pohledy) a testy. Jako vzor slouží `auction/`.
+2. Registrace v `server/minigames/modules.ts`.
+3. V klientovi komponenty pro telefon, ducha a moderátora v `client/minigames/<nazev>/` a zápis do `client/minigames/registry.ts`.
+
+Rámec se postará o los, pravidla, tajnou kartu, časovače, výsledek, stopu, předání štítu, poklad i body.
+
+Klient nikdy nedostane celý stav hry, jen svůj **pohled** spočítaný na serveru. Role ostatních hráčů, cizí nabídky a volby v minihrách ani držitel štítu se do telefonu nedostanou ani skrytě – hlídají to testy v `server/game/views.test.ts`, `server/game/ghosts.test.ts` a `server/minigames/`.

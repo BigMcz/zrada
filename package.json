@@ -10,7 +10,8 @@
     "start": "tsx server/index.ts --prod",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "npm run build && tsx scripts/e2e-games.ts"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",

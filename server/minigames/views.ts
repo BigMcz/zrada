@@ -1,7 +1,7 @@
 import type { ModeratorMinigameView, PlayerMinigameView } from '../../shared/types.js';
 import { isTippingGhost } from '../game/rules.js';
 import type { GameState, Player } from '../game/state.js';
-import { manualChoices } from './framework.js';
+import { drawCandidates, manualChoices } from './framework.js';
 import { getMinigame } from './registry.js';
 
 /** Kroky, ve kterých už existuje stav modulu a dá se ukázat průběh hry. */
@@ -82,6 +82,7 @@ export function moderatorMinigameView(state: GameState): ModeratorMinigameView |
     name: module ? module.meta.name : '',
     step: active.step,
     rerollsLeft: active.rerollsLeft,
+    canReroll: active.step === 'DRAW' && active.rerollsLeft > 0 && drawCandidates(state).some((m) => m.id !== active.id),
     choices: active.step === 'DRAW' ? manualChoices(state).map((m) => ({ id: m.id, name: m.meta.name })) : [],
     secretCardSeen: { ...active.secretCardSeen },
     game: module && hasState && active.step !== 'DRAW' ? module.viewForModerator(active.state) : null,

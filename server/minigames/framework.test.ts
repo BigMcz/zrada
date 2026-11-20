@@ -120,6 +120,20 @@ describe('řízení dne a los', () => {
     expect(rejected(s, MOD, { type: 'chooseMinigame', id: 'NEEXISTUJE' })).toMatch(/nejde hrát/);
   });
 
+  it('tlačítko Přelosovat konzole nabídne, jen když je z čeho losovat', () => {
+    const fresh = must(startedWith(6, ['p1']), MOD, { type: 'drawMinigame' });
+    expect(viewForModerator(fresh, new Set()).minigame!.canReroll).toBe(true);
+    // TEST se už hrál, zbývá jen TEST2 → není z čeho přelosovat.
+    const s = startedWith(6, ['p1']);
+    s.minigamesPlayed = ['TEST'];
+    const drawn = must(s, MOD, { type: 'drawMinigame' });
+    expect(drawn.minigame!.id).toBe('TEST2');
+    expect(viewForModerator(drawn, new Set()).minigame!.canReroll).toBe(false);
+    // Po využitém přelosování taky ne.
+    const rerolled = must(fresh, MOD, { type: 'rerollMinigame' });
+    expect(viewForModerator(rerolled, new Set()).minigame!.canReroll).toBe(false);
+  });
+
   it('minihru řídí jen moderátor', () => {
     const s = startedWith(6, ['p1']);
     rejected(s, as('p2'), { type: 'drawMinigame' });

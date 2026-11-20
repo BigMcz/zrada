@@ -92,6 +92,8 @@ export interface ModeratorMinigameView {
   name: string;
   step: MinigameStep;
   rerollsLeft: number;
+  /** Zda jde právě přelosovat (zbývá přelosování a je z čeho). */
+  canReroll: boolean;
   /** Minihry, které jde právě ručně vybrat. */
   choices: { id: MinigameId; name: string }[];
   secretCardSeen: Record<string, boolean>;

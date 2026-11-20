@@ -36,7 +36,7 @@ export function MinigamePanel({ view, run, busy }: Props) {
             Potvrdit a ukázat pravidla
           </button>
           <div className="minigame-actions">
-            {mg.rerollsLeft > 0 && (
+            {mg.canReroll && (
               <button type="button" className="toggle" disabled={busy} onClick={() => run({ type: 'rerollMinigame' })}>
                 Přelosovat
               </button>
