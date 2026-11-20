@@ -2,6 +2,7 @@ import { GHOST_TIP_PHASES, MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Inten
 import type { Rng } from './random.js';
 import {
   assignRoles,
+  currentRound,
   awardGhostTips,
   checkWinner,
   isTippingGhost,
@@ -9,29 +10,30 @@ import {
   resolveNight,
   tallyVotes,
 } from './rules.js';
-import type { GameState, Player } from './state.js';
+import { fail, INVALID_TARGET, NOT_ALLOWED, RuleError, WRONG_PHASE } from './errors.js';
+import { reduceMinigame, startNextDay } from '../minigames/framework.js';
+import { STARTING_POT, type GameState, type Player } from './state.js';
 
 /** Kdo akci posílá. Ověření (token, klíč moderátora) dělá server, ne jádro. */
-export type Actor = { kind: 'moderator' } | { kind: 'player'; playerId: string } | { kind: 'guest' };
+export type Actor =
+  | { kind: 'moderator' }
+  | { kind: 'player'; playerId: string }
+  | { kind: 'guest' }
+  /** Server sám (časovače miniher). */
+  | { kind: 'system' };
 
 /**
  * Úmysly klientů a připojení nového hráče. Jádro je ověří a teprve pak změní stav.
  * U `join` vygeneruje id a token server, aby jádro zůstalo bez vedlejších efektů.
  */
-export type Action = Intent | { type: 'join'; name: string; playerId: string; token: string };
+export type Action =
+  | Intent
+  | { type: 'join'; name: string; playerId: string; token: string }
+  /** Posun časovačů miniher; posílá jen server. */
+  | { type: 'tick'; now: number };
 
 export type ApplyResult = { ok: true; state: GameState } | { ok: false; error: string };
 
-// Jedna hláška pro každý nepovolený cíl, aby chyba neprozradila, proč (např. že jde o spoluzrádce).
-const INVALID_TARGET = 'Tohoto hráče nelze vybrat.';
-const WRONG_PHASE = 'Teď to nejde.';
-const NOT_ALLOWED = 'Na tohle nemáš oprávnění.';
-
-class RuleError extends Error {}
-
-function fail(message: string): never {
-  throw new RuleError(message);
-}
 
 function requireModerator(actor: Actor): void {
   if (actor.kind !== 'moderator') fail(NOT_ALLOWED);
@@ -60,15 +62,6 @@ function aliveOther(state: GameState, self: Player, targetId: string): Player {
   return target;
 }
 
-function currentRound(state: GameState) {
-  let entry = state.history.find((h) => h.round === state.round);
-  if (!entry) {
-    entry = { round: state.round, banishedId: null, murderedId: null };
-    state.history.push(entry);
-  }
-  return entry;
-}
-
 /** Po každém vyřazení: buď konec hry, nebo pokračovat do `next`. */
 function finishOr(state: GameState, next: GameState['phase']): void {
   const winner = checkWinner(state);
@@ -85,10 +78,10 @@ function finishOr(state: GameState, next: GameState['phase']): void {
 /**
  * Jediný vstup do herní logiky. Nemění předaný stav; vrátí nový, nebo chybu pro odesílatele.
  */
-export function apply(prev: GameState, actor: Actor, action: Action, rng: Rng): ApplyResult {
+export function apply(prev: GameState, actor: Actor, action: Action, rng: Rng, now: number = Date.now()): ApplyResult {
   const state = structuredClone(prev);
   try {
-    reduce(state, actor, action, rng);
+    if (!reduceMinigame(state, actor, action, rng, now)) reduce(state, actor, action, rng);
     return { ok: true, state };
   } catch (e) {
     if (e instanceof RuleError) return { ok: false, error: e.message };
@@ -149,8 +142,13 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
 
     case 'startVote': {
       requireModerator(actor);
-      requirePhase(state, 'ROLES', 'MORNING');
-      if (state.phase === 'MORNING') state.round += 1;
+      requirePhase(state, 'ROLES', 'MORNING', 'MINIGAME');
+      if (state.phase === 'MINIGAME') {
+        if (state.minigame?.step !== 'DONE') fail(WRONG_PHASE);
+        state.minigame = null;
+      }
+      // Přeskočení minihry ráno = nový den rovnou u kulatého stolu.
+      if (state.phase === 'MORNING') startNextDay(state);
       state.votes = {};
       state.phase = 'VOTE';
       return;
@@ -240,6 +238,11 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
       state.ghostTips = {};
       state.ghostTipLog = [];
       state.points = [];
+      state.minigame = null;
+      state.minigamesPlayed = [];
+      state.minigameMemory = {};
+      state.shieldHolderId = null;
+      state.pot = STARTING_POT;
       delete state.winner;
       return;
     }

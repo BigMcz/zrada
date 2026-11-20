@@ -3,6 +3,7 @@ import type { Phase, PlayerStatus, PublicPlayer, Role } from '../shared/types';
 export const PHASE_LABEL: Record<Phase, string> = {
   LOBBY: 'Čekárna',
   ROLES: 'Rozdání rolí',
+  MINIGAME: 'Minihra',
   VOTE: 'Kulatý stůl',
   VOTE_RESULT: 'Kulatý stůl',
   NIGHT: 'Noc',

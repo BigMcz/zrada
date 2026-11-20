@@ -60,6 +60,16 @@ export function resolveNight(state: GameState, rng: Rng): string | null {
   return loyal.length > 0 ? pick(rng, loyal) : null;
 }
 
+/** Záznam aktuálního kola v historii; vytvoří ho, pokud ještě není. */
+export function currentRound(state: GameState) {
+  let entry = state.history.find((h) => h.round === state.round);
+  if (!entry) {
+    entry = { round: state.round, banishedId: null, murderedId: null };
+    state.history.push(entry);
+  }
+  return entry;
+}
+
 /** Duch, který tipuje: vyřazený Věrný. Vyhnaný Zrádce zná spoluzrádce, a proto netipuje. */
 export function isTippingGhost(p: Player): boolean {
   return p.status !== 'ALIVE' && p.role === 'LOYAL';

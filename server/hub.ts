@@ -27,8 +27,39 @@ export interface HubOptions {
   rng?: Rng;
 }
 
-const PLAYER_INTENTS = new Set(['ackRole', 'vote', 'nightPick', 'ghostTip']);
-const MODERATOR_INTENTS = new Set(['kick', 'startGame', 'startVote', 'closeVote', 'startNight', 'endNight', 'newGame']);
+const PLAYER_INTENTS = new Set(['ackRole', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick']);
+const MODERATOR_INTENTS = new Set([
+  'kick',
+  'startGame',
+  'startVote',
+  'closeVote',
+  'startNight',
+  'endNight',
+  'newGame',
+  'setMinigames',
+  'drawMinigame',
+  'rerollMinigame',
+  'chooseMinigame',
+  'confirmMinigame',
+  'startMinigame',
+  'minigameModerator',
+  'skipMinigame',
+  'showClue',
+  'afterClue',
+]);
+
+/** Data minihry od klienta: jen JSON rozumné velikosti (moduly je pak samy ověří). */
+function isSmallJson(v: unknown): boolean {
+  try {
+    const json = JSON.stringify(v);
+    return json !== undefined && json.length <= 2000;
+  } catch {
+    return false;
+  }
+}
+
+/** Jak často server posouvá časovače miniher. */
+const TICK_MS = 200;
 
 /** Zpráva od klienta je nedůvěryhodná: propustí jen známé typy se správnými poli. */
 export function parseIntent(raw: unknown): Intent | null {
@@ -37,6 +68,14 @@ export function parseIntent(raw: unknown): Intent | null {
   const isId = (v: unknown): v is string => typeof v === 'string' && v.length > 0 && v.length <= 64;
   switch (r.type) {
     case 'ackRole':
+    case 'ackSecretCard':
+    case 'drawMinigame':
+    case 'rerollMinigame':
+    case 'confirmMinigame':
+    case 'startMinigame':
+    case 'skipMinigame':
+    case 'showClue':
+    case 'afterClue':
     case 'startVote':
     case 'closeVote':
     case 'startNight':
@@ -49,6 +88,15 @@ export function parseIntent(raw: unknown): Intent | null {
       return isId(r.targetId) ? { type: r.type, targetId: r.targetId } : null;
     case 'kick':
       return isId(r.playerId) ? { type: 'kick', playerId: r.playerId } : null;
+    case 'minigameInput':
+    case 'minigameModerator':
+      return 'payload' in r && isSmallJson(r.payload) ? { type: r.type, payload: r.payload } : null;
+    case 'handoffPick':
+      return r.targetId === null || isId(r.targetId) ? { type: 'handoffPick', targetId: r.targetId as string | null } : null;
+    case 'chooseMinigame':
+      return isId(r.id) ? { type: 'chooseMinigame', id: r.id } : null;
+    case 'setMinigames':
+      return typeof r.enabled === 'boolean' ? { type: 'setMinigames', enabled: r.enabled } : null;
     case 'startGame':
       return typeof r.traitorCount === 'number' ? { type: 'startGame', traitorCount: r.traitorCount } : null;
     default:
@@ -106,6 +154,17 @@ export function attachGame(io: GameServer, options: HubOptions) {
     broadcast();
     return { ok: true };
   }
+
+  // Časovače miniher: server posouvá čas a pohledy rozešle, jen když se něco změnilo.
+  const timer = setInterval(() => {
+    if (state.phase !== 'MINIGAME') return;
+    const result = apply(state, { kind: 'system' }, { type: 'tick', now: Date.now() }, rng);
+    if (!result.ok) return;
+    const changed = JSON.stringify(result.state.minigame) !== JSON.stringify(state.minigame);
+    state = result.state;
+    if (changed) broadcast();
+  }, TICK_MS);
+  timer.unref();
 
   function newPlayerId(): string {
     let id: string;
@@ -196,5 +255,6 @@ export function attachGame(io: GameServer, options: HubOptions) {
   return {
     /** Jen pro testy a ladění. */
     getState: () => state,
+    stop: () => clearInterval(timer),
   };
 }

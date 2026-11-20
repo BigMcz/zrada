@@ -3,6 +3,7 @@
 export type Phase =
   | 'LOBBY' // hráči se připojují
   | 'ROLES' // hráči si prohlížejí role
+  | 'MINIGAME' // minihra na začátku dne (Rozšíření 2)
   | 'VOTE' // kulatý stůl, hlasování
   | 'VOTE_RESULT' // výsledek hlasování
   | 'NIGHT' // Zrádci vybírají oběť, Věrní tipují
@@ -31,6 +32,71 @@ export function recommendedTraitors(playerCount: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// Minihry (Rozšíření 2)
+// ---------------------------------------------------------------------------
+
+/** Id minihry; seznam v server/minigames/registry.ts. */
+export type MinigameId = string;
+
+/** Společné kroky každé minihry. */
+export type MinigameStep = 'DRAW' | 'INTRO' | 'PLAY' | 'RESULT' | 'CLUE' | 'HANDOFF' | 'DONE';
+
+/** Stopa: veřejná data z minihry, o kterých se mluví u kulatého stolu. */
+export interface Clue {
+  kind: 'table' | 'list';
+  title: string;
+  rows: { playerId?: string; label: string; value: string }[];
+}
+
+/** Veřejný záznam odehrané minihry v historii kola. */
+export interface PublicMinigameRecord {
+  id: MinigameId;
+  name: string;
+  summary: string;
+  clues: Clue[];
+  potDelta: number;
+  /** Kdo štít vyhrál (veřejné); kdo ho nakonec drží, veřejné není. */
+  shieldWinnerId: string | null;
+  ghostWinnerIds: string[];
+}
+
+/** Minihra v pohledu hráče. Pro Věrného i Zrádce stejná pole stejných typů. */
+export interface PlayerMinigameView {
+  id: MinigameId | null;
+  name: string;
+  step: MinigameStep;
+  rules: string[];
+  traitorRule: string;
+  /** Tajná karta (jen živí hráči v krocích INTRO a dál); stejný počet řádků pro obě role. */
+  secretCard: string[] | null;
+  cardSeen: boolean;
+  /** Pohled konkrétního modulu (jen PLAY a dál). */
+  game: unknown;
+  /** Konec aktuálního odpočtu v čase serveru, nebo null. */
+  endsAt: number | null;
+  /** Výsledek (RESULT a dál). */
+  result: { summary: string; shieldWinnerId: string | null; potDelta: number; ghostWinnerIds: string[] } | null;
+  clues: Clue[] | null;
+  /** Předání štítu (jen HANDOFF, jen živí hráči). */
+  handoff: { isWinner: boolean; myPick: string | null; endsAt: number } | null;
+}
+
+export interface ModeratorMinigameView {
+  id: MinigameId | null;
+  name: string;
+  step: MinigameStep;
+  rerollsLeft: number;
+  /** Minihry, které jde právě ručně vybrat. */
+  choices: { id: MinigameId; name: string }[];
+  secretCardSeen: Record<string, boolean>;
+  game: unknown;
+  endsAt: number | null;
+  result: PlayerMinigameView['result'];
+  clues: Clue[] | null;
+  handoff: { winnerId: string; picks: Record<string, string | null>; endsAt: number } | null;
+}
+
+// ---------------------------------------------------------------------------
 // Pohledy: jediné, co klient o hře dostane. Počítá je server v server/game/views.ts.
 // ---------------------------------------------------------------------------
 
@@ -41,6 +107,8 @@ export interface PublicRoundResult {
   banishedId: string | null;
   /** Kdo zemřel v noci; null = noc ještě neproběhla. */
   murderedId: string | null;
+  /** Minihra tohoto dne, pokud se hrála. */
+  minigame?: PublicMinigameRecord;
 }
 
 /** Hráč tak, jak ho vidí ostatní. */
@@ -111,6 +179,8 @@ export interface PlayerView {
   };
   /** Žebříček duchů; jen na konci hry. */
   ghostBoard?: GhostRank[];
+  /** Jen ve fázi MINIGAME. */
+  minigame?: PlayerMinigameView;
   winner?: Winner;
 }
 
@@ -147,6 +217,12 @@ export interface ModeratorView {
   traitorsDone?: boolean;
   /** Žebříček duchů s aktuálními tipy; moderátor ho vidí po celou hru. */
   ghosts: ModeratorGhost[];
+  /** Zda jsou minihry zapnuté (přepínač v lobby). */
+  minigamesEnabled: boolean;
+  /** Minihry, které jde dnes losovat; prázdné = jen Přeskočit. */
+  minigameAvailable: boolean;
+  /** Jen ve fázi MINIGAME. */
+  minigame?: ModeratorMinigameView;
   winner?: Winner;
   /** Adresa pro připojení hráčů (pro QR kód); doplní server. */
   joinUrl?: string;
@@ -172,6 +248,9 @@ export type Intent =
   | { type: 'vote'; targetId: string }
   | { type: 'nightPick'; targetId: string }
   | { type: 'ghostTip'; targetId: string }
+  | { type: 'ackSecretCard' }
+  | { type: 'minigameInput'; payload: unknown }
+  | { type: 'handoffPick'; targetId: string | null }
   // moderátor
   | { type: 'kick'; playerId: string }
   | { type: 'startGame'; traitorCount: number }
@@ -179,7 +258,17 @@ export type Intent =
   | { type: 'closeVote' }
   | { type: 'startNight' }
   | { type: 'endNight' }
-  | { type: 'newGame' };
+  | { type: 'newGame' }
+  | { type: 'setMinigames'; enabled: boolean }
+  | { type: 'drawMinigame' }
+  | { type: 'rerollMinigame' }
+  | { type: 'chooseMinigame'; id: MinigameId }
+  | { type: 'confirmMinigame' }
+  | { type: 'startMinigame' }
+  | { type: 'minigameModerator'; payload: unknown }
+  | { type: 'skipMinigame' }
+  | { type: 'showClue' }
+  | { type: 'afterClue' };
 
 export type Result = { ok: true } | { ok: false; error: string };
 

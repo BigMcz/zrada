@@ -1,4 +1,14 @@
-import type { Phase, PlayerStatus, PointReason, Role, Winner } from '../../shared/types.js';
+import type {
+  MinigameId,
+  MinigameStep,
+  Phase,
+  PlayerStatus,
+  PointReason,
+  PublicMinigameRecord,
+  Role,
+  Winner,
+} from '../../shared/types.js';
+import type { MinigameResult } from '../minigames/types.js';
 
 /**
  * Úplný stav hry. Existuje jen na serveru a nikdy se neposílá klientům celý;
@@ -22,6 +32,24 @@ export interface RoundResult {
   banishedId: string | null;
   /** Kdo zemřel v noci; null = noc tohoto kola ještě neproběhla. */
   murderedId: string | null;
+  /** Minihra tohoto dne (veřejné údaje). */
+  minigame?: PublicMinigameRecord;
+}
+
+/** Probíhající minihra. Stav modulu je obyčejný objekt (musí jít zkopírovat přes structuredClone). */
+export interface ActiveMinigame {
+  id: MinigameId | null;
+  step: MinigameStep;
+  rerollsLeft: number;
+  secretCardSeen: Record<string, boolean>;
+  state: unknown;
+  result: MinigameResult | null;
+  /** Předání štítu: vítěz a volby všech živých (jen vítězova se počítá). */
+  handoff: { winnerId: string; picks: Record<string, string | null>; endsAt: number } | null;
+}
+
+export interface GameSettings {
+  minigamesEnabled: boolean;
 }
 
 /**
@@ -61,8 +89,21 @@ export interface GameState {
   /** Tipy duchů z uzavřených kol (pro počet tipů a kontrolu bodů). */
   ghostTipLog: GhostTipRecord[];
   points: PointEntry[];
+  settings: GameSettings;
+  /** Probíhající minihra (jen ve fázi MINIGAME). */
+  minigame: ActiveMinigame | null;
+  /** Minihry odehrané v této hře, v pořadí (kvůli losu bez opakování). */
+  minigamesPlayed: MinigameId[];
+  /** Paměť modulů napříč dny (např. kdo už byl duelistou). */
+  minigameMemory: Record<MinigameId, unknown>;
+  /** Kdo drží štít pro noc aktuálního kola. */
+  shieldHolderId: string | null;
+  /** Společný poklad; nikdy neklesne pod 0. */
+  pot: number;
   winner?: Winner;
 }
+
+export const STARTING_POT = 1000;
 
 export function createGame(): GameState {
   return {
@@ -77,5 +118,11 @@ export function createGame(): GameState {
     ghostTips: {},
     ghostTipLog: [],
     points: [],
+    settings: { minigamesEnabled: true },
+    minigame: null,
+    minigamesPlayed: [],
+    minigameMemory: {},
+    shieldHolderId: null,
+    pot: STARTING_POT,
   };
 }

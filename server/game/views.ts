@@ -10,6 +10,8 @@ import {
   type PublicRoundResult,
 } from '../../shared/types.js';
 import { isTippingGhost, pointsOf } from './rules.js';
+import { drawCandidates } from '../minigames/framework.js';
+import { moderatorMinigameView, playerMinigameView } from '../minigames/views.js';
 import type { GameState, Player } from './state.js';
 
 /*
@@ -37,7 +39,12 @@ function ghostRanks(state: GameState): GhostRank[] {
 }
 
 function publicHistory(state: GameState): PublicRoundResult[] {
-  return state.history.map((h) => ({ round: h.round, banishedId: h.banishedId, murderedId: h.murderedId }));
+  return state.history.map((h) => {
+    const out: PublicRoundResult = { round: h.round, banishedId: h.banishedId, murderedId: h.murderedId };
+    // Záznam minihry obsahuje jen veřejné údaje (shrnutí, stopa, kdo štít vyhrál).
+    if (h.minigame) out.minigame = structuredClone(h.minigame);
+    return out;
+  });
 }
 
 function publicPlayer(state: GameState, p: Player): PublicPlayer {
@@ -104,6 +111,9 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
       tipsGiven: tipsGiven(state, me.id),
     };
   }
+  const minigame = playerMinigameView(state, me);
+  if (minigame) view.minigame = minigame;
+
   if (state.phase === 'ENDED') {
     const board = ghostRanks(state);
     if (board.length > 0) view.ghostBoard = board;
@@ -140,7 +150,14 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
       const target = state.players.find((p) => p.id === tip);
       return { ...g, tip, tipOnTraitor: target ? target.role === 'TRAITOR' : null };
     }),
+    minigamesEnabled: state.settings.minigamesEnabled,
+    minigameAvailable:
+      state.settings.minigamesEnabled &&
+      (state.phase === 'ROLES' || state.phase === 'MORNING') &&
+      drawCandidates(state).length > 0,
   };
+  const minigame = moderatorMinigameView(state);
+  if (minigame) view.minigame = minigame;
 
   if (state.phase === 'NIGHT') {
     view.traitorsDone = state.players
