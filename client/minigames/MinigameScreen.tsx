@@ -79,12 +79,19 @@ export function MinigameScreen({ view, tag, corner, status }: Props) {
       );
     }
 
-    case 'RESULT':
+    case 'RESULT': {
+      // Nad výsledkem i konečný stav hry (otočené karty duelu, odhalené nabídky aukce).
+      const ui = mg.id ? MINIGAME_UI[mg.id] : undefined;
+      const Comp = alive ? ui?.Player : ui?.Ghost;
       return (
         <Screen {...common}>
+          {Comp && mg.game !== null && (
+            <Comp game={mg.game} nameOf={(id: string) => name(id)} send={() => undefined} />
+          )}
           <Result mg={mg} name={name} />
         </Screen>
       );
+    }
 
     case 'CLUE':
       return (

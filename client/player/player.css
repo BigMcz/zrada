@@ -632,3 +632,74 @@
   max-height: 90dvh;
   overflow-y: auto;
 }
+
+/* --- Rozdělit, nebo ukrást --- */
+
+.duel-names {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 28px;
+}
+
+.choice-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.choice-cards.three {
+  grid-template-columns: 1fr;
+}
+
+.choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.choice-cards.three .choice-card {
+  min-height: 64px;
+  font-size: 22px;
+}
+
+.choice-card.selected {
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+
+.choice-card.revealed {
+  cursor: default;
+  animation: reveal 0.4s ease-out;
+}
+
+.choice-card.revealed small {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.choice-card.revealed.steal {
+  border-color: var(--blood);
+  color: var(--traitor-text);
+}
+
+.choice-card.revealed.split {
+  border-color: var(--loyal);
+  color: var(--loyal-text);
+}

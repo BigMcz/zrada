@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { AuctionModerator, AuctionPlayer } from './auction/Auction';
+import { SplitStealModerator, SplitStealPlayer } from './splitSteal/SplitSteal';
 
 export interface MinigamePlayerProps<G = unknown> {
   game: G;
@@ -28,4 +29,5 @@ export interface MinigameUi {
 /** Obrazovky miniher podle id ze serveru. */
 export const MINIGAME_UI: Record<string, MinigameUi> = {
   AUCTION: { Player: AuctionPlayer, Moderator: AuctionModerator },
+  SPLIT_STEAL: { Player: SplitStealPlayer, Moderator: SplitStealModerator },
 };
