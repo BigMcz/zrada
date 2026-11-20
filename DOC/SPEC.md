@@ -336,7 +336,7 @@ Platí vše dosavadní a navíc:
 ### Rozšíření NEobsahuje
 
 - Velkou obrazovku pro projektor a její scény
-- Minihry Trezor, Zneškodni bombu, Rytmus, Insider kvíz a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3)
+- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4)
 - Utrácení osobních bodů
 - Veřejný režim štítu (jen tajné předání)
 - Podrobné nastavení (osudí, délky časovačů, počáteční poklad); používají se výchozí hodnoty
@@ -435,3 +435,88 @@ Platí vše z Rozšíření 2 a navíc:
 | --- | --- | --- |
 | H1 | Pravidla Horkého bramboru na serveru a testy, včetně utajení ručičky tlaku a odpojeného držitele | Testy prochází |
 | H2 | Obrazovky na telefonu (bomba, mřížka jmen, ručička tlaku), u ducha a v konzoli, rozšíření robota `npm run e2e` | Horký brambor jde odehrát v 5 kartách prohlížeče, robot prochází |
+
+## Rozšíření 4: Insider kvíz
+
+Čtvrtá minihra do osudí. Podrobně v [analýze miniher](minihry-analyza.md), kapitola 6. Rámec miniher zůstává beze změny.
+
+### Cíl
+
+Krátký kvíz, kde Zrádci mají nápovědu se správnou odpovědí. Kdo odpovídá rychle hned po nápovědě a skoro vždy správně, je podezřelý.
+
+### Pravidla
+
+- Hrají všichni živí hráči, podmínka **aspoň 3 živí**.
+- **7 otázek**, každá se **4 možnostmi** a časem **15 s**.
+- Po **3 s** se u jedné možnosti rozsvítí **svíčka** (nápověda).
+- Hráč ťukne na odpověď. **Odpověď nejde změnit.**
+- Otázka skončí po 15 s, nebo dřív, když odpoví všichni připojení živí hráči.
+- Po otázce se na **4 s** ukáže správná odpověď a průběžné pořadí. Pak sama naskočí další otázka. Moderátor může mezikrok zkrátit tlačítkem **Další otázka**.
+- **Body kvízu:** správně 100 + bonus za rychlost až 50 (lineárně, 50 při okamžité odpovědi, 0 na konci času). Špatně nebo bez odpovědi 0. Body kvízu nejsou osobní body.
+
+### Výhoda Zrádců: svíčka
+
+- Zrádcům svíčka ukazuje **správnou** odpověď, Věrným **náhodnou** (může být i správná).
+- Svíčka se objeví u všech ve stejnou chvíli a pole nápovědy má každý telefon. Přes rameno nejde poznat, čí svíčka je pravá.
+- Pravidlo je veřejné: „Nápověda ukazuje Zrádcům správnou odpověď. Věrným ukazuje náhodnou.“
+- Tajná karta: Věrný „Tvoje nápověda je náhodná.“ / „Spoléhej na sebe.“; Zrádce „Tvoje nápověda je vždy správná.“ / „Nebuď ale až moc dobrý.“
+
+### Vyhodnocení
+
+| | |
+| --- | --- |
+| Štít | nejvíc bodů kvízu; při shodě menší součet časů odpovědí; při úplné shodě nikdo |
+| Poklad | +300 × podíl správných odpovědí všech hráčů, zaokrouhleno na desítky |
+| Osobní body | vítěz +2 (jako u ostatních miniher) |
+
+### Otázky
+
+- Jedna obecná sada asi **60 českých otázek** v `server/minigames/quiz/questions/obecne.cs.json` ve formátu z analýzy (sada nemá v sobě nic o rolích ani nápovědách).
+- Otázky se v jedné hře neopakují.
+
+### Stopa
+
+- Konečné pořadí s body kvízu.
+- Tabulka hráč → **kolikrát odpověděl do 1,5 s po rozsvícení svíčky a kolikrát z toho správně**.
+
+### Duchové
+
+- Hrají **stejný kvíz mimo soutěž**, se stejnými otázkami a body za rychlost, **bez svíčky**.
+- Mají vlastní pořadí, které se do pořadí o štít nepočítá.
+- Nejlepší duch 3 body, druhý 2, třetí 1 (při shodě bodů kvízu stejné místo).
+
+### Utajení
+
+Platí vše z Rozšíření 2 a navíc:
+
+- Správná odpověď nejde do žádného telefonu, dokud otázka neskončí.
+- Nápověda jde do telefonu až po 3 s. Pohled Věrného i Zrádce má v každém okamžiku stejná pole.
+- Duch nápovědu nedostává vůbec.
+
+### Obrazovky
+
+- **Telefon:** otázka nahoře, čtyři velké dlaždice odpovědí pod sebou, malá svíčka u jedné z nich, odpočet. Po odpovědi „Odpověď zamčena“. Po otázce správná odpověď a průběžné pořadí.
+- **Duch:** stejný kvíz bez svíčky, vlastní pořadí duchů.
+- **Konzole moderátora:** otázka, správná odpověď, kdo jak odpověděl, kde mají Věrní náhodné svíčky, průběžné pořadí, tlačítko Další otázka.
+
+### Rozšíření NEobsahuje
+
+- Výběr sad otázek v nastavení
+- Vlastní sadu otázek zákazníka
+- Otázky z lobby („Pes, nebo kočka?“)
+- Neopakování otázek napříč hrami celého večera
+
+### Hotovo, když
+
+1. Insider kvíz se losuje s ostatními minihrami a jde odehrát v 5 kartách prohlížeče od losu po kulatý stůl.
+2. Body za rychlost, konec otázky po odpovědi všech, štít, poklad a body duchů odpovídají pravidlům (ověřeno testy).
+3. **Utajení:** testy ověří, že telefon nedostane správnou odpověď před koncem otázky ani nápovědu před 3 s, že Věrný a Zrádce mají stejný tvar pohledu a že Zrádce má svíčku u správné odpovědi.
+4. Banka otázek má aspoň 60 platných otázek (ověřeno testem) a v jedné hře se neopakují.
+5. Robot `npm run e2e` odehraje hry i s kvízem bez chyby.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| Q1 | Pravidla kvízu na serveru, banka otázek a testy, včetně utajení odpovědi a nápovědy | Testy prochází |
+| Q2 | Obrazovky telefonu, ducha a konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Kvíz jde odehrát v 5 kartách prohlížeče, robot prochází |
