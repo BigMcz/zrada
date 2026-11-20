@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { Intent, PlayerView, Role } from '../../shared/types';
 import { MAX_NAME_LENGTH } from '../../shared/types';
+import { GhostBoard } from '../components/GhostBoard';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
 import { PrimaryButton, Screen } from '../components/Screen';
@@ -373,6 +374,7 @@ function Ended({ view, tag }: ScreenProps) {
       <p className="center">Vyhráli</p>
       <p className={`headline center ${roleClass(view.winner)}`}>{view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}</p>
       <PlayerList view={view} />
+      {view.ghostBoard && <GhostBoard ghosts={view.ghostBoard} nameOf={(id) => nameOf(view.players, id)} />}
     </Screen>
   );
 }

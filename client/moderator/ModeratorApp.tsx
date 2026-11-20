@@ -1,6 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, type ReactNode } from 'react';
 import { MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } from '../../shared/types';
+import { GhostBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { send, useConnection } from '../socket';
 
@@ -178,7 +179,58 @@ function PlayersTable({ view, hideRoles }: { view: ModeratorView; hideRoles: boo
           <ul className="console-players">{out.map(row)}</ul>
         </>
       )}
+      <GhostsPanel view={view} hideRoles={hideRoles} />
     </section>
+  );
+}
+
+/**
+ * Duchové pro moderátora: průběžné pořadí, body a koho kdo právě tipuje.
+ * Správnost tipu a body se při „Skrýt role“ zakryjí – prozrazovaly by Zrádce.
+ */
+/** Duchové v pořadí připojení hráčů (server je posílá seřazené podle bodů). */
+function inPlayerOrder(view: ModeratorView) {
+  const order = view.players.map((p) => p.id);
+  return [...view.ghosts].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+}
+
+function GhostsPanel({ view, hideRoles }: { view: ModeratorView; hideRoles: boolean }) {
+  if (view.ghosts.length === 0) return null;
+  const name = (id: string | null) => nameOf(view.players, id);
+
+  return (
+    <>
+      <h3>Duchové</h3>
+      <ul className="console-players ghosts">
+        {/* Při skrytí rolí ani pořadí neprozradí, kdo tipoval správně. */}
+        {(hideRoles ? inPlayerOrder(view).map((ghost) => ({ ghost, place: null })) : rankGhosts(view.ghosts)).map(({ ghost: g, place }) => (
+          <li key={g.id}>
+            <span className="place">{place ?? '–'}</span>
+            <span className="grow name">
+              {name(g.id)}
+              <small>
+                {!g.canTip
+                  ? 'Zrádce, netipuje'
+                  : g.tip
+                    ? `tipuje: ${name(g.tip)}`
+                    : '… zatím netipoval/a'}
+              </small>
+            </span>
+            {g.canTip && g.tip && (
+              <span
+                className={
+                  hideRoles ? 'role-badge hidden' : `role-badge ${g.tipOnTraitor ? 'traitor' : 'loyal'}`
+                }
+                title={hideRoles ? '' : g.tipOnTraitor ? 'tip míří na Zrádce' : 'tip míří na Věrného'}
+              >
+                {hideRoles ? '•' : g.tipOnTraitor ? 'Z' : 'V'}
+              </span>
+            )}
+            <span className="state">{g.canTip ? (hideRoles ? '• bodů' : `${g.points} ${pointsWord(g.points)}`) : ''}</span>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -327,6 +379,7 @@ function Ended({ view }: { view: ModeratorView }) {
             </li>
           ))}
         </ul>
+        <GhostBoard ghosts={view.ghosts} nameOf={(id) => nameOf(view.players, id)} />
         <button type="button" className="console-primary" disabled={busy} onClick={() => run({ type: 'newGame' })}>
           Nová hra
         </button>
