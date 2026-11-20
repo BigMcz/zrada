@@ -31,6 +31,30 @@ export interface AuctionState {
   ghostGuesses: Record<string, number>;
 }
 
+/** Pohled ducha: jen veřejné údaje a vlastní tip. */
+export interface AuctionGhostView {
+  stage: AuctionStage;
+  myGuess: number | null;
+  /** Nejvyšší možný součet (10 × počet hráčů). */
+  maxSum: number;
+  submitted: number;
+  total: number;
+  revealed: { playerId: string; bid: number }[];
+}
+
+/** Body duchů: nejbližší tip 3 (při shodě všichni nejbližší), jinak tip do 3 žetonů 1. */
+export function auctionGhostScores(guesses: Record<string, number>, sum: number): Record<string, number> {
+  const entries = Object.entries(guesses);
+  if (entries.length === 0) return {};
+  const best = Math.min(...entries.map(([, g]) => Math.abs(g - sum)));
+  return Object.fromEntries(
+    entries.map(([id, g]) => {
+      const d = Math.abs(g - sum);
+      return [id, d === best ? 3 : d <= 3 ? 1 : 0];
+    }),
+  );
+}
+
 /** Pohled hráče: stejná pole pro Věrného i Zrádce. */
 export interface AuctionPlayerView {
   stage: AuctionStage;
@@ -74,6 +98,7 @@ export const auction: MinigameModule<AuctionState> = {
       'Nejdřív minuta na domluvu nahlas, pak 30 sekund na přihazování.',
     ],
     traitorRule: 'Zrádcům nevadí, když poklad klesne. Spíš naopak.',
+    ghostRule: 'Duchové tipují součet všech nabídek. Nejbližší tip 3 body, tip vzdálený nejvýš 3 žetony 1 bod.',
   },
 
   canRun: (ctx) => ctx.pot >= MIN_POT,
@@ -109,6 +134,13 @@ export const auction: MinigameModule<AuctionState> = {
     const bid = (input as { bid?: unknown } | null)?.bid;
     if (!isInt(bid, 0, MAX_BID)) return null;
     return { ...state, bids: { ...state.bids, [playerId]: bid } };
+  },
+
+  applyGhost(state, ghostId, input) {
+    if (state.stage !== 'TALK' && state.stage !== 'BID') return null;
+    const guess = (input as { guess?: unknown } | null)?.guess;
+    if (!isInt(guess, 0, MAX_BID * state.players.length)) return null;
+    return { ...state, ghostGuesses: { ...state.ghostGuesses, [ghostId]: guess } };
   },
 
   applyModerator(state, input, now, rng) {
@@ -170,11 +202,22 @@ export const auction: MinigameModule<AuctionState> = {
           : `Nejvyšší nabídku (${top}) dalo víc hráčů, štít zůstává v trezoru.`,
       clues,
       playerPoints: {},
-      ghostScores: {},
+      ghostScores: auctionGhostScores(state.ghostGuesses, sum),
     };
   },
 
   endsAt: (state) => state.endsAt,
+
+  viewForGhost(state, ghostId): AuctionGhostView {
+    return {
+      stage: state.stage,
+      myGuess: state.ghostGuesses[ghostId] ?? null,
+      maxSum: MAX_BID * state.players.length,
+      submitted: Object.keys(state.bids).length,
+      total: state.players.length,
+      revealed: revealedList(state),
+    };
+  },
 
   viewForPlayer(state, playerId): AuctionPlayerView {
     return {

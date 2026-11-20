@@ -1,7 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, type ReactNode } from 'react';
 import { MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } from '../../shared/types';
-import { GhostBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
+import { GhostBoard, PlayerBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { send, useConnection } from '../socket';
 import { MinigamePanel } from './MinigamePanel';
@@ -446,6 +446,15 @@ function Ended({ view }: { view: ModeratorView }) {
             </li>
           ))}
         </ul>
+        {view.history.some((h) => h.minigame) && (
+          <p className="phase-detail">Vítězové si dělí poklad: {view.pot.toLocaleString('cs')} bodů</p>
+        )}
+        {Object.values(view.playerPoints).some((n) => n !== 0) && (
+          <PlayerBoard
+            board={Object.entries(view.playerPoints).map(([id, points]) => ({ id, points }))}
+            nameOf={(id) => nameOf(view.players, id)}
+          />
+        )}
         <GhostBoard ghosts={view.ghosts} nameOf={(id) => nameOf(view.players, id)} />
         <button type="button" className="console-primary" disabled={busy} onClick={() => run({ type: 'newGame' })}>
           Nová hra

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AuctionModeratorView, AuctionPlayerView } from '../../../server/minigames/auction/index';
+import type { AuctionGhostView, AuctionModeratorView, AuctionPlayerView } from '../../../server/minigames/auction/index';
 import { tokensWord } from '../../../shared/words';
 import type { MinigamePlayerProps, MinigameModeratorProps } from '../registry';
 
@@ -60,7 +60,53 @@ export function AuctionPlayer({ game, nameOf, send }: MinigamePlayerProps<Auctio
   );
 }
 
-function RevealList({ game, nameOf }: { game: AuctionPlayerView; nameOf: (id: string) => string }) {
+/** Duch tipuje součet všech nabídek; vidí jen veřejné údaje. */
+export function AuctionGhost({ game, nameOf, send }: MinigamePlayerProps<AuctionGhostView>) {
+  const [value, setValue] = useState(game.myGuess ?? Math.round(game.maxSum / 4));
+  const open = game.stage === 'TALK' || game.stage === 'BID';
+
+  if (!open) {
+    return (
+      <>
+        <p className="center muted">Odhalování od nejnižší nabídky</p>
+        <RevealList game={game} nameOf={nameOf} />
+        <p className="center muted">Tvůj tip součtu: {game.myGuess ?? 'žádný'}</p>
+      </>
+    );
+  }
+
+  const changed = value !== game.myGuess;
+  return (
+    <>
+      <p className="center">Kolik žetonů přihodí všichni dohromady?</p>
+      <p className="bid-number">{value}</p>
+      <input
+        className="bid-slider"
+        type="range"
+        min={0}
+        max={game.maxSum}
+        step={1}
+        value={value}
+        onChange={(e) => setValue(Number(e.target.value))}
+        aria-label="Tip součtu nabídek"
+      />
+      <button type="button" className="primary" disabled={!changed} onClick={() => send({ guess: value })}>
+        {changed ? 'Tipnout součet: ' + value : 'Tip odevzdán'}
+      </button>
+      <p className="center muted">
+        Přihodilo {game.submitted} z {game.total}
+      </p>
+    </>
+  );
+}
+
+function RevealList({
+  game,
+  nameOf,
+}: {
+  game: { revealed: { playerId: string; bid: number }[]; total: number };
+  nameOf: (id: string) => string;
+}) {
   return (
     <ul className="reveal-list">
       {game.revealed.map((r) => (

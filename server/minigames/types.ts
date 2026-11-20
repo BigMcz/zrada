@@ -39,6 +39,8 @@ export interface MinigameModule<S = any> {
     rules: string[];
     /** Veřejné pravidlo o výhodě Zrádců. */
     traitorRule: string;
+    /** Co v minihře dělají duchové (prázdné = jen sledují). */
+    ghostRule?: string;
   };
   /** Další podmínka losu (např. aukce potřebuje poklad aspoň 200). */
   canRun?(ctx: MinigameContext): boolean;

@@ -58,7 +58,9 @@ export function MinigameScreen({ view, tag, corner, status }: Props) {
           {mg.secretCard ? (
             <SealedCard lines={mg.secretCard} />
           ) : (
-            <p className="muted center">Jako duch tuhle minihru jen sleduješ.</p>
+            <p className="center ghost-winner">
+              {mg.ghostRule ? 'Úloha duchů: ' + mg.ghostRule : 'Jako duch tuhle minihru jen sleduješ.'}
+            </p>
           )}
           {errorLine}
         </Screen>

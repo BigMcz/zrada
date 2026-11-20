@@ -71,6 +71,8 @@ export interface PlayerMinigameView {
   step: MinigameStep;
   rules: string[];
   traitorRule: string;
+  /** Úloha duchů v této minihře, nebo null. */
+  ghostRule: string | null;
   /** Tajná karta (jen živí hráči v krocích INTRO a dál); stejný počet řádků pro obě role. */
   secretCard: string[] | null;
   cardSeen: boolean;
@@ -190,6 +192,8 @@ export interface PlayerView {
   };
   /** Žebříček duchů; jen na konci hry. */
   ghostBoard?: GhostRank[];
+  /** Žebříček všech hráčů podle osobních bodů; jen na konci hry, když se hrály minihry nebo padly body. */
+  playerBoard?: { id: string; points: number }[];
   /** Jen ve fázi MINIGAME. */
   minigame?: PlayerMinigameView;
   winner?: Winner;
@@ -229,6 +233,8 @@ export interface ModeratorView {
   /** Žebříček duchů s aktuálními tipy; moderátor ho vidí po celou hru. */
   ghosts: ModeratorGhost[];
   pot: number;
+  /** Osobní body všech hráčů včetně skrytých (moderátor vidí vše). */
+  playerPoints: Record<string, number>;
   /** Kdo drží štít pro dnešní noc. */
   shieldHolderId: string | null;
   /** Zda jsou minihry zapnuté (přepínač v lobby). */

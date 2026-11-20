@@ -1,6 +1,8 @@
 import type {
   Bet,
   Choice,
+  GhostBet,
+  SplitStealGhostView,
   SplitStealModeratorView,
   SplitStealPlayerView,
 } from '../../../server/minigames/splitSteal/index';
@@ -13,7 +15,7 @@ const BET_LABEL: Record<Bet, string> = {
   BOTH_STEAL: 'Oba ukradnou',
 };
 
-function DuelHeader({ game, nameOf }: { game: SplitStealPlayerView | SplitStealModeratorView; nameOf: (id: string) => string }) {
+function DuelHeader({ game, nameOf }: { game: { duelists: [string, string] }; nameOf: (id: string) => string }) {
   return (
     <p className="duel-names">
       <b>{nameOf(game.duelists[0])}</b>
@@ -100,6 +102,53 @@ export function SplitStealPlayer({ game, nameOf, send }: MinigamePlayerProps<Spl
           ? `Tvoje volba: ${game.myChoice ? CHOICE_LABEL[game.myChoice] : 'Rozdělit (nezvoleno)'}`
           : `Tvoje sázka: ${game.myBet ? BET_LABEL[game.myBet] : 'žádná'}`}
       </p>
+    </>
+  );
+}
+
+/** Duch sází přesněji, kdo ukradne; vidí jen veřejné údaje. */
+export function SplitStealGhost({ game, nameOf, send }: MinigamePlayerProps<SplitStealGhostView>) {
+  const [a, b] = game.duelists;
+  const labels: Record<GhostBet, string> = {
+    BOTH_SPLIT: 'Oba rozdělí',
+    A_STEALS: 'Ukradne ' + nameOf(a),
+    B_STEALS: 'Ukradne ' + nameOf(b),
+    BOTH_STEAL: 'Oba ukradnou',
+  };
+  const open = game.stage === 'TALK' || game.stage === 'CHOOSE' || game.stage === 'READY';
+
+  return (
+    <>
+      <DuelHeader game={game} nameOf={nameOf} />
+      {game.revealed ? (
+        <div className="choice-cards">
+          {game.duelists.map((d) => (
+            <div key={d} className={'choice-card revealed ' + (game.revealed![d] === 'STEAL' ? 'steal' : 'split')}>
+              <small>{nameOf(d)}</small>
+              {CHOICE_LABEL[game.revealed![d]]}
+            </div>
+          ))}
+        </div>
+      ) : open ? (
+        <>
+          <p className="center">Jak duel dopadne?</p>
+          <div className="choice-cards three">
+            {(Object.keys(labels) as GhostBet[]).map((bet) => (
+              <button
+                key={bet}
+                type="button"
+                className={game.myBet === bet ? 'choice-card selected' : 'choice-card'}
+                onClick={() => send({ ghostBet: bet })}
+              >
+                {labels[bet]}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="lead center">Volby jsou zamčené. Čeká se na odhalení.</p>
+      )}
+      <p className="center muted">Tvoje sázka: {game.myBet ? labels[game.myBet] : 'žádná'}</p>
     </>
   );
 }

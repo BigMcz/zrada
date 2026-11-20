@@ -147,3 +147,16 @@ body {
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* Žebříček hráčů: stejný styl jako žebříček duchů, ale zlatý */
+.ghost-board.player-board {
+  border-color: var(--gold-dim);
+  background: rgba(212, 169, 60, 0.05);
+}
+
+.ghost-board.player-board h2,
+.ghost-board.player-board .place,
+.ghost-board.player-board li.first .grow,
+.ghost-board.player-board li.first .points {
+  color: var(--gold);
+}

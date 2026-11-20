@@ -38,6 +38,13 @@ function ghostRanks(state: GameState): GhostRank[] {
     .sort((a, b) => b.points - a.points);
 }
 
+/** Všichni hráči seřazení podle osobních bodů (včetně skrytých – jen pro konec hry a moderátora). */
+function playerBoard(state: GameState): { id: string; points: number }[] {
+  return state.players
+    .map((p) => ({ id: p.id, points: pointsOf(state, p.id, true) }))
+    .sort((a, b) => b.points - a.points);
+}
+
 function publicHistory(state: GameState): PublicRoundResult[] {
   return state.history.map((h) => {
     const out: PublicRoundResult = { round: h.round, banishedId: h.banishedId, murderedId: h.murderedId };
@@ -125,6 +132,7 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
   if (state.phase === 'ENDED') {
     const board = ghostRanks(state);
     if (board.length > 0) view.ghostBoard = board;
+    if (state.points.length > 0 || state.minigamesPlayed.length > 0) view.playerBoard = playerBoard(state);
   }
   if (state.winner) view.winner = state.winner;
   return view;
@@ -159,6 +167,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
       return { ...g, tip, tipOnTraitor: target ? target.role === 'TRAITOR' : null };
     }),
     pot: state.pot,
+    playerPoints: Object.fromEntries(state.players.map((p) => [p.id, pointsOf(state, p.id, true)])),
     shieldHolderId: state.shieldHolderId,
     minigamesEnabled: state.settings.minigamesEnabled,
     minigameAvailable:

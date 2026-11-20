@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { Intent, PlayerView, Role } from '../../shared/types';
 import { MAX_NAME_LENGTH } from '../../shared/types';
-import { GhostBoard } from '../components/GhostBoard';
+import { GhostBoard, PlayerBoard } from '../components/GhostBoard';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
 import { ClueView } from '../components/ClueView';
@@ -428,7 +428,9 @@ function Ended({ view, tag }: ScreenProps) {
     <Screen tag={tag}>
       <p className="center">Vyhráli</p>
       <p className={`headline center ${roleClass(view.winner)}`}>{view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}</p>
+      {view.playerBoard && <p className="center">Vítězové si dělí poklad: {view.pot.toLocaleString('cs')} bodů</p>}
       <PlayerList view={view} />
+      {view.playerBoard && <PlayerBoard board={view.playerBoard} nameOf={(id) => nameOf(view.players, id)} />}
       {view.ghostBoard && <GhostBoard ghosts={view.ghostBoard} nameOf={(id) => nameOf(view.players, id)} />}
     </Screen>
   );

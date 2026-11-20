@@ -38,6 +38,31 @@ export function GhostBoard({ ghosts, nameOf }: Props) {
   );
 }
 
+/** Žebříček všech hráčů podle osobních bodů (konec hry). */
+export function PlayerBoard({ board, nameOf }: { board: { id: string; points: number }[]; nameOf: (id: string) => string }) {
+  if (board.length === 0) return null;
+  const sorted = [...board].sort((a, b) => b.points - a.points);
+  return (
+    <section className="ghost-board player-board">
+      <h2>Žebříček hráčů</h2>
+      <ol>
+        {sorted.map((p) => {
+          const place = sorted.findIndex((x) => x.points === p.points) + 1;
+          return (
+            <li key={p.id} className={place === 1 ? 'first' : ''}>
+              <span className="place">{place}</span>
+              <span className="grow">{nameOf(p.id)}</span>
+              <span className="points">
+                {p.points} {pointsWord(p.points)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
 export function pointsWord(n: number): string {
   if (n === 1) return 'bod';
   if (n >= 2 && n <= 4) return 'body';

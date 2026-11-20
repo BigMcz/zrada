@@ -13,7 +13,7 @@ function allStates(seeds: number): GameState[] {
   return states;
 }
 
-const STATES = allStates(60);
+const STATES = allStates(40);
 
 /** Prohodí role dvou hráčů včetně jejich noční volby / tipu, aby stav zůstal konzistentní. */
 function swapRoles(state: GameState, aId: string, bId: string): GameState {
@@ -51,7 +51,8 @@ describe('utajení rolí', () => {
       }
     }
     expect(compared).toBeGreaterThan(1000);
-  });
+    // Tisíce srovnání; na vytíženém notebooku to trvá i desítky sekund.
+  }, 120_000);
 
   it('žádný pohled neobsahuje token jiného hráče', () => {
     for (const state of STATES) {

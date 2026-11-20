@@ -12,6 +12,16 @@ export const BET_POT_BONUS = 20;
 export type Choice = 'SPLIT' | 'STEAL';
 export type Bet = 'BOTH_SPLIT' | 'ONE_STEALS' | 'BOTH_STEAL';
 export type DuelStage = 'READY' | 'TALK' | 'CHOOSE' | 'REVEAL' | 'DONE';
+/** Přesnější sázka duchů: kdo přesně ukradne. */
+export type GhostBet = 'BOTH_SPLIT' | 'A_STEALS' | 'B_STEALS' | 'BOTH_STEAL';
+const GHOST_BETS: GhostBet[] = ['BOTH_SPLIT', 'A_STEALS', 'B_STEALS', 'BOTH_STEAL'];
+
+export interface SplitStealGhostView {
+  stage: DuelStage;
+  duelists: [string, string];
+  myBet: GhostBet | null;
+  revealed: Record<string, Choice> | null;
+}
 
 export interface SplitStealState {
   players: string[];
@@ -24,8 +34,8 @@ export interface SplitStealState {
   choices: Record<string, Choice>;
   /** Sázky živých diváků. */
   bets: Record<string, Bet>;
-  /** Sázky duchů (krok M5). */
-  ghostBets: Record<string, string>;
+  /** Sázky duchů. */
+  ghostBets: Record<string, GhostBet>;
   /** Kdo už byl v této hře duelistou (paměť napříč dny). */
   pastDuelists: string[];
 }
@@ -59,6 +69,21 @@ export const CHOICE_LABEL: Record<Choice, string> = { SPLIT: 'Rozdělit', STEAL:
 
 const choiceOf = (s: SplitStealState, id: string): Choice => s.choices[id] ?? 'SPLIT';
 
+export function ghostOutcomeOf(s: SplitStealState): GhostBet {
+  const [a, b] = s.duelists;
+  const sa = choiceOf(s, a) === 'STEAL';
+  const sb = choiceOf(s, b) === 'STEAL';
+  return sa && sb ? 'BOTH_STEAL' : sa ? 'A_STEALS' : sb ? 'B_STEALS' : 'BOTH_SPLIT';
+}
+
+/** Body duchů: přesná sázka 3; „někdo ukradl“, ale špatný duelista 1. */
+export function duelGhostScores(bets: Record<string, GhostBet>, outcome: GhostBet): Record<string, number> {
+  const single = (b: GhostBet) => b === 'A_STEALS' || b === 'B_STEALS';
+  return Object.fromEntries(
+    Object.entries(bets).map(([id, bet]) => [id, bet === outcome ? 3 : single(bet) && single(outcome) ? 1 : 0]),
+  );
+}
+
 export function outcomeOf(s: SplitStealState): Bet {
   const steals = s.duelists.filter((d) => choiceOf(s, d) === 'STEAL').length;
   return steals === 0 ? 'BOTH_SPLIT' : steals === 1 ? 'ONE_STEALS' : 'BOTH_STEAL';
@@ -87,6 +112,7 @@ export const splitSteal: MinigameModule<SplitStealState> = {
       'Každá správná sázka diváka přidá do pokladu 20 a divákovi 1 bod.',
     ],
     traitorRule: 'Zrádcům štít nic nedá, ale krádež rozbíjí důvěru. A to se jim hodí.',
+    ghostRule: 'Duchové sázejí přesněji: kdo přesně ukradne. Přesná sázka 3 body, správně „někdo ukradl“, ale špatný duelista 1 bod.',
   },
 
   init(ctx, rng) {
@@ -124,6 +150,13 @@ export const splitSteal: MinigameModule<SplitStealState> = {
     }
     if (!BETS.includes(i.bet as Bet)) return null;
     return { ...state, bets: { ...state.bets, [playerId]: i.bet as Bet } };
+  },
+
+  applyGhost(state, ghostId, input) {
+    if (state.stage !== 'TALK' && state.stage !== 'CHOOSE') return null;
+    const bet = (input as { ghostBet?: unknown } | null)?.ghostBet;
+    if (!GHOST_BETS.includes(bet as GhostBet)) return null;
+    return { ...state, ghostBets: { ...state.ghostBets, [ghostId]: bet as GhostBet } };
   },
 
   applyModerator(state, input, now) {
@@ -191,7 +224,7 @@ export const splitSteal: MinigameModule<SplitStealState> = {
             : 'Jeden duelista ukradl, druhý rozdělil.',
       clues,
       playerPoints: Object.fromEntries(winners.map((id) => [id, 1])),
-      ghostScores: {},
+      ghostScores: duelGhostScores(state.ghostBets, ghostOutcomeOf(state)),
       memory: { duelists: [...state.pastDuelists, a, b] },
     };
   },
@@ -205,6 +238,18 @@ export const splitSteal: MinigameModule<SplitStealState> = {
       amDuelist: state.duelists.includes(playerId),
       myChoice: state.choices[playerId] ?? null,
       myBet: state.bets[playerId] ?? null,
+      revealed:
+        state.stage === 'DONE'
+          ? Object.fromEntries(state.duelists.map((d) => [d, choiceOf(state, d)]))
+          : null,
+    };
+  },
+
+  viewForGhost(state, ghostId): SplitStealGhostView {
+    return {
+      stage: state.stage,
+      duelists: [...state.duelists] as [string, string],
+      myBet: state.ghostBets[ghostId] ?? null,
       revealed:
         state.stage === 'DONE'
           ? Object.fromEntries(state.duelists.map((d) => [d, choiceOf(state, d)]))

@@ -48,6 +48,7 @@ export function playerMinigameView(state: GameState, me: Player): PlayerMinigame
     step: active.step,
     rules: module ? [...module.meta.rules] : [],
     traitorRule: module ? module.meta.traitorRule : '',
+    ghostRule: module?.meta.ghostRule ?? null,
     secretCard: alive && module && hasState ? module.secretCard(active.state, me.id) : null,
     cardSeen: active.secretCardSeen[me.id] === true,
     game,
