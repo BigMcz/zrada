@@ -336,7 +336,7 @@ Platí vše dosavadní a navíc:
 ### Rozšíření NEobsahuje
 
 - Velkou obrazovku pro projektor a její scény
-- Minihry Trezor, Zneškodni bombu, Rytmus, Horký brambor, Insider kvíz a Fyzickou misi (přijdou později po jedné)
+- Minihry Trezor, Zneškodni bombu, Rytmus, Insider kvíz a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3)
 - Utrácení osobních bodů
 - Veřejný režim štítu (jen tajné předání)
 - Podrobné nastavení (osudí, délky časovačů, počáteční poklad); používají se výchozí hodnoty
@@ -361,3 +361,77 @@ Platí vše dosavadní a navíc:
 | M4 | Rozdělit, nebo ukrást | Duel jde odehrát v 5 kartách prohlížeče |
 | M5 | Duchové v minihrách, vítěz mezi duchy, žebříček hráčů a poklad na konci hry | Duch tipuje v obou minihrách, na konci jsou žebříčky |
 | M6 | Úpravy README a zkouška naživo | Celá hra s minihrami na telefonech |
+
+## Rozšíření 3: Horký brambor
+
+Třetí minihra do osudí. Podrobně v [analýze miniher](minihry-analyza.md), kapitola 5. Rámec miniher (los, tajná karta, stopa, předání štítu, poklad, body) zůstává beze změny.
+
+### Cíl
+
+Rychlá a hlučná minihra, kde se bomba posílá z telefonu na telefon. Zrádci vidí, kdy se blíží výbuch, a proto skoro nikdy nebouchnou. Právě to je stopa.
+
+### Pravidla
+
+- Hrají všichni živí hráči, podmínka **aspoň 3 živí**.
+- Bomba se objeví u **náhodného** hráče, který je v minihře. Kdo ji drží, ťukne na jméno v mřížce a bomba přeletí k němu.
+- Bombu **nejde poslat zpět** tomu, od koho přišla. Když v minihře zbývají jen dva hráči, toto pravidlo neplatí.
+- **Rozbuška** je v 1. kole náhodně 10–25 s a s každým dalším kolem se zkracuje, nejméně na 6–12 s. Délku zná jen server.
+- U koho bomba bouchne, ten **vypadává z minihry** (ne ze hry) a dál jen sleduje. Po pauze 3 s začne další kolo u náhodného zbývajícího hráče.
+- **Poslední přeživší získá štít** a +2 osobní body. **Poklad se nemění.**
+- Když se odpojí ten, kdo drží bombu, po 3 s bomba sama přeskočí k náhodnému připojenému hráči v minihře. Rozbuška běží dál.
+
+### Výhoda Zrádců: ručička tlaku
+
+- Všichni živí hráči vidí **stejnou bombu s ručičkou tlaku** (hodnota 0–1), i když bombu zrovna nedrží.
+- Zrádcům ručička ukazuje **skutečný** zbývající čas, posledních 5 s je v červeném poli. Věrným ručička **náhodně kmitá** v celém rozsahu, takže občas ukáže červenou, i když nehrozí.
+- Kmitání počítá server. Telefon Věrného i Zrádce dostane stejné pole a přes rameno nejde poznat, čí ručička je pravá.
+- Pravidlo je veřejné: „Zrádcům ukazuje ručička tlaku skutečný čas do výbuchu. Ostatním jen náhodně kmitá.“
+- Tajná karta: Věrný „Tvoje ručička tlaku lže. Spoléhej na štěstí.“ / Zrádce „Tvoje ručička tlaku je pravá. Červené pole = zbývá méně než 5 s.“
+
+### Stopa
+
+- Pořadí vyřazení („1. Jana, 2. Karel, …“).
+- Tabulka hráč → **kolikrát se bomby zbavil v posledních 3 s před výbuchem** a **průměrná doba držení**.
+
+### Duchové
+
+- Před první bombou tipují **posledního přeživšího** a **prvního, u koho bouchne**.
+- Správný poslední přeživší 3 body, správný první vyřazený 1 bod.
+- Ručičku tlaku nemají, vidí jen, kdo bombu drží.
+
+### Utajení
+
+Platí vše z Rozšíření 2 a navíc:
+
+- Čas výbuchu ani délka rozbušky nejdou do žádného telefonu. Do pohledu jde jen `pressure`.
+- Pohled Věrného i Zrádce má v každém okamžiku stejná pole, liší se jen hodnota `pressure`.
+
+### Obrazovky
+
+- **Telefon s bombou:** velká bomba, ručička tlaku, pod ní mřížka jmen a výzva „Pošli ji dál!“.
+- **Telefon bez bomby:** stejné rozložení, bomba malá a šedá, nahoře „Bombu má: Karel“, mřížka neaktivní, ručička tlaku zůstává.
+- **Vyřazený z minihry:** „Bouchlo to u tebe“, dál vidí, kdo bombu drží.
+- **Duch:** tipy před první bombou, pak jen kdo drží bombu a kdo vypadl.
+- **Konzole moderátora:** kdo drží bombu, skutečný čas do výbuchu, pořadí vyřazených, tipy duchů.
+
+### Rozšíření NEobsahuje
+
+- Velkou obrazovku s animací výbuchu
+- Zvuk tikání a vibrace (telefony dál nesmí vydávat zvuk)
+- Nastavení délky rozbušky
+
+### Hotovo, když
+
+1. Horký brambor se losuje s ostatními minihrami a jde odehrát v 5 kartách prohlížeče od losu po kulatý stůl.
+2. Bomba nejde poslat zpět odesílateli (kromě souboje dvou), vyřazení, pauza, kratší rozbuška a štít pro posledního přeživšího odpovídají pravidlům (ověřeno testy).
+3. **Utajení:** testy ověří, že pohled Věrného a Zrádce má stejný tvar, Zrádce dostává skutečný tlak a do telefonu nejde čas výbuchu.
+4. Odpojený držitel: bomba po 3 s přeskočí (ověřeno testem).
+5. Duchové tipují a dostanou body podle pravidel, stopa ukazuje pořadí, zbavení na poslední chvíli a průměrnou dobu držení.
+6. Robot `npm run e2e` odehraje hry i s Horkým bramborem bez chyby.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| H1 | Pravidla Horkého bramboru na serveru a testy, včetně utajení ručičky tlaku a odpojeného držitele | Testy prochází |
+| H2 | Obrazovky na telefonu (bomba, mřížka jmen, ručička tlaku), u ducha a v konzoli, rozšíření robota `npm run e2e` | Horký brambor jde odehrát v 5 kartách prohlížeče, robot prochází |
