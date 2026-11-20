@@ -319,7 +319,12 @@ export function reduceMinigame(state: GameState, actor: Actor, action: Action, r
       if (state.phase !== 'MINIGAME' || !state.minigame) return true;
       const active = state.minigame;
       if (active.step === 'PLAY') {
-        active.state = moduleOf(state).tick(active.state, action.now, rng);
+        active.state = moduleOf(state).tick(
+          active.state,
+          action.now,
+          rng,
+          action.connected ? new Set(action.connected) : undefined,
+        );
         finishIfDone(state);
       } else if (active.step === 'HANDOFF' && action.now >= active.handoff!.endsAt) {
         finishHandoff(state);

@@ -30,7 +30,7 @@ export type Action =
   | Intent
   | { type: 'join'; name: string; playerId: string; token: string }
   /** Posun časovačů miniher; posílá jen server. */
-  | { type: 'tick'; now: number };
+  | { type: 'tick'; now: number; connected?: string[] };
 
 export type ApplyResult = { ok: true; state: GameState } | { ok: false; error: string };
 

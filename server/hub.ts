@@ -158,7 +158,7 @@ export function attachGame(io: GameServer, options: HubOptions) {
   // Časovače miniher: server posouvá čas a pohledy rozešle, jen když se něco změnilo.
   const timer = setInterval(() => {
     if (state.phase !== 'MINIGAME') return;
-    const result = apply(state, { kind: 'system' }, { type: 'tick', now: Date.now() }, rng);
+    const result = apply(state, { kind: 'system' }, { type: 'tick', now: Date.now(), connected: [...connectedPlayerIds()] }, rng);
     if (!result.ok) return;
     const changed = JSON.stringify(result.state.minigame) !== JSON.stringify(state.minigame);
     state = result.state;

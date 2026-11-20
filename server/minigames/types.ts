@@ -53,8 +53,8 @@ export interface MinigameModule<S = any> {
   apply(state: S, playerId: string, input: unknown, now: number, rng: Rng): S | null;
   applyModerator?(state: S, input: unknown, now: number, rng: Rng): S | null;
   applyGhost?(state: S, ghostId: string, input: unknown, now: number): S | null;
-  /** Posun časovačů. */
-  tick(state: S, now: number, rng: Rng): S;
+  /** Posun časovačů. `connected` = připojení hráči (když ho server zná). */
+  tick(state: S, now: number, rng: Rng, connected?: ReadonlySet<string>): S;
   isFinished(state: S): boolean;
   result(state: S): MinigameResult;
   /** Konec aktuálního odpočtu (pro telefon), nebo null. */
