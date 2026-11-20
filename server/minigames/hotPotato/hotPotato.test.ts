@@ -127,7 +127,8 @@ describe('Horký brambor – pravidla', () => {
     s = { ...hotPotato.tick(s, s.endsAt!, rng()), holderId: 'a' };
     s = explode(s); // a vypadne
     const clues = hotPotato.result(s).clues;
-    expect(clues[0].rows.map((r) => r.playerId)).toEqual(['c', 'a']);
+    expect(clues[0].rows.map((r) => r.playerId)).toEqual(['c', 'a', 'b']);
+    expect(clues[0].rows.map((r) => r.value)).toEqual(['vypadl/a 1.', 'vypadl/a 2.', 'přežil/a']);
     const row = (id: string) => clues[1].rows.find((r) => r.playerId === id)!.value;
     expect(clues[1].rows[0].playerId).toBe('b');
     expect(row('b')).toMatch(/^1× · Ø /);

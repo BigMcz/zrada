@@ -5,7 +5,7 @@ import type { MinigameModule } from '../types.js';
 
 export const HOT_POTATO_ID = 'HOT_POTATO';
 /** Před první bombou: duchové tipují, hráči se chystají. Moderátor může zkrátit. */
-export const READY_MS = 10_000;
+export const READY_MS = 15_000;
 export const PAUSE_MS = 3_000;
 /** Odpojený držitel: po této době bomba sama přeskočí. */
 export const DISCONNECT_JUMP_MS = 3_000;
@@ -308,11 +308,14 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
       {
         kind: 'list',
         title: 'Pořadí vyřazení',
-        rows: state.eliminated.map((id, i) => ({ playerId: id, label: `${i + 1}.`, value: '' })),
+        rows: [
+          ...state.eliminated.map((id, i) => ({ playerId: id, label: '', value: `vypadl/a ${i + 1}.` })),
+          ...(survivor ? [{ playerId: survivor, label: '', value: 'přežil/a' }] : []),
+        ],
       },
       {
         kind: 'table',
-        title: 'Zbavil/a se bomby v posledních 3 s · průměrné držení',
+        title: 'Zbavil/a se bomby v posledních 3 s · Ø držení',
         rows: [...state.players]
           .sort((a, b) => (state.lastMoment[b] ?? 0) - (state.lastMoment[a] ?? 0))
           .map((id) => {

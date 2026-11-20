@@ -46,6 +46,7 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 
 - **Tajná aukce** – tajné nabídky 0–10 žetonů, nejvyšší nabídka vyhrává štít, všechny nabídky se platí z pokladu.
 - **Rozdělit, nebo ukrást** – dva duelisté tajně volí Rozdělit / Ukrást, ostatní sázejí na výsledek.
+- **Horký brambor** – bomba se posílá z telefonu na telefon, u koho bouchne, vypadá; poslední přeživší získá štít. Zrádcům ukazuje ručička tlaku skutečný čas do výbuchu.
 
 Na konci hry je poklad, žebříček hráčů podle osobních bodů a žebříček duchů. Celá pravidla jsou v [SPEC.md](DOC/SPEC.md).
 
@@ -101,6 +102,7 @@ server/
     registry.ts        seznam miniher; modules.ts je registruje při startu
     auction/           Tajná aukce
     splitSteal/        Rozdělit, nebo ukrást
+    hotPotato/         Horký brambor
 client/
   player/              obrazovky telefonu hráče
   moderator/           konzole moderátora

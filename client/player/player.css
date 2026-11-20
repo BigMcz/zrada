@@ -703,3 +703,81 @@
   border-color: var(--loyal);
   color: var(--loyal-text);
 }
+
+/* --- Horký brambor --- */
+
+.bomb {
+  margin: 0 auto;
+  font-size: 56px;
+  line-height: 1;
+  text-align: center;
+  filter: grayscale(1) opacity(0.5);
+}
+
+.bomb.hot {
+  font-size: 96px;
+  filter: none;
+  animation: bomb-shake 0.5s ease-in-out infinite;
+}
+
+@keyframes bomb-shake {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+.gauge {
+  display: block;
+  width: 180px;
+  margin: 0 auto;
+}
+
+.gauge-track,
+.gauge-red {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: butt;
+}
+
+.gauge-track {
+  stroke: var(--line);
+}
+
+.gauge-red {
+  stroke: var(--blood);
+}
+
+.gauge-needle {
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 60px 60px;
+  transition: transform 0.2s linear;
+}
+
+.gauge-hub {
+  fill: var(--gold);
+}
+
+.potato-hot {
+  color: var(--gold);
+}
+
+.potato-boom {
+  color: var(--traitor-text);
+  animation: reveal 0.4s ease-out;
+}
+
+.potato-out {
+  font-size: 14px;
+}
+
+.portrait:disabled {
+  cursor: default;
+}
+
+/* Držitel bomby: komu ji poslat nejde (sobě, odesílateli), je ztlumené. */
+.player-grid.passing .portrait:disabled .avatar,
+.player-grid.passing .portrait:disabled .portrait-name {
+  opacity: 0.35;
+}

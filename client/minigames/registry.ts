@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { AuctionGhost, AuctionModerator, AuctionPlayer } from './auction/Auction';
+import { HotPotatoGhost, HotPotatoModerator, HotPotatoPlayer } from './hotPotato/HotPotato';
 import { SplitStealGhost, SplitStealModerator, SplitStealPlayer } from './splitSteal/SplitSteal';
 
 export interface MinigamePlayerProps<G = unknown> {
@@ -30,4 +31,5 @@ export interface MinigameUi {
 export const MINIGAME_UI: Record<string, MinigameUi> = {
   AUCTION: { Player: AuctionPlayer, Ghost: AuctionGhost, Moderator: AuctionModerator },
   SPLIT_STEAL: { Player: SplitStealPlayer, Ghost: SplitStealGhost, Moderator: SplitStealModerator },
+  HOT_POTATO: { Player: HotPotatoPlayer, Ghost: HotPotatoGhost, Moderator: HotPotatoModerator },
 };

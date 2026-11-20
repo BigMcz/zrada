@@ -115,7 +115,7 @@ async function connect(url: string): Promise<ClientSocket> {
 // ---------------------------------------------------------------------------
 
 /** Klíče, které by v pohledu hráče nikdy neměly být (skryté údaje miniher a štítu). */
-const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"'];
+const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"'];
 
 function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   const v = bot.pv;
@@ -138,7 +138,26 @@ function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   if (v.minigame?.id === 'SPLIT_STEAL' && game && game.stage !== 'DONE' && game.revealed) {
     report.violation(`${bot.name}: vidí volby duelistů před odhalením`);
   }
+  checkGhostPotato(bot, report);
+  if (v.minigame?.id === 'HOT_POTATO' && v.me.status === 'ALIVE' && game) {
+    // Horký brambor: Věrný i Zrádce mají stejná pole, ručička je číslo 0–1 a mimo bombu stojí na nule.
+    const keys = Object.keys(game).sort().join(',');
+    if (keys !== HOT_POTATO_KEYS) report.violation(`${bot.name}: pohled Horkého bramboru má jiná pole: ${keys}`);
+    const p = (game as { pressure?: unknown }).pressure;
+    if (typeof p !== 'number' || p < 0 || p > 1) report.violation(`${bot.name}: ručička tlaku mimo rozsah: ${String(p)}`);
+    if (game.stage !== 'BOMB' && p !== 0) report.violation(`${bot.name}: ručička tlaku mimo bombu není 0`);
+  }
 }
+
+/** Duch ručičku tlaku nemá. */
+function checkGhostPotato(bot: Bot, report: Report) {
+  const v = bot.pv;
+  if (v?.minigame?.id === 'HOT_POTATO' && v.me.status !== 'ALIVE' && v.minigame.game && 'pressure' in (v.minigame.game as object)) {
+    report.violation(`${bot.name}: duch vidí ručičku tlaku`);
+  }
+}
+
+const HOT_POTATO_KEYS = 'amHolder,amOut,canPassTo,eliminated,holderId,players,pressure,remaining,round,stage';
 
 /** Kontroly, které potřebují pohled moderátora (pravda) – volají se, když je stav ustálený. */
 function checkAgainstModerator(m: ModeratorView, bots: Bot[], report: Report) {
@@ -204,6 +223,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
 
     const m = () => mod.view as ModeratorView;
     const nameOf = (id: string) => bots.find((b) => b.id === id)?.name ?? id;
+    let potatoPlayed = false;
     const signature = () => {
       const v = m();
       const g = v.minigame?.game as { stage?: string; revealed?: unknown[] | boolean } | null | undefined;
@@ -234,12 +254,19 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     }
 
     let reconnected = 'ne';
+    let potatoJump = 'ne';
     async function maybeReconnect() {
       if (!cfg.reconnect || reconnected !== 'ne') return;
       const bot = rand(alive());
-      const oldId = bot.id;
       bot.socket.disconnect();
       await sleep(200);
+      await rejoin(bot);
+      reconnected = `${bot.name} (fáze ${m().phase}, ${m().round}. kolo) – vrátil/a se jako stejný hráč`;
+    }
+
+    /** Nové připojení se stejným tokenem; musí to být stejný hráč. */
+    async function rejoin(bot: Bot) {
+      const oldId = bot.id;
       const s = await connect(url);
       sockets.push(s);
       bot.socket = s;
@@ -253,7 +280,6 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       if (res.as !== 'player' || res.playerId !== oldId || bot.pv?.me.id !== oldId) {
         report.violation(`${bot.name}: po návratu není stejný hráč`);
       }
-      reconnected = `${bot.name} (fáze ${m().phase}, ${m().round}. kolo) – vrátil/a se jako stejný hráč`;
     }
 
     // --- Lobby ---
@@ -263,7 +289,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
 
     let loops = 0;
     while (m().phase !== 'ENDED') {
-      if (++loops > 400) throw new Error(`Hra se zasekla ve fázi ${m().phase}`);
+      if (++loops > 4000) throw new Error(`Hra se zasekla ve fázi ${m().phase}`);
       checkAgainstModerator(m(), bots, report);
       const v = m();
 
@@ -321,7 +347,9 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       const mg = m().minigame!;
       switch (mg.step) {
         case 'DRAW':
-          if (mg.canReroll && chance(0.3)) await modAct({ type: 'rerollMinigame' });
+          if (!potatoPlayed && mg.id !== 'HOT_POTATO' && mg.choices.some((c) => c.id === 'HOT_POTATO') && chance(0.6)) {
+            await modAct({ type: 'chooseMinigame', id: 'HOT_POTATO' });
+          } else if (mg.canReroll && chance(0.3)) await modAct({ type: 'rerollMinigame' });
           else if (mg.choices.length > 1 && chance(0.3)) await modAct({ type: 'chooseMinigame', id: rand(mg.choices).id });
           else await modAct({ type: 'confirmMinigame' });
           if (m().minigame?.step === 'DRAW') await modAct({ type: 'confirmMinigame' });
@@ -336,6 +364,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
           return;
         }
         case 'PLAY':
+          if (mg.id === 'HOT_POTATO') return playHotPotato();
           return mg.id === 'AUCTION' ? playAuction() : playDuel();
         case 'RESULT':
           await modAct({ type: 'showClue' });
@@ -411,6 +440,65 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       }
     }
 
+    async function playHotPotato() {
+      potatoPlayed = true;
+      const game = m().minigame!.game as {
+        stage: string;
+        holderId: string | null;
+        players: string[];
+        round: number;
+        explodeAt: number | null;
+      };
+      if (game.stage === 'READY') {
+        for (const g of tippingGhosts()) {
+          const ids = game.players;
+          await act(g, { type: 'minigameInput', payload: { survivorId: rand(ids), firstId: rand(ids) } });
+        }
+        await modAct({ type: 'minigameModerator', payload: { action: 'endStage' } });
+        return;
+      }
+      if (game.stage !== 'BOMB' || !game.holderId) {
+        await sleep(150);
+        return;
+      }
+      const holder = bots.find((b) => b.id === game.holderId)!;
+
+      // Jednou za hru (s návratem hráče): držitel se odpojí, bomba musí po 3 s přeskočit.
+      if (cfg.reconnect && potatoJump === 'ne' && game.explodeAt && game.explodeAt - Date.now() > 5_000) {
+        holder.socket.disconnect();
+        const round = game.round;
+        await sleep(3_800);
+        const now = m().minigame?.game as { holderId: string | null; round: number; stage: string } | null;
+        if (now && now.stage === 'BOMB' && now.round === round && now.holderId === holder.id) {
+          report.violation(`bomba u odpojeného ${holder.name} po 3 s nepřeskočila`);
+        }
+        await rejoin(holder);
+        potatoJump = `${holder.name} se odpojil/a s bombou, bomba přeskočila na ${nameOf(now?.holderId ?? '')}`;
+        return;
+      }
+
+      // Držitel bombu chvíli drží (Zrádce dokud ručička není vysoko), pak ji pošle dál.
+      const v = holder.pv?.minigame?.game as { amHolder: boolean; canPassTo: string[]; pressure: number } | undefined;
+      if (!v || !v.amHolder) {
+        await sleep(100);
+        return;
+      }
+      const isTraitor = holder.pv!.me.role === 'TRAITOR';
+      if (v.canPassTo.length === 0) report.violation(`${holder.name}: drží bombu, ale nemá komu ji poslat`);
+      const wait = isTraitor && v.pressure < 0.8 ? 300 : 300 + Math.random() * 2_500;
+      await sleep(wait);
+      const still = holder.pv?.minigame?.game as { amHolder: boolean; canPassTo: string[]; pressure: number } | undefined;
+      if (!still?.amHolder || (isTraitor && still.pressure < 0.8 && chance(0.7))) return;
+      const res = await holder.socket.emitWithAck('intent', {
+        type: 'minigameInput',
+        payload: { targetId: rand(still.canPassTo) },
+      });
+      // Bomba mohla mezitím bouchnout – to není chyba.
+      if (!res.ok && (m().minigame?.game as { holderId?: string } | null)?.holderId === holder.id) {
+        report.failedActions.push(`${holder.name} poslání bomby: ${res.error}`);
+      }
+    }
+
     // --- Konec hry: kontroly ---
     await sleep(400);
     const end = m();
@@ -450,7 +538,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected,
+      reconnected: potatoJump === 'ne' ? reconnected : `${reconnected}; ${potatoJump}`,
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,
