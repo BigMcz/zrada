@@ -123,8 +123,8 @@ Podrobnější vizuální návrh je v [zradci-design.md](zradci-design.md). Pro 
 
 ## První verze NEobsahuje
 
-- Mise a poklad
-- Štít proti noční vraždě
+- Mise a poklad – poklad doplněn v části [Rozšíření 2: Minihry](#rozšíření-2-minihry)
+- Štít proti noční vraždě – doplněn v části [Rozšíření 2: Minihry](#rozšíření-2-minihry)
 - Verbování Věrných na stranu Zrádců
 - Finálové hlasování „ukončit hru / vyhnat dalšího“
 - ~~Režim duchů s body a žebříčkem pro vyřazené~~ – doplněno v části [Rozšíření 1: Duchové](#rozšíření-1-duchové)
@@ -225,3 +225,139 @@ Duch má vlastní, chladnější barvu (vybledlá modrá místo zlaté), aby byl
 | A | Pravidla duchů a body na serveru, pohledy pro hráče a moderátora, testy včetně utajení | Testy prochází |
 | B | Obrazovka ducha na telefonu | Ve hře v prohlížeči jde tipovat jako duch |
 | C | Panel Duchové v konzoli a žebříček na konci hry | Moderátor vidí tipy a body, na konci všichni vidí žebříček |
+
+---
+
+## Rozšíření 2: Minihry
+
+20. 11. 2026 · vychází z [minihry-analyza.md](minihry-analyza.md); kde se toto zadání od analýzy liší, platí toto zadání
+
+### Cíl
+
+Každý herní den může začít **minihrou na telefonech**, ve které živí hráči soutěží o **štít** proti noční vraždě a mění společný **poklad**. Zrádci mají v každé minihře veřejně známou výhodu nebo motiv a po minihře zůstane **stopa**, o které se pak mluví u kulatého stolu. První dávka obsahuje rámec a dvě minihry, **Tajnou aukci** a **Rozdělit, nebo ukrást**. Další minihry z analýzy přibudou později po jedné.
+
+### Průběh dne s minihrou
+
+1. Po rozdání rolí a každé ráno má moderátor dvě stejně velká tlačítka: **Spustit minihru** a **Přeskočit minihru**. Přeskočení vede rovnou ke kulatému stolu.
+2. **Los:** aplikace vylosuje minihru, která v této hře ještě nebyla. Když už se hrály všechny, smí se opakovat kromě té ze včerejška. Moderátor může jednou za den **přelosovat** nebo minihru **vybrat ručně** a pak los **potvrdí**.
+3. **Pravidla:** telefony ukážou název, pravidla, veřejné pravidlo o Zrádcích a **tajnou kartu** na podržení prstu. Kartu má každý živý hráč, Zrádce na ní najde svou výhodu a Věrný neutrální text se stejným počtem řádků. Moderátor vidí, kdo kartu viděl, a stiskne **Spustit**.
+4. **Hra:** podle minihry. Časovače běží na serveru a moderátor může každou část ukončit dřív.
+5. **Výsledek:** všichni vidí, kdo vyhrál (nebo že nikdo), změnu pokladu a **vítěze mezi duchy**.
+6. **Stopa:** moderátor ji ukáže tlačítkem. Jsou to veřejná data z minihry (např. kdo kolik přihodil). Stopy dřívějších dní si hráč může kdykoli znovu otevřít.
+7. **Předání štítu** (jen když štít někdo vyhrál): vítěz má 20 s, aby si štít tajně ponechal, nebo ho daroval jinému živému hráči. Ostatní živí hráči vidí ve stejné chvíli obrazovku stejného tvaru („Komu bys štít svěřil ty?“) a jejich volba se nikam nepočítá.
+8. Moderátor stiskne **Začít kulatý stůl** a den pokračuje jako dosud.
+
+Moderátor může kdykoli během minihry stisknout **Přeskočit minihru**: žádný štít, poklad beze změny, žádné body a minihra se nepočítá jako odehraná.
+
+### Štít
+
+- Za den nejvýš jeden štít. Platí jen pro noc téhož kola, ráno zmizí.
+- Když Zrádci v noci vyberou hráče se štítem, **nikdo nezemře**. Ráno všichni uvidí „Tuto noc nikdo nezemřel“. Zrádci se nedozví víc než ostatní.
+- Kdo štít drží, uvidí to jen na podržení pečeti v rohu („Tuto noc tě chrání štít“). Ostatní na stejném místě uvidí „Štít drží někdo jiný“, nebo „Dnes štít nikdo nemá“.
+- Moderátor vidí u držitele štítu ikonu 🛡.
+
+### Poklad
+
+- Hra začíná s pokladem **1000 bodů**. Minihry ho zvyšují i snižují, nikdy neklesne pod 0.
+- Poklad je vidět v hlavičce telefonu a v konzoli moderátora.
+- Na konci hry: „Vítězové si dělí poklad: 1 750 bodů“.
+
+### Osobní body hráčů
+
+Navazuje na osobní body z Rozšíření 1.
+
+- **Vítěz minihry** (kdo štít vyhrál, ještě před předáním) dostane **+2 body**.
+- **Divák, který v duelu správně vsadí**, dostane **+1 bod**.
+- Duchové dostávají body za úlohy v minihrách (viz níže).
+- Body z miniher jsou **vidět hned**: vyplývají jen z veřejných výsledků. Body za tipy duchů na Zrádce zůstávají skryté až do konce hry jako dosud.
+- Hráč vidí své body v hlavičce telefonu. Na konci hry je pod vítězem **žebříček hráčů** (všichni hráči podle osobních bodů) a pod ním žebříček duchů jako dosud.
+- Utrácení bodů v první dávce není.
+
+### Duchové v minihrách
+
+- Duch o štít nesoutěží, ale v každé minihře má **vlastní úlohu** (tip na výsledek). Body se počítají **jen z veřejných výsledků**, nikdy ne z toho, kdo je Zrádce.
+- Ve výsledku minihry se všem ukáže **vítěz mezi duchy** („Mezi duchy vyhrála Anna, +3 body“). Při shodě všichni nejlepší. Bez duchů se tento řádek nezobrazí.
+- Vyhnaný Zrádce v minihrách netipuje, stejně jako u tipů na Zrádce.
+
+### Tajná aukce
+
+Podrobně v analýze, kapitola 4. Shrnutí:
+
+- Každý živý hráč tajně přihodí **0–10 žetonů** na štít. 1 žeton = 50 bodů pokladu. Podmínka: poklad aspoň 200.
+- **Domluva 60 s** (nahlas), pak **přihazování 30 s** (posuvník, nabídku jde do konce měnit, kdo nepotvrdí, přihodil 0).
+- **Odhalení:** moderátor odhaluje nabídky jednu po druhé od nejnižší po nejvyšší.
+- **Štít** získá jediná nejvyšší nabídka; při remíze na vrcholu nikdo. **Poklad** se sníží o součet nabídek × 50.
+- Tajná karta: Věrný „Každý žeton stojí poklad 50 bodů. Šetři.“ / Zrádce „Každý žeton stojí poklad 50 bodů. Čím víc, tím líp, ale nebuď nápadný.“
+- **Stopa:** tabulka hráč → nabídka (od nejvyšší), součet a o kolik se snížil poklad.
+- **Duchové** během přihazování tipují součet všech nabídek. Nejbližší tip 3 body (při shodě všichni nejbližší), tip vzdálený nejvýš 3 žetony 1 bod.
+
+### Rozdělit, nebo ukrást
+
+Podrobně v analýze, kapitola 7. Shrnutí:
+
+- Los dvou **duelistů** mezi živými (kdo už v této hře duelistou byl, má nižší šanci).
+- **Domluva 60 s** (nahlas tváří v tvář), pak **volba 10 s**: duelisté tajně zvolí **Rozdělit**, nebo **Ukrást** (kdo nezvolí, rozděluje). Ostatní živí hráči ve stejných 10 s **sázejí**: „Oba rozdělí“, „Jeden ukradne“, „Oba ukradnou“.
+- **Odhalení** spustí moderátor, obě volby se otočí současně.
+
+| Duelista A | Duelista B | Štít | Poklad |
+| --- | --- | --- | --- |
+| Rozdělit | Rozdělit | nikdo | +300 |
+| Ukrást | Rozdělit | A | 0 |
+| Rozdělit | Ukrást | B | 0 |
+| Ukrást | Ukrást | nikdo | −200 |
+
+- Za každou správnou sázku diváka jde do pokladu +20 a divák dostane +1 osobní bod.
+- Tajná karta: Věrný „Rozdělit pomáhá všem. Ukrást pomáhá jen tobě.“ / Zrádce „Rozdělit pomáhá Věrným. Ukrást rozbíjí důvěru.“
+- **Stopa:** volby obou duelistů a sázky diváků se jmény.
+- **Duchové** sázejí přesněji: oba rozdělí / ukradne A / ukradne B / oba ukradnou. Přesná sázka 3 body, správně „někdo ukradl“, ale špatný duelista, 1 bod. Do pokladu nepřidávají.
+
+### Utajení
+
+Platí vše dosavadní a navíc:
+
+- Pohled minihry má pro Věrného i Zrádce **stejná pole**, výhoda Zrádců je jen jiná hodnota (u první dávky jen text tajné karty).
+- Do telefonu nejde nic, co se hráč nemá dozvědět předem (cizí nabídky před odhalením, volby duelistů před odhalením, kdo drží štít).
+- Kdo komu daroval štít, nevidí nikdo kromě dárce a moderátora.
+- Telefony nesmí ani v minihře vydávat zvuk ani dávat herní informaci vibrací.
+
+### Obrazovky navíc
+
+**Telefon:** v hlavičce poklad a moje body. Pro každý krok minihry obrazovka podle analýzy (los, pravidla s tajnou kartou, hra, výsledek, stopa, předání štítu, „Za chvíli začne kulatý stůl“). Ikona **Stopy** v hlavičce otevře stopy všech dosavadních dní.
+
+**Konzole moderátora:** tlačítka Spustit / Přeskočit minihru, při losu Přelosovat / Vybrat ručně / Potvrdit, v každém kroku jedno hlavní tlačítko dalšího kroku. Během hry vidí moderátor všechny skryté údaje (nabídky, volby, sázky, tipy duchů, komu byl štít darován). V seznamu hráčů ikona 🛡 u držitele štítu. V lobby přepínač **Minihry zapnuté / vypnuté**.
+
+### Data navíc
+
+- Poklad, držitel štítu pro aktuální noc, odehrané minihry této hry.
+- Probíhající minihra: která, v jakém kroku, její vlastní stav, kdo viděl tajnou kartu, výsledek a předání štítu.
+- U každého kola: jaká minihra se hrála, shrnutí, stopa, změna pokladu, vítězové mezi duchy a zda štít někoho zachránil.
+- Nastavení: minihry zapnuté / vypnuté.
+
+### Rozšíření NEobsahuje
+
+- Velkou obrazovku pro projektor a její scény
+- Minihry Trezor, Zneškodni bombu, Rytmus, Horký brambor, Insider kvíz a Fyzickou misi (přijdou později po jedné)
+- Utrácení osobních bodů
+- Veřejný režim štítu (jen tajné předání)
+- Podrobné nastavení (osudí, délky časovačů, počáteční poklad); používají se výchozí hodnoty
+- Nižší váhu losu pro minihry z předchozí hry
+
+### Hotovo, když
+
+1. **Řízení dne:** moderátor po rozdání rolí i každé ráno zvolí Spustit, nebo Přeskočit minihru. Při vypnutých minihrách běží hra přesně jako dosud.
+2. **Tajná aukce** jde v 5 kartách prohlížeče odehrát od losu po kulatý stůl. Štít, poklad i stopa odpovídají pravidlům.
+3. **Rozdělit, nebo ukrást** jde odehrát stejně, včetně všech čtyř výsledků (ověřeno testy) a sázek.
+4. **Štít funguje:** když Zrádci vyberou hráče se štítem, nikdo nezemře a ráno to všichni uvidí. Kdo štít drží, ví jen on a moderátor.
+5. **Utajení:** automatické testy ověří, že telefony Věrného a Zrádce mají v každém kroku minihry pohled stejného tvaru a že do telefonu nepřijdou cizí nabídky, volby ani držitel štítu dřív, než mají.
+6. **Body:** vítěz minihry, správně sázející diváci a duchové dostanou body podle pravidel a na konci hry je vidí všichni v žebříčcích.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| M1 | Rámec miniher na serveru: fáze Minihra, kroky od losu po předání štítu, časovače, tajná karta, stopa, historie, los a přeskočení. Testovací minihra jen pro testy. | Testy prochází |
+| M2 | Štít v noci, poklad a osobní body z miniher na serveru | Testy prochází |
+| M3 | Tajná aukce na serveru a kostra miniher v klientovi (telefon i konzole) | Aukce jde odehrát v 5 kartách prohlížeče |
+| M4 | Rozdělit, nebo ukrást | Duel jde odehrát v 5 kartách prohlížeče |
+| M5 | Duchové v minihrách, vítěz mezi duchy, žebříček hráčů a poklad na konci hry | Duch tipuje v obou minihrách, na konci jsou žebříčky |
+| M6 | Úpravy README a zkouška naživo | Celá hra s minihrami na telefonech |
