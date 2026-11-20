@@ -63,7 +63,7 @@
   margin: 0;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 60px;
+  font-size: 48px;
   font-weight: 600;
   letter-spacing: 0.22em;
   color: var(--gold);
@@ -86,14 +86,14 @@
   line-height: 1.25;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 600;
 }
 
 .headline {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 44px;
+  font-size: 32px;
   font-weight: 600;
   line-height: 1.1;
   color: var(--gold);
@@ -134,7 +134,7 @@
 
 .reveal {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -243,7 +243,7 @@
   background: var(--surface-2);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 22px;
+  font-size: 18px;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
@@ -340,7 +340,7 @@
 
 .role-title {
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--gold);
 }
@@ -544,7 +544,7 @@
 
 .secret-line.first {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--gold);
 }
@@ -563,7 +563,7 @@
 .clue h3 {
   margin: 0 0 6px;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 17px;
   color: var(--gold);
 }
 
@@ -589,7 +589,7 @@
   margin: 0;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 96px;
+  font-size: 80px;
   font-weight: 700;
   line-height: 1;
   color: var(--gold);
@@ -639,7 +639,7 @@
   margin: 0;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 20px;
 }
 
 .choice-cards {
@@ -666,7 +666,7 @@
   color: var(--text);
   font: inherit;
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
   cursor: pointer;
 }

@@ -85,7 +85,7 @@ Pro 10 hráčů je posílání celého pohledu po každé změně zanedbatelná 
 | Klient | **React 18** + **Vite** | Rychlý vývoj s okamžitým obnovením stránky, jednoduchý build |
 | Směrování v klientovi | žádná knihovna; dvě cesty `/` a `/moderator` se rozliší podle adresy | Dvě obrazovky routing knihovnu nepotřebují |
 | Styly | **CSS proměnné** a obyčejné CSS moduly | Barvy z návrhu designu jako tokeny, bez dalšího nástroje |
-| Písma | **@fontsource/cormorant-garamond**, **@fontsource/inter** | Fonty přibalené v aplikaci, fungují bez internetu |
+| Písma | **@fontsource/cinzel**, **@fontsource/figtree** | Fonty přibalené v aplikaci, fungují bez internetu; obě s plnou češtinou |
 | QR kód | **qrcode.react** | Vykreslí QR v prohlížeči moderátora |
 | Testy | **Vitest** | Stejná konfigurace jako Vite, rychlé testy herního jádra |
 | Spouštění vývoje | **tsx** + `node --watch`, Vite jako middleware v Expressu | Jeden příkaz `npm run dev`, jeden port pro stránku, Socket.IO i obnovování stránky při změnách |

@@ -49,9 +49,9 @@ Kontrast `--text` na `--bg` je zhruba 15 : 1 a `--gold` na `--bg` zhruba 8 : 1, 
 
 | Role | Písmo | Velikost (telefon / TV) |
 | --- | --- | --- |
-| Nadpisy, jména, odhalení | **Cormorant Garamond** SemiBold (patkové, „hradní“) | 32 px / 120 px |
-| Text, tlačítka, UI | **Inter** Medium | 17 px / 40 px |
-| Čísla (poklad, časovač) | Inter Tabular, SemiBold | 48 px / 160 px |
+| Nadpisy, jména, odhalení | **Cinzel** SemiBold/Bold (tesané kapitálky, „hradní“; nejčastější volba pro fantasy hry) | 24–32 px / 96 px |
+| Text, tlačítka, UI | **Figtree** Medium (čisté, dobře čitelné na telefonu) | 17 px / 40 px |
+| Čísla (poklad, časovač) | Figtree Tabular, SemiBold | 48 px / 160 px |
 
 Obě písma mají plnou českou diakritiku. Pro lokální demo je přibalíme do aplikace (`@fontsource`), aby hra fungovala i bez internetu.
 
@@ -438,7 +438,7 @@ Pro lokální demo stačí:
 
 - **Tailwind CSS** s tokeny výše v `tailwind.config` (nebo CSS proměnné, pokud se Tailwind nepoužije).
 - **Framer Motion** pro otáčení karet, prolínání fází a počítadlo pokladu.
-- **@fontsource/cormorant-garamond** a **@fontsource/inter**, přibalené fonty bez závislosti na internetu.
+- **@fontsource/cinzel** a **@fontsource/figtree**, přibalené fonty bez závislosti na internetu.
 - **qrcode.react** pro QR kód v lobby a na velké obrazovce.
 - Zvuky jako krátké `.mp3` v `public/sounds`, z volně licencovaných knihoven.
 
