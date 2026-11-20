@@ -115,7 +115,7 @@ async function connect(url: string): Promise<ClientSocket> {
 // ---------------------------------------------------------------------------
 
 /** Klíče, které by v pohledu hráče nikdy neměly být (skryté údaje miniher a štítu). */
-const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"'];
+const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"'];
 
 function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   const v = bot.pv;
@@ -139,6 +139,7 @@ function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
     report.violation(`${bot.name}: vidí volby duelistů před odhalením`);
   }
   checkGhostPotato(bot, report);
+  checkQuiz(bot, report);
   if (v.minigame?.id === 'HOT_POTATO' && v.me.status === 'ALIVE' && game) {
     // Horký brambor: Věrný i Zrádce mají stejná pole, ručička je číslo 0–1 a mimo bombu stojí na nule.
     const keys = Object.keys(game).sort().join(',');
@@ -158,6 +159,24 @@ function checkGhostPotato(bot: Bot, report: Report) {
 }
 
 const HOT_POTATO_KEYS = 'amHolder,amOut,canPassTo,eliminated,holderId,players,pressure,remaining,round,stage';
+const QUIZ_KEYS = 'answeredCount,correct,hint,index,myAnswer,question,stage,standings,total';
+
+/** Kvíz: stejná pole pro všechny, správná odpověď až po konci otázky, duch bez svíčky. */
+function checkQuiz(bot: Bot, report: Report) {
+  const v = bot.pv;
+  if (v?.minigame?.id !== 'QUIZ' || v.minigame.step !== 'PLAY' || !v.minigame.game) return;
+  const game = v.minigame.game as { stage: string; correct: number | null; hint?: number | null };
+  if (v.me.status !== 'ALIVE') {
+    if ('hint' in game) report.violation(`${bot.name}: duch vidí svíčku`);
+    return;
+  }
+  const keys = Object.keys(game).sort().join(',');
+  if (keys !== QUIZ_KEYS) report.violation(`${bot.name}: pohled kvízu má jiná pole: ${keys}`);
+  if (game.stage === 'QUESTION' && game.correct !== null) report.violation(`${bot.name}: vidí správnou odpověď před koncem otázky`);
+  if (game.stage === 'REVEAL' && v.me.role === 'TRAITOR' && game.hint !== game.correct) {
+    report.violation(`${bot.name}: Zrádce má svíčku jinde než u správné odpovědi`);
+  }
+}
 
 /** Kontroly, které potřebují pohled moderátora (pravda) – volají se, když je stav ustálený. */
 function checkAgainstModerator(m: ModeratorView, bots: Bot[], report: Report) {
@@ -224,6 +243,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     const m = () => mod.view as ModeratorView;
     const nameOf = (id: string) => bots.find((b) => b.id === id)?.name ?? id;
     let potatoPlayed = false;
+    let quizPlayed = false;
     const signature = () => {
       const v = m();
       const g = v.minigame?.game as { stage?: string; revealed?: unknown[] | boolean } | null | undefined;
@@ -347,8 +367,12 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       const mg = m().minigame!;
       switch (mg.step) {
         case 'DRAW':
-          if (!potatoPlayed && mg.id !== 'HOT_POTATO' && mg.choices.some((c) => c.id === 'HOT_POTATO') && chance(0.6)) {
-            await modAct({ type: 'chooseMinigame', id: 'HOT_POTATO' });
+          // Nové minihry robot volí častěji, aby se v každém běhu odehrály.
+          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ'].filter(
+            (id): id is string => !!id && id !== mg.id && mg.choices.some((c) => c.id === id),
+          );
+          if (wanted.length > 0 && chance(0.6)) {
+            await modAct({ type: 'chooseMinigame', id: rand(wanted) });
           } else if (mg.canReroll && chance(0.3)) await modAct({ type: 'rerollMinigame' });
           else if (mg.choices.length > 1 && chance(0.3)) await modAct({ type: 'chooseMinigame', id: rand(mg.choices).id });
           else await modAct({ type: 'confirmMinigame' });
@@ -365,6 +389,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
         }
         case 'PLAY':
           if (mg.id === 'HOT_POTATO') return playHotPotato();
+          if (mg.id === 'QUIZ') return playQuiz();
           return mg.id === 'AUCTION' ? playAuction() : playDuel();
         case 'RESULT':
           await modAct({ type: 'showClue' });
@@ -438,6 +463,45 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       } else {
         await sleep(100);
       }
+    }
+
+    async function playQuiz() {
+      quizPlayed = true;
+      const game = m().minigame!.game as { stage: string; index: number; correct: number };
+      if (game.stage === 'QUESTION') {
+        // Hráči odpovídají postupně (Věrný správně s 60 %, Zrádce se řídí svíčkou), duchové náhodně.
+        await sleep(200 + Math.random() * 1_500);
+        for (const b of [...alive(), ...tippingGhosts()]) {
+          const g = b.pv?.minigame?.game as { stage: string; index: number; myAnswer: number | null; hint?: number | null } | null;
+          if (!g || g.stage !== 'QUESTION' || g.index !== game.index || g.myAnswer !== null || !chance(0.9)) continue;
+          let option = Math.floor(Math.random() * 4);
+          if (b.pv!.me.status === 'ALIVE' && b.pv!.me.role === 'TRAITOR' && g.hint != null && chance(0.7)) option = g.hint;
+          else if (b.pv!.me.status === 'ALIVE' && b.pv!.me.role === 'LOYAL' && chance(0.6)) option = game.correct;
+          const res = await b.socket.emitWithAck('intent', { type: 'minigameInput', payload: { option } });
+          // Otázka mohla mezitím skončit – to není chyba.
+          const now = m().minigame?.game as { stage?: string; index?: number } | null;
+          if (!res.ok && now?.stage === 'QUESTION' && now.index === game.index) {
+            report.failedActions.push(`${b.name} odpověď v kvízu: ${res.error}`);
+          }
+        }
+        // Čekání, až otázka skončí (po odpovědi všech nebo po 15 s).
+        const until = Date.now() + 17_000;
+        while (Date.now() < until) {
+          const g = m().minigame?.game as { stage?: string; index?: number } | null;
+          if (!g || g.stage !== 'QUESTION' || g.index !== game.index) break;
+          await sleep(100);
+        }
+        return;
+      }
+      if (game.stage === 'REVEAL') {
+        await sleep(300);
+        // Moderátor občas mezikrok zkrátí (jen když ještě chvíli běží, ať se netrefí do automatického konce).
+        const endsAt = m().minigame?.endsAt ?? 0;
+        if (chance(0.5) && endsAt - Date.now() > 1_500) await modAct({ type: 'minigameModerator', payload: { action: 'next' } });
+        else await sleep(200);
+        return;
+      }
+      await sleep(100);
     }
 
     async function playHotPotato() {

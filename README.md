@@ -47,6 +47,7 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 - **Tajná aukce** – tajné nabídky 0–10 žetonů, nejvyšší nabídka vyhrává štít, všechny nabídky se platí z pokladu.
 - **Rozdělit, nebo ukrást** – dva duelisté tajně volí Rozdělit / Ukrást, ostatní sázejí na výsledek.
 - **Horký brambor** – bomba se posílá z telefonu na telefon, u koho bouchne, vypadá; poslední přeživší získá štít. Zrádcům ukazuje ručička tlaku skutečný čas do výbuchu.
+- **Insider kvíz** – 7 otázek po 15 s, svíčka (nápověda) ukazuje Zrádcům správnou odpověď, Věrným náhodnou; nejlepší hráč získá štít. Otázky jsou v `server/minigames/quiz/questions/`.
 
 Na konci hry je poklad, žebříček hráčů podle osobních bodů a žebříček duchů. Celá pravidla jsou v [SPEC.md](DOC/SPEC.md).
 
@@ -103,6 +104,7 @@ server/
     auction/           Tajná aukce
     splitSteal/        Rozdělit, nebo ukrást
     hotPotato/         Horký brambor
+    quiz/              Insider kvíz (otázky v questions/*.json)
 client/
   player/              obrazovky telefonu hráče
   moderator/           konzole moderátora
