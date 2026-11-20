@@ -4,6 +4,7 @@ import { MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } fr
 import { GhostBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { send, useConnection } from '../socket';
+import { MinigamePanel } from './MinigamePanel';
 
 export function ModeratorApp() {
   const { connected, view, helloError } = useConnection();
@@ -104,6 +105,16 @@ function Lobby({ view }: { view: ModeratorView }) {
             </ul>
           )}
 
+          <h2>Minihry</h2>
+          <label className="lobby-toggle">
+            <input
+              type="checkbox"
+              checked={view.minigamesEnabled}
+              onChange={(e) => run({ type: 'setMinigames', enabled: e.target.checked })}
+            />
+            {view.minigamesEnabled ? 'Minihry zapnuté' : 'Minihry vypnuté (hra jako bez miniher)'}
+          </label>
+
           <h2>Počet Zrádců</h2>
           {options.length === 0 ? (
             <p className="muted">Ke hře jsou potřeba aspoň {MIN_PLAYERS} hráči.</p>
@@ -154,17 +165,36 @@ function ConnectionDot({ connected }: { connected: boolean }) {
 function PlayersTable({ view, hideRoles }: { view: ModeratorView; hideRoles: boolean }) {
   const alive = view.players.filter((p) => p.status === 'ALIVE');
   const out = view.players.filter((p) => p.status !== 'ALIVE');
+  const intro = view.phase === 'MINIGAME' && view.minigame?.step === 'INTRO';
   const row = (p: ModeratorPlayer) => (
     <li key={p.id} className={p.status === 'ALIVE' ? '' : 'out'}>
       <ConnectionDot connected={p.connected} />
-      <span className="grow name">{p.name}</span>
+      <span className="grow name">
+        {p.name}
+        {view.shieldHolderId === p.id && !hideRoles && (
+          <span className="shield-icon" title="drží štít">
+            {' '}
+            🛡
+          </span>
+        )}
+      </span>
       {p.role && (
         <span className={hideRoles ? 'role-badge hidden' : `role-badge ${p.role === 'TRAITOR' ? 'traitor' : 'loyal'}`}>
           {hideRoles ? '•' : p.role === 'TRAITOR' ? 'Z' : 'V'}
         </span>
       )}
       <span className="state">
-        {p.status !== 'ALIVE' ? STATUS_LABEL[p.status] : p.done === undefined ? '' : p.done ? '✔ hotovo' : '… čeká'}
+        {p.status !== 'ALIVE'
+          ? STATUS_LABEL[p.status]
+          : intro
+            ? view.minigame!.secretCardSeen[p.id]
+              ? '✔ karta'
+              : '… čeká'
+            : p.done === undefined
+              ? ''
+              : p.done
+                ? '✔ hotovo'
+                : '… čeká'}
       </span>
     </li>
   );
@@ -311,9 +341,13 @@ function phaseStep(view: ModeratorView): PhaseStep {
       return {
         title: 'Ráno',
         detail: (
-          <>
-            Tuto noc zemřel/a: <b>{nameOf(view.players, round?.murderedId)}</b>
-          </>
+          round?.murderedId ? (
+            <>
+              Tuto noc zemřel/a: <b>{nameOf(view.players, round.murderedId)}</b>
+            </>
+          ) : (
+            <>Tuto noc nikdo nezemřel – Zrádci vybrali hráče se štítem.</>
+          )
         ),
         button: 'Další kolo',
         intent: { type: 'startVote' },
@@ -327,11 +361,16 @@ function phaseStep(view: ModeratorView): PhaseStep {
 function Control({ view }: { view: ModeratorView }) {
   const { error, busy, run } = useSend();
   const [hideRoles, setHideRoles] = useState(false);
-  const step = phaseStep(view);
+  const minigame = view.phase === 'MINIGAME' && view.minigame;
+  const step = minigame ? null : phaseStep(view);
+  // Po rozdání rolí a ráno: Spustit / Přeskočit minihru (dvě stejně velká tlačítka).
+  const offerMinigame = (view.phase === 'ROLES' || view.phase === 'MORNING') && view.minigameAvailable;
+  const minigamesInPlay = view.phase === 'MINIGAME' || view.history.some((h) => h.minigame);
 
   return (
     <>
       <TopBar view={view}>
+        {minigamesInPlay && <span className="console-phase">Poklad {view.pot.toLocaleString('cs')}</span>}
         <button type="button" className="toggle" onClick={() => setHideRoles((h) => !h)}>
           {hideRoles ? 'Ukázat role' : 'Skrýt role'}
         </button>
@@ -339,13 +378,41 @@ function Control({ view }: { view: ModeratorView }) {
       <main className="control">
         <PlayersTable view={view} hideRoles={hideRoles} />
         <section className="phase-panel">
-          <h1>{step.title}</h1>
-          <p className="phase-detail">{step.detail}</p>
-          <button type="button" className="console-primary big" disabled={busy} onClick={() => run(step.intent)}>
-            {step.button}
-          </button>
+          {minigame || !step ? (
+            <MinigamePanel view={view} run={run} busy={busy} />
+          ) : (
+            <>
+              <h1>{step.title}</h1>
+              <p className="phase-detail">{step.detail}</p>
+              {offerMinigame ? (
+                <div className="two-buttons">
+                  <button type="button" className="console-primary big" disabled={busy} onClick={() => run({ type: 'drawMinigame' })}>
+                    Spustit minihru
+                  </button>
+                  <button
+                    type="button"
+                    className="console-primary big secondary-look"
+                    disabled={busy}
+                    onClick={() => run({ type: 'startVote' })}
+                  >
+                    Přeskočit minihru
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className="console-primary big" disabled={busy} onClick={() => run(step.intent)}>
+                  {step.button}
+                </button>
+              )}
+              <p className="muted">
+                {offerMinigame
+                  ? 'Přeskočení vede rovnou ke kulatému stolu.'
+                  : view.minigamesEnabled && (view.phase === 'ROLES' || view.phase === 'MORNING')
+                    ? 'Dnes se nedá hrát žádná minihra.'
+                    : `Po stisknutí: ${step.next}`}
+              </p>
+            </>
+          )}
           {error && <p className="error">{error}</p>}
-          <p className="muted">Po stisknutí: {step.next}</p>
         </section>
       </main>
     </>

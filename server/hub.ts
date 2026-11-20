@@ -246,6 +246,8 @@ export function attachGame(io: GameServer, options: HubOptions) {
       respond(reply, run(actor, intent));
     });
 
+    socket.on('time', (reply) => respond(reply, Date.now()));
+
     socket.on('disconnect', () => {
       sessions.delete(socket.id);
       broadcast();

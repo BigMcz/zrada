@@ -4,13 +4,15 @@ import type { Role } from '../../shared/types';
 interface Props {
   role: Role;
   allies: { id: string; name: string }[];
+  /** Řádek o štítu (jen když se hrají minihry); stejné místo pro všechny. */
+  shieldLine?: string;
 }
 
 /**
  * Karta s pečetí: role je vidět jen po dobu, kdy hráč drží prst.
  * Obě role mají stejnou barvu, velikost i počet řádků – liší se jen text.
  */
-export function RoleCard({ role, allies }: Props) {
+export function RoleCard({ role, allies, shieldLine }: Props) {
   const [revealed, setRevealed] = useState(false);
   const hide = () => setRevealed(false);
 
@@ -51,6 +53,7 @@ export function RoleCard({ role, allies }: Props) {
         <>
           <span className="role-title">{title}</span>
           <span className="role-line">{line}</span>
+          {shieldLine && <span className="role-line shield-line">{shieldLine}</span>}
         </>
       ) : (
         <>

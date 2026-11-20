@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { Server } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types.js';
 import { attachGame } from './hub.js';
+import { registerAllMinigames } from './minigames/modules.js';
 import { findLanIp, listLanIps } from './network.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -24,6 +25,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   // Vite HMR používá stejný HTTP server; Socket.IO nesmí jeho upgrade zahodit.
   destroyUpgrade: false,
 });
+registerAllMinigames();
 attachGame(io, { moderatorKey, joinUrl });
 
 if (PROD) {

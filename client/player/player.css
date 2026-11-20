@@ -476,3 +476,159 @@
 .phone.ghost-mode .player-list {
   margin-top: 12px;
 }
+
+/* --- Minihry (Rozšíření 2) --- */
+
+.screen-corner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.screen-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: center;
+  padding: 6px 0 2px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.link-button {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gold);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--gold);
+}
+
+.countdown.urgent {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.rules ul {
+  margin: 8px 0;
+  padding-left: 20px;
+  line-height: 1.45;
+}
+
+.traitor-rule {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--gold-dim);
+  background: var(--surface);
+  font-size: 15px;
+}
+
+.secret-line {
+  color: var(--text);
+}
+
+.secret-line.first {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.shield-line {
+  min-height: 0;
+  color: var(--gold);
+}
+
+.clues {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.clue h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--gold);
+}
+
+.clue ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.clue li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.clue-value {
+  font-weight: 600;
+}
+
+.bid-number {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 96px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.bid-slider {
+  width: 100%;
+  height: 44px;
+  accent-color: var(--gold);
+}
+
+.reveal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reveal-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  animation: reveal 0.3s ease-out;
+}
+
+.reveal-list li.hidden-bid {
+  color: var(--text-muted);
+  background: transparent;
+  animation: none;
+}
+
+.ghost-winner {
+  color: var(--ghost);
+}
+
+.overlay-panel.scroll {
+  max-height: 90dvh;
+  overflow-y: auto;
+}

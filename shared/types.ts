@@ -309,4 +309,6 @@ export interface ClientToServerEvents {
   hello: (req: HelloRequest, reply: (res: HelloResult) => void) => void;
   join: (name: string, reply: (res: JoinResult) => void) => void;
   intent: (intent: Intent, reply: (res: Result) => void) => void;
+  /** Čas serveru pro odpočty miniher (klient si spočítá rozdíl hodin). */
+  time: (reply: (serverNow: number) => void) => void;
 }

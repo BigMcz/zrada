@@ -1,4 +1,7 @@
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
+
+/** Stavový řádek pod hlavičkou (poklad, moje body, stopy); nastaví ho PlayerGame. */
+export const ScreenStatus = createContext<ReactNode>(null);
 
 interface Props {
   /** Malý nápis nahoře, např. „Kulatý stůl · 2. kolo“. */
@@ -12,12 +15,14 @@ interface Props {
 
 /** Kostra každé obrazovky telefonu: štítek fáze nahoře, obsah, hlavní akce dole. */
 export function Screen({ tag, corner, action, children }: Props) {
+  const status = useContext(ScreenStatus);
   return (
     <div className="screen">
       <header className="screen-top">
         <span className="phase-tag">{tag}</span>
-        {corner}
+        <span className="screen-corner">{corner}</span>
       </header>
+      {status && <div className="screen-status">{status}</div>}
       <div className="screen-body">{children}</div>
       {action && <div className="screen-action">{action}</div>}
     </div>

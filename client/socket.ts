@@ -50,8 +50,33 @@ function update(patch: Partial<Connection>) {
   for (const l of listeners) l();
 }
 
+// ---------------------------------------------------------------------------
+// Rozdíl hodin telefonu a serveru (pro odpočty miniher)
+// ---------------------------------------------------------------------------
+
+let clockOffset = 0;
+
+/** Odhad času serveru podle hodin telefonu. */
+export function serverNow(): number {
+  return Date.now() + clockOffset;
+}
+
+/** 5 výměn zpráv, vezme se ta s nejkratší cestou (nejpřesnější). */
+async function syncClock() {
+  let best: { rtt: number; offset: number } | null = null;
+  for (let i = 0; i < 5; i++) {
+    const t0 = Date.now();
+    const server = await socket.emitWithAck('time');
+    const t1 = Date.now();
+    const sample = { rtt: t1 - t0, offset: server - (t0 + t1) / 2 };
+    if (!best || sample.rtt < best.rtt) best = sample;
+  }
+  if (best) clockOffset = best.offset;
+}
+
 socket.on('connect', () => {
   update({ connected: true });
+  void syncClock();
   // Po každém (znovu)připojení se server dozví, kdo jsme.
   const req = isModeratorPage ? { moderatorKey } : { token: readToken() };
   socket.emit('hello', req, (res) => {

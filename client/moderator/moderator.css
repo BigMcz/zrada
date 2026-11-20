@@ -364,3 +364,62 @@ button.link:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- Minihry v konzoli --- */
+
+.console-players.compact li {
+  padding: 6px 0;
+  font-size: 15px;
+}
+
+.minigame-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.minigame-actions select {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.two-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.two-buttons .console-primary {
+  margin-top: 20px;
+}
+
+.console-primary.secondary-look {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+
+.lobby-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 20px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.lobby-toggle input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--gold);
+}
+
+.shield-icon {
+  font-size: 15px;
+}

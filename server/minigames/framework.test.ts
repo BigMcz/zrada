@@ -211,9 +211,10 @@ describe('kroky minihry', () => {
 describe('stopa a předání štítu', () => {
   const atClue = () => at(everyonePresses(playing()), MOD, { type: 'showClue' });
 
-  it('stopa je vidět až od kroku Stopa', () => {
+  it('stopa je vidět až od kroku Stopa (ani v historii ne dřív)', () => {
     const result = everyonePresses(playing());
     expect(viewForPlayer(result, 'p2')!.minigame!.clues).toBeNull();
+    expect(viewForPlayer(result, 'p2')!.history[0].minigame!.clues).toEqual([]);
     const clue = at(result, MOD, { type: 'showClue' });
     expect(viewForPlayer(clue, 'p2')!.minigame!.clues![0].title).toBe('Pořadí');
     expect(viewForPlayer(clue, 'p2')!.history[0].minigame!.clues[0].rows).toHaveLength(6);

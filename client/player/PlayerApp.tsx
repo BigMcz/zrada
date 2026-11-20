@@ -4,7 +4,9 @@ import { MAX_NAME_LENGTH } from '../../shared/types';
 import { GhostBoard } from '../components/GhostBoard';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
-import { PrimaryButton, Screen } from '../components/Screen';
+import { ClueView } from '../components/ClueView';
+import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
+import { MinigameScreen } from '../minigames/MinigameScreen';
 import { initials, nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { join, send, useConnection } from '../socket';
 
@@ -113,9 +115,35 @@ function PlayerGame({ view }: { view: PlayerView }) {
   const corner = <RoleCorner view={view} onOpen={() => setRoleOpen(true)} />;
   const tag = phaseTag(view.phase, view.round);
 
+  const [cluesOpen, setCluesOpen] = useState(false);
+  // Minihry „ve hře“: veřejná informace, takže řádek se štítem a poklad vidí všichni stejně.
+  const minigamesInPlay = view.phase === 'MINIGAME' || view.history.some((h) => h.minigame);
+  const withClues = view.history.filter((h) => h.minigame && h.minigame.clues.length > 0);
+  const status =
+    minigamesInPlay && view.phase !== 'LOBBY' ? (
+      <>
+        <span>Poklad {view.pot.toLocaleString('cs')}</span>
+        <span>Moje body {view.myPoints}</span>
+        {withClues.length > 0 && (
+          <button type="button" className="link-button" onClick={() => setCluesOpen(true)}>
+            Stopy ({withClues.length})
+          </button>
+        )}
+      </>
+    ) : null;
+  const shieldLine = !minigamesInPlay
+    ? undefined
+    : view.me.shield === 'MINE'
+      ? 'Tuto noc tě chrání štít.'
+      : view.me.shield === 'OTHER'
+        ? 'Štít drží někdo jiný.'
+        : 'Dnes štít nikdo nemá.';
+
   let screen: ReactNode;
   if (view.phase === 'LOBBY') screen = <Waiting view={view} tag={tag} />;
   else if (view.phase === 'ENDED') screen = <Ended view={view} tag={tag} />;
+  else if (view.phase === 'MINIGAME' && view.minigame)
+    screen = <MinigameScreen key={view.round} view={view} tag={view.ghost ? `Duch · ${tag}` : tag} corner={corner} />;
   // key podle kola: v novém kole začíná duch bez předvybraného hráče
   else if (view.ghost) screen = <Ghost key={view.round} view={view} tag={`Duch · ${tag}`} corner={corner} />;
   else if (view.phase === 'ROLES') screen = <Roles view={view} tag={tag} corner={corner} />;
@@ -126,19 +154,37 @@ function PlayerGame({ view }: { view: PlayerView }) {
   else screen = <Morning view={view} tag={tag} corner={corner} />;
 
   return (
-    <>
+    <ScreenStatus.Provider value={status}>
       {screen}
+      {cluesOpen && (
+        <div className="overlay" onClick={() => setCluesOpen(false)}>
+          <div className="overlay-panel scroll" onClick={(e) => e.stopPropagation()}>
+            {withClues.map((h) => (
+              <section key={h.round}>
+                <h2 className="question">
+                  {h.round}. den · {h.minigame!.name}
+                </h2>
+                <p className="center muted">{h.minigame!.summary}</p>
+                <ClueView clues={h.minigame!.clues} nameOf={(id) => nameOf(view.players, id)} />
+              </section>
+            ))}
+            <button type="button" className="secondary" onClick={() => setCluesOpen(false)}>
+              Zavřít
+            </button>
+          </div>
+        </div>
+      )}
       {roleOpen && view.me.role && (
         <div className="overlay" onClick={() => setRoleOpen(false)}>
           <div className="overlay-panel" onClick={(e) => e.stopPropagation()}>
-            <RoleCard role={view.me.role} allies={view.allies} />
+            <RoleCard role={view.me.role} allies={view.allies} shieldLine={shieldLine} />
             <button type="button" className="secondary" onClick={() => setRoleOpen(false)}>
               Zavřít
             </button>
           </div>
         </div>
       )}
-    </>
+    </ScreenStatus.Provider>
   );
 }
 
@@ -287,8 +333,14 @@ function Morning({ view, tag, corner }: ScreenProps) {
   const murderedId = lastRound(view)?.murderedId ?? null;
   return (
     <Screen tag={tag} corner={corner}>
-      <p className="center">Tuto noc zemřel/a</p>
-      <p className="headline center">{nameOf(view.players, murderedId)}</p>
+      {murderedId ? (
+        <>
+          <p className="center">Tuto noc zemřel/a</p>
+          <p className="headline center">{nameOf(view.players, murderedId)}</p>
+        </>
+      ) : (
+        <p className="headline center">Tuto noc nikdo nezemřel</p>
+      )}
       <p className="muted center">Čekáme na moderátora.</p>
     </Screen>
   );
@@ -300,7 +352,10 @@ function currentEvent(view: PlayerView): string {
   if (view.phase === 'VOTE_RESULT') {
     return round?.banishedId ? `Kulatý stůl vyhnal: ${nameOf(view.players, round.banishedId)}` : 'Nikdo nebyl vyhnán.';
   }
-  if (view.phase === 'MORNING') return `Tuto noc zemřel/a: ${nameOf(view.players, round?.murderedId)}`;
+  if (view.phase === 'MORNING') {
+    return round?.murderedId ? `Tuto noc zemřel/a: ${nameOf(view.players, round.murderedId)}` : 'Tuto noc nikdo nezemřel.';
+  }
+  if (view.phase === 'MINIGAME') return 'Hraje se minihra.';
   if (view.phase === 'VOTE') return 'Hráči hlasují, koho vyženou.';
   if (view.phase === 'NIGHT') return 'Je noc.';
   return '';

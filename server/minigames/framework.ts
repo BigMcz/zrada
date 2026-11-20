@@ -128,7 +128,8 @@ function finishIfDone(state: GameState): void {
     id: module.id,
     name: module.meta.name,
     summary: result.summary,
-    clues: result.clues,
+    // Stopa se do (veřejné) historie zapíše až ve kroku Stopa, kdy ji moderátor ukáže.
+    clues: [],
     potDelta: result.potDelta,
     shieldWinnerId: result.shieldWinnerId,
     ghostWinnerIds: ghostWinners(state, result),
@@ -279,7 +280,10 @@ export function reduceMinigame(state: GameState, actor: Actor, action: Action, r
 
     case 'showClue': {
       requireModerator(actor);
-      requireStep(state, 'RESULT').step = 'CLUE';
+      const active = requireStep(state, 'RESULT');
+      active.step = 'CLUE';
+      const record = currentRound(state).minigame;
+      if (record && active.result) record.clues = structuredClone(active.result.clues);
       return true;
     }
 
