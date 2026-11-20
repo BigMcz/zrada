@@ -209,8 +209,15 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
     case 'endNight': {
       requireModerator(actor);
       requirePhase(state, 'NIGHT');
-      const murderedId = resolveNight(state, rng);
+      let murderedId = resolveNight(state, rng);
+      // Štít: vybraný hráč přežije a nikdo nezemře. Zrádci se nedozví víc než ostatní.
+      if (murderedId && murderedId === state.shieldHolderId) {
+        currentRound(state).shieldSaved = true;
+        murderedId = null;
+      }
       currentRound(state).murderedId = murderedId;
+      // Štít platil jen pro tuto noc.
+      state.shieldHolderId = null;
       if (murderedId) {
         state.players.find((p) => p.id === murderedId)!.status = 'MURDERED';
       }

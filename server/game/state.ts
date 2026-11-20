@@ -34,6 +34,8 @@ export interface RoundResult {
   murderedId: string | null;
   /** Minihra tohoto dne (veřejné údaje). */
   minigame?: PublicMinigameRecord;
+  /** Zrádci vybrali hráče se štítem a nikdo nezemřel (jen pro server a moderátora). */
+  shieldSaved?: boolean;
 }
 
 /** Probíhající minihra. Stav modulu je obyčejný objekt (musí jít zkopírovat přes structuredClone). */

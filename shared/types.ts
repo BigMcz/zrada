@@ -17,7 +17,11 @@ export type PlayerStatus = 'ALIVE' | 'BANISHED' | 'MURDERED';
 export type Winner = Role;
 
 /** Důvod připsání osobních bodů; minihry přidají další. */
-export type PointReason = 'GHOST_TIP';
+export type PointReason =
+  | 'GHOST_TIP' // duch tipl Zrádce (vidět až na konci)
+  | 'MINIGAME_WIN' // vítěz minihry, +2
+  | 'MINIGAME' // další body hráčů z minihry (např. správná sázka v duelu)
+  | 'GHOST_MINIGAME'; // úloha ducha v minihře
 
 /** Fáze, ve kterých duch může tipovat Zrádce. */
 export const GHOST_TIP_PHASES: readonly Phase[] = ['VOTE', 'VOTE_RESULT', 'NIGHT'];
@@ -105,7 +109,7 @@ export interface PublicRoundResult {
   round: number;
   /** Kdo byl vyhnán; null = nikdo nehlasoval. */
   banishedId: string | null;
-  /** Kdo zemřel v noci; null = noc ještě neproběhla. */
+  /** Kdo zemřel v noci; null = noc ještě neproběhla, nebo nikdo nezemřel (štít). */
   murderedId: string | null;
   /** Minihra tohoto dne, pokud se hrála. */
   minigame?: PublicMinigameRecord;
@@ -149,7 +153,14 @@ export interface PlayerView {
     /** Vlastní role; v lobby chybí. */
     role?: Role;
     sawRole: boolean;
+    /**
+     * Štít pro dnešní noc z mého pohledu: mám ho já / má ho někdo jiný / nikdo.
+     * Pole má každý hráč, ukazuje se jen na podržení pečeti.
+     */
+    shield: 'MINE' | 'OTHER' | 'NONE';
   };
+  /** Společný poklad. */
+  pot: number;
   /** Spoluzrádci; jen pro Zrádce, jinak prázdné. */
   allies: { id: string; name: string }[];
   /** Všichni hráči včetně mě, bez rolí (kromě odhalených). */
@@ -217,6 +228,9 @@ export interface ModeratorView {
   traitorsDone?: boolean;
   /** Žebříček duchů s aktuálními tipy; moderátor ho vidí po celou hru. */
   ghosts: ModeratorGhost[];
+  pot: number;
+  /** Kdo drží štít pro dnešní noc. */
+  shieldHolderId: string | null;
   /** Zda jsou minihry zapnuté (přepínač v lobby). */
   minigamesEnabled: boolean;
   /** Minihry, které jde dnes losovat; prázdné = jen Přeskočit. */

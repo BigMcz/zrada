@@ -90,7 +90,15 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
     kind: 'player',
     phase: state.phase,
     round: state.round,
-    me: { id: me.id, name: me.name, status: me.status, sawRole: me.sawRole },
+    me: {
+      id: me.id,
+      name: me.name,
+      status: me.status,
+      sawRole: me.sawRole,
+      // Kdo štít drží, ví jen on sám (a moderátor). Ostatní ví jen, že ho má „někdo jiný“.
+      shield: state.shieldHolderId === null ? 'NONE' : state.shieldHolderId === me.id ? 'MINE' : 'OTHER',
+    },
+    pot: state.pot,
     allies,
     players: state.players.map((p) => publicPlayer(state, p)),
     history: publicHistory(state),
@@ -150,6 +158,8 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
       const target = state.players.find((p) => p.id === tip);
       return { ...g, tip, tipOnTraitor: target ? target.role === 'TRAITOR' : null };
     }),
+    pot: state.pot,
+    shieldHolderId: state.shieldHolderId,
     minigamesEnabled: state.settings.minigamesEnabled,
     minigameAvailable:
       state.settings.minigamesEnabled &&

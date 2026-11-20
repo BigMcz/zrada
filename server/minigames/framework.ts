@@ -1,4 +1,4 @@
-import type { MinigameId } from '../../shared/types.js';
+import type { MinigameId, PointReason } from '../../shared/types.js';
 import type { Action, Actor } from '../game/engine.js';
 import { fail, INVALID_TARGET, NOT_ALLOWED, WRONG_PHASE } from '../game/errors.js';
 import { pick, type Rng } from '../game/random.js';
@@ -94,9 +94,17 @@ function playerOf(state: GameState, actor: Actor): Player {
   return player;
 }
 
+/** Body duchů z výsledku, jen pro skutečné duchy (vyřazené Věrné). */
+function realGhostScores(state: GameState, result: MinigameResult): [string, number][] {
+  return Object.entries(result.ghostScores).filter(([id]) => {
+    const p = state.players.find((x) => x.id === id);
+    return p !== undefined && isTippingGhost(p);
+  });
+}
+
 /** Vítězové mezi duchy: nejvyšší kladné skóre, při shodě všichni. */
-export function ghostWinners(result: MinigameResult): string[] {
-  const scores = Object.entries(result.ghostScores).filter(([, s]) => s > 0);
+export function ghostWinners(state: GameState, result: MinigameResult): string[] {
+  const scores = realGhostScores(state, result).filter(([, s]) => s > 0);
   if (scores.length === 0) return [];
   const best = Math.max(...scores.map(([, s]) => s));
   return scores.filter(([, s]) => s === best).map(([id]) => id);
@@ -123,13 +131,29 @@ function finishIfDone(state: GameState): void {
     clues: result.clues,
     potDelta: result.potDelta,
     shieldWinnerId: result.shieldWinnerId,
-    ghostWinnerIds: ghostWinners(result),
+    ghostWinnerIds: ghostWinners(state, result),
   };
   applyResultEffects(state, result);
 }
 
-/** Dopady výsledku na poklad a body (krok M2). */
-export function applyResultEffects(_state: GameState, _result: MinigameResult): void {}
+/** Body za vítězství v minihře (kdo vyhrál štít, ještě před předáním). */
+export const WIN_POINTS = 2;
+
+/**
+ * Dopady výsledku: poklad (nikdy pod 0) a osobní body. Body z miniher plynou jen
+ * z veřejných výsledků, a proto jsou vidět hned.
+ */
+export function applyResultEffects(state: GameState, result: MinigameResult): void {
+  state.pot = Math.max(0, state.pot + result.potDelta);
+  const add = (playerId: string, amount: number, reason: PointReason) => {
+    if (amount !== 0 && state.players.some((p) => p.id === playerId)) {
+      state.points.push({ playerId, amount, reason, round: state.round, visible: 'NOW' });
+    }
+  };
+  if (result.shieldWinnerId) add(result.shieldWinnerId, WIN_POINTS, 'MINIGAME_WIN');
+  for (const [id, n] of Object.entries(result.playerPoints)) add(id, n, 'MINIGAME');
+  for (const [id, n] of realGhostScores(state, result)) add(id, n, 'GHOST_MINIGAME');
+}
 
 function finishHandoff(state: GameState): void {
   const active = state.minigame!;
