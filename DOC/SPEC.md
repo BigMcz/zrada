@@ -336,7 +336,7 @@ Platí vše dosavadní a navíc:
 ### Rozšíření NEobsahuje
 
 - Velkou obrazovku pro projektor a její scény
-- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4)
+- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4, Trezor v Rozšíření 5)
 - Utrácení osobních bodů
 - Veřejný režim štítu (jen tajné předání)
 - Podrobné nastavení (osudí, délky časovačů, počáteční poklad); používají se výchozí hodnoty
@@ -520,3 +520,103 @@ Platí vše z Rozšíření 2 a navíc:
 | --- | --- | --- |
 | Q1 | Pravidla kvízu na serveru, banka otázek a testy, včetně utajení odpovědi a nápovědy | Testy prochází |
 | Q2 | Obrazovky telefonu, ducha a konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Kvíz jde odehrát v 5 kartách prohlížeče, robot prochází |
+
+## Rozšíření 5: Trezor
+
+Pátá minihra do osudí. Podrobně v [analýze miniher](minihry-analyza.md), kapitola 1. Rámec miniher zůstává beze změny.
+
+### Cíl
+
+Skupina skládá kód trezoru z nápověd na telefonech. Zrádci mají jednu nápovědu falešnou. Kdo kód otevře, získá štít. Stopa ukáže, čí nápovědy pro skutečný kód neplatily.
+
+### Pravidla
+
+- Hrají všichni živí hráči, podmínka **aspoň 4 živí**.
+- Kód má **4 číslice** (0–9, mohou se opakovat). Při **4 živých** má kód jen **3 číslice**.
+- **Rozdání nápověd:** server vygeneruje kód a nápovědy hned na začátku minihry a rozdá je dokola všem živým hráčům, každý má **1–3 nápovědy**. Nápověd je tolik, aby:
+  - pravdivé nápovědy dohromady vedly na **jediný** kód (ověřeno hrubou silou přes všechny kombinace),
+  - ke každé číslici mířily aspoň **dvě nápovědy od různých hráčů**.
+- **Volba zámečníka (20 s):** živí hlasují na telefonu, kdo bude zámečník. Sám sebe volit nejde. Nejvíc hlasů vyhrává, remízu rozhodne los. Když nikdo nehlasuje, losuje se ze všech živých. Moderátor může volbu ukončit dřív.
+- Zámečník **si nápovědy ponechá** a navíc dostane klávesnici.
+- **Luštění (3 min):** hráči čtou nápovědy nahlas. Zámečník zadá kód a zmáčkne **Otevřít trezor**. Má **3 pokusy**. Po každém pokusu všichni vidí zadaný kód a **počet číslic na správném místě** („2 ze 4“).
+- Minihra skončí otevřením trezoru, vyčerpáním pokusů, vypršením času, nebo když ji moderátor ukončí.
+- **Zámečník se odpojí:** čas běží dál. Po 20 s odpojení nabídne konzole **Přidělit zámečníka znovu** (los mezi ostatními živými). Nový zámečník si nápovědy ponechá a pokračuje se zbývajícími pokusy.
+
+### Typy nápověd
+
+| Typ | Příklad |
+| --- | --- |
+| Parita | „1. číslice je sudá.“ |
+| Rozsah | „3. číslice je větší než 5.“ |
+| Vyloučení | „2. číslice není 1, 4 ani 7.“ |
+| Vztah dvou číslic | „4. číslice je o 2 menší než 1.“ |
+| Součet | „Součet 2. a 3. číslice je 11.“ |
+| Přesná hodnota (nejvýš 1 na kód) | „3. číslice je 8.“ |
+
+### Výhoda a nevýhoda Zrádců: falešná nápověda
+
+- Každý Zrádce má na telefonu **jednu falešnou nápovědu**, ostatní jeho nápovědy jsou pravé. Falešná má stejný typ a číslice jako pravá, jen jinou hodnotu, a pro skutečný kód **neplatí**.
+- Dva Zrádci mají falešné nápovědy pokud možno u různých číslic.
+- Na telefonu vypadá falešná nápověda stejně jako pravá.
+- Pravidlo je veřejné: „Zrádci mají na telefonu falešnou nápovědu.“
+- Tajná karta: Věrný „Tvoje nápovědy jsou pravdivé.“ / „Ostatním věř opatrně.“; Zrádce „Jedna tvoje nápověda je falešná.“ / „Pravá zní: ‚…‘“.
+
+### Vyhodnocení
+
+| Výsledek | Štít | Poklad |
+| --- | --- | --- |
+| Otevřeno na 1. pokus | zámečník | +300 |
+| Otevřeno na 2. pokus | zámečník | +200 |
+| Otevřeno na 3. pokus | zámečník | +100 |
+| Neotevřeno | nikdo | 0 |
+
+Osobní body: zámečník, který otevře, +2 (jako u ostatních miniher).
+
+### Stopa
+
+- Skutečný kód a všechny pokusy zámečníka s výsledkem.
+- Tabulka **hráč → jeho nápovědy tak, jak je měl na telefonu**. Stopa neříká, které jsou falešné.
+- Věta „Z pravdivých nápověd šlo kód složit jednoznačně.“
+
+### Duchové
+
+- Tipují výsledek: **1. pokus / 2. pokus / 3. pokus / neotevře se**. Tip jde podat během volby zámečníka a luštění až do prvního pokusu.
+- Přesný tip **3 body**, tip o jeden pokus vedle **1 bod** („neotevře se“ se počítá jako 4. pokus).
+- Nápovědy hráčů nevidí. Vidí zámečníka, odpočet a pokusy.
+
+### Utajení
+
+Platí vše z Rozšíření 2 a navíc:
+
+- Kód nejde do žádného telefonu, dokud minihra neskončí.
+- Každý telefon dostane jen **své** nápovědy, nikdy cizí. Nikde v pohledu hráče není poznačeno, která nápověda je falešná.
+- Pohled Věrného i Zrádce má stejná pole.
+- Duch nápovědy nedostává vůbec.
+
+### Obrazovky
+
+- **Telefon hráče:** při volbě mřížka jmen pro hlas, pak karta s nápovědami, odpočet, zámečník, počet zbývajících pokusů a historie pokusů.
+- **Telefon zámečníka:** navíc čtyři (tři) okénka, číselník 0–9 s mazáním a tlačítko **Otevřít trezor**.
+- **Duch:** tlačítka tipu, zámečník, odpočet, pokusy.
+- **Konzole moderátora:** kód, nápovědy všech hráčů s označením falešných, hlasy, pokusy, tlačítka Ukončit volbu, Ukončit trezor a Přidělit zámečníka znovu (po 20 s odpojení).
+
+### Rozšíření NEobsahuje
+
+- Velkou obrazovku s animací zámku (přijde se scénami na velkou obrazovku)
+- Odebrání nápověd zámečníkovi
+- Pozastavení času při odpojení zámečníka
+
+### Hotovo, když
+
+1. Trezor se losuje s ostatními minihrami a jde odehrát v 5 kartách prohlížeče od losu po kulatý stůl.
+2. Generátor pro 3 i 4 číslice a 4–10 hráčů vždy dá nápovědy, z jejichž pravdivé části jde kód složit jednoznačně, každá číslice má aspoň dvě nápovědy od různých hráčů a falešné nápovědy pro kód neplatí (ověřeno testem na mnoha náhodných hrách).
+3. Volba zámečníka, pokusy, štít, poklad, přidělení nového zámečníka a body duchů odpovídají pravidlům (ověřeno testy).
+4. **Utajení:** testy ověří, že telefon nedostane kód ani cizí nápovědy, že Věrný a Zrádce mají stejný tvar pohledu a že duch nápovědy nevidí.
+5. Robot `npm run e2e` odehraje hry i s Trezorem bez chyby.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| T1 | Generátor kódu a nápověd, pravidla Trezoru na serveru a testy, včetně utajení | Testy prochází |
+| T2 | Obrazovky telefonu, zámečníka, ducha a konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Trezor jde odehrát v 5 kartách prohlížeče, robot prochází |
