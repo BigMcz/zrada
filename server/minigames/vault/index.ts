@@ -54,6 +54,8 @@ export interface VaultPlayerView {
   digits: number;
   /** Nápovědy tak, jak je hráč má na telefonu (falešná vypadá stejně jako pravá). */
   myHints: string[];
+  /** Koho smí volit (všichni kromě sebe). */
+  voteTargets: string[];
   myVote: string | null;
   votedCount: number;
   locksmithId: string | null;
@@ -280,6 +282,7 @@ export const vault: MinigameModule<VaultState> = {
       stage: state.stage,
       digits: state.digits,
       myHints: shownHints(state, playerId).map(hintText),
+      voteTargets: state.players.filter((id) => id !== playerId),
       myVote: state.votes[playerId] ?? null,
       votedCount: Object.keys(state.votes).length,
       locksmithId: state.locksmithId,

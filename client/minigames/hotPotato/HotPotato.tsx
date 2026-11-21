@@ -4,7 +4,7 @@ import type {
   HotPotatoPlayerView,
 } from '../../../server/minigames/hotPotato/index';
 import { Countdown } from '../../components/Countdown';
-import { initials } from '../../labels';
+import { NameGrid } from '../NameGrid';
 import type { MinigameModeratorProps, MinigamePlayerProps } from '../registry';
 
 /** Červené pole ručičky (stejné číslo jako na serveru). */
@@ -29,37 +29,6 @@ export function PressureGauge({ pressure }: { pressure: number }) {
       <line x1="60" y1="60" x2="60" y2="18" className="gauge-needle" style={{ transform: `rotate(${angle}deg)` }} />
       <circle cx="60" cy="60" r="5" className="gauge-hub" />
     </svg>
-  );
-}
-
-function NameGrid({
-  ids,
-  nameOf,
-  enabled = [],
-  marked = [],
-  onPick,
-}: {
-  ids: string[];
-  nameOf: (id: string) => string;
-  enabled?: string[];
-  marked?: string[];
-  onPick?: (id: string) => void;
-}) {
-  return (
-    <div className={enabled.length > 0 ? 'player-grid passing' : 'player-grid'}>
-      {ids.map((id) => (
-        <button
-          key={id}
-          type="button"
-          className={marked.includes(id) ? 'portrait selected' : 'portrait'}
-          disabled={!enabled.includes(id)}
-          onClick={() => onPick?.(id)}
-        >
-          <span className="avatar">{initials(nameOf(id))}</span>
-          <span className="portrait-name">{nameOf(id)}</span>
-        </button>
-      ))}
-    </div>
   );
 }
 

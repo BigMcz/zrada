@@ -3,6 +3,7 @@ import { AuctionGhost, AuctionModerator, AuctionPlayer } from './auction/Auction
 import { HotPotatoGhost, HotPotatoModerator, HotPotatoPlayer } from './hotPotato/HotPotato';
 import { QuizGhost, QuizModerator, QuizPlayer } from './quiz/Quiz';
 import { SplitStealGhost, SplitStealModerator, SplitStealPlayer } from './splitSteal/SplitSteal';
+import { VaultGhost, VaultModerator, VaultPlayer } from './vault/Vault';
 
 export interface MinigamePlayerProps<G = unknown> {
   game: G;
@@ -34,4 +35,5 @@ export const MINIGAME_UI: Record<string, MinigameUi> = {
   SPLIT_STEAL: { Player: SplitStealPlayer, Ghost: SplitStealGhost, Moderator: SplitStealModerator },
   HOT_POTATO: { Player: HotPotatoPlayer, Ghost: HotPotatoGhost, Moderator: HotPotatoModerator },
   QUIZ: { Player: QuizPlayer, Ghost: QuizGhost, Moderator: QuizModerator },
+  VAULT: { Player: VaultPlayer, Ghost: VaultGhost, Moderator: VaultModerator },
 };

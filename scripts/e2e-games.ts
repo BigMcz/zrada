@@ -115,7 +115,7 @@ async function connect(url: string): Promise<ClientSocket> {
 // ---------------------------------------------------------------------------
 
 /** Klíče, které by v pohledu hráče nikdy neměly být (skryté údaje miniher a štítu). */
-const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"'];
+const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"'];
 
 function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   const v = bot.pv;
@@ -140,6 +140,7 @@ function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   }
   checkGhostPotato(bot, report);
   checkQuiz(bot, report);
+  checkVault(bot, report);
   if (v.minigame?.id === 'HOT_POTATO' && v.me.status === 'ALIVE' && game) {
     // Horký brambor: Věrný i Zrádce mají stejná pole, ručička je číslo 0–1 a mimo bombu stojí na nule.
     const keys = Object.keys(game).sort().join(',');
@@ -160,6 +161,22 @@ function checkGhostPotato(bot: Bot, report: Report) {
 
 const HOT_POTATO_KEYS = 'amHolder,amOut,canPassTo,eliminated,holderId,players,pressure,remaining,round,stage';
 const QUIZ_KEYS = 'answeredCount,correct,hint,index,myAnswer,question,stage,standings,total';
+const VAULT_KEYS = 'attempts,attemptsLeft,digits,isLocksmith,locksmithId,myHints,myVote,revealedCode,stage,voteTargets,votedCount';
+
+/** Trezor: stejná pole pro všechny, kód až po konci, duch bez nápověd. */
+function checkVault(bot: Bot, report: Report) {
+  const v = bot.pv;
+  if (v?.minigame?.id !== 'VAULT' || v.minigame.step !== 'PLAY' || !v.minigame.game) return;
+  const game = v.minigame.game as { stage: string; revealedCode?: number[] | null; myHints?: string[] };
+  if (v.me.status !== 'ALIVE') {
+    if ('myHints' in game) report.violation(`${bot.name}: duch vidí nápovědy trezoru`);
+  } else {
+    const keys = Object.keys(game).sort().join(',');
+    if (keys !== VAULT_KEYS) report.violation(`${bot.name}: pohled trezoru má jiná pole: ${keys}`);
+    if (!game.myHints || game.myHints.length < 1 || game.myHints.length > 3) report.violation(`${bot.name}: má ${game.myHints?.length} nápověd`);
+  }
+  if (game.stage !== 'DONE' && game.revealedCode != null) report.violation(`${bot.name}: vidí kód trezoru před koncem`);
+}
 
 /** Kvíz: stejná pole pro všechny, správná odpověď až po konci otázky, duch bez svíčky. */
 function checkQuiz(bot: Bot, report: Report) {
@@ -244,6 +261,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     const nameOf = (id: string) => bots.find((b) => b.id === id)?.name ?? id;
     let potatoPlayed = false;
     let quizPlayed = false;
+    let vaultPlayed = false;
     const signature = () => {
       const v = m();
       const g = v.minigame?.game as { stage?: string; revealed?: unknown[] | boolean } | null | undefined;
@@ -275,6 +293,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
 
     let reconnected = 'ne';
     let potatoJump = 'ne';
+    let vaultReassign = 'ne';
     async function maybeReconnect() {
       if (!cfg.reconnect || reconnected !== 'ne') return;
       const bot = rand(alive());
@@ -368,7 +387,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       switch (mg.step) {
         case 'DRAW':
           // Nové minihry robot volí častěji, aby se v každém běhu odehrály.
-          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ'].filter(
+          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ', !vaultPlayed && 'VAULT'].filter(
             (id): id is string => !!id && id !== mg.id && mg.choices.some((c) => c.id === id),
           );
           if (wanted.length > 0 && chance(0.6)) {
@@ -390,6 +409,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
         case 'PLAY':
           if (mg.id === 'HOT_POTATO') return playHotPotato();
           if (mg.id === 'QUIZ') return playQuiz();
+          if (mg.id === 'VAULT') return playVault();
           return mg.id === 'AUCTION' ? playAuction() : playDuel();
         case 'RESULT':
           await modAct({ type: 'showClue' });
@@ -504,6 +524,85 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       await sleep(100);
     }
 
+    async function playVault() {
+      vaultPlayed = true;
+      type VaultMod = {
+        stage: string;
+        code: number[];
+        digits: number;
+        locksmithId: string | null;
+        attemptsLeft: number;
+        hints: Record<string, { text: string }[]>;
+        reassignable: boolean;
+      };
+      const game = m().minigame!.game as VaultMod;
+      const vaultGame = () => m().minigame?.game as Partial<VaultMod> | null | undefined;
+      if (game.stage === 'VOTE') {
+        // Nápovědy na telefonu musí sedět s konzolí (falešná tak, jak ji Zrádce vidí).
+        for (const b of alive()) {
+          const mine = (b.pv?.minigame?.game as { myHints?: string[] } | undefined)?.myHints ?? [];
+          const expected = (game.hints[b.id] ?? []).map((h) => h.text);
+          if (mine.join('|') !== expected.join('|')) report.violation(`${b.name}: nápovědy trezoru nesedí s konzolí`);
+        }
+        for (const g of tippingGhosts()) await act(g, { type: 'minigameInput', payload: { tip: 1 + Math.floor(Math.random() * 4) } });
+        for (const b of alive()) {
+          const targets = (b.pv?.minigame?.game as { voteTargets?: string[] } | undefined)?.voteTargets ?? [];
+          if (targets.includes(b.id)) report.violation(`${b.name}: může volit sám sebe za zámečníka`);
+          if (targets.length > 0 && chance(0.85)) await act(b, { type: 'minigameInput', payload: { vote: rand(targets) } });
+        }
+        await sleep(100);
+        await modAct({ type: 'minigameModerator', payload: { action: 'endVote' } });
+        return;
+      }
+      if (game.stage !== 'CRACK' || !game.locksmithId) {
+        await sleep(100);
+        return;
+      }
+      const locksmith = bots.find((b) => b.id === game.locksmithId)!;
+
+      // Jednou za hru (s návratem hráče): zámečník se odpojí, po 20 s ho moderátor přidělí znovu.
+      if (cfg.reconnect && vaultReassign === 'ne' && game.attemptsLeft > 1) {
+        locksmith.socket.disconnect();
+        const until = Date.now() + 25_000;
+        while (Date.now() < until && !vaultGame()?.reassignable) await sleep(200);
+        if (!vaultGame()?.reassignable) report.violation(`po odpojení zámečníka ${locksmith.name} nejde přidělit znovu`);
+        else await modAct({ type: 'minigameModerator', payload: { action: 'reassign' } });
+        const now = vaultGame();
+        if (now?.locksmithId === locksmith.id) report.violation('nový zámečník je stejný jako odpojený');
+        await rejoin(locksmith);
+        vaultReassign = `zámečník ${locksmith.name} se odpojil/a, nový zámečník ${nameOf(now?.locksmithId ?? '')}`;
+        return;
+      }
+
+      const lv = locksmith.pv?.minigame?.game as { isLocksmith?: boolean } | undefined;
+      if (!lv?.isLocksmith) {
+        await sleep(100);
+        return;
+      }
+      if (chance(0.05)) {
+        await modAct({ type: 'minigameModerator', payload: { action: 'end' } });
+        return;
+      }
+      await sleep(300 + Math.random() * 1_200);
+      // Věrný zámečník trefí kód s 50 %, Zrádce s 30 %; jinak část číslic správně.
+      const right = chance(locksmith.pv!.me.role === 'TRAITOR' ? 0.3 : 0.5);
+      const guess = game.code.map((d) => (right || chance(0.4) ? d : (d + 1 + Math.floor(Math.random() * 9)) % 10));
+      const before = game.attemptsLeft;
+      await act(locksmith, { type: 'minigameInput', payload: { guess } });
+      const until = Date.now() + 3_000;
+      while (Date.now() < until && vaultGame()?.stage === 'CRACK' && vaultGame()?.attemptsLeft === before) await sleep(50);
+      await sleep(150);
+      // Telefony ukazují pokus a správný počet číslic na místě.
+      const hits = guess.filter((d, i) => d === game.code[i]).length;
+      for (const b of alive()) {
+        const attempts = (b.pv?.minigame?.game as { attempts?: { guess: number[]; hits: number }[] } | undefined)?.attempts;
+        const last = attempts?.[attempts.length - 1];
+        if (b.pv?.minigame?.step === 'PLAY' && (!last || last.hits !== hits || last.guess.join('') !== guess.join(''))) {
+          report.violation(`${b.name}: na telefonu nesedí pokus zámečníka`);
+        }
+      }
+    }
+
     async function playHotPotato() {
       potatoPlayed = true;
       const game = m().minigame!.game as {
@@ -602,7 +701,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected: potatoJump === 'ne' ? reconnected : `${reconnected}; ${potatoJump}`,
+      reconnected: [reconnected, potatoJump, vaultReassign].filter((x, i) => i === 0 || x !== 'ne').join('; '),
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,

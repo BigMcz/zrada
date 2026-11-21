@@ -871,3 +871,121 @@
 .quiz-standings {
   margin-top: 8px;
 }
+
+/* Trezor */
+.vault-hints li {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.vault-windows {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.vault-window {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 58px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--gold);
+}
+
+.vault-hits {
+  margin-left: 6px;
+  min-width: 56px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.vault-attempts {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.vault-attempts .vault-window {
+  width: 36px;
+  height: 42px;
+  font-size: 20px;
+}
+
+.vault-lock {
+  display: grid;
+  gap: 14px;
+}
+
+.vault-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.vault-keypad button {
+  min-height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.vault-keypad button:disabled {
+  opacity: 0.4;
+}
+
+.vault-tips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.vault-tips button {
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.vault-tips button.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px var(--gold-glow);
+  color: var(--gold);
+}
+
+.vault-console-code {
+  margin: 4px 0 8px;
+  font-size: 20px;
+}
+
+.vault-console-player {
+  flex-wrap: wrap;
+}
+
+.vault-console-hints {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  padding-left: 16px;
+  font-size: 14px;
+}
+
+.vault-console-hints li.fake {
+  color: var(--traitor-text);
+}
+
+.vault-warning {
+  color: var(--warn);
+  font-weight: 600;
+}
