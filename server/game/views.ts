@@ -172,6 +172,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     shieldHolderId: state.shieldHolderId,
     minigamesEnabled: state.settings.minigamesEnabled,
     physicalMission: state.settings.physicalMission,
+    screenMuted: state.settings.screenMuted,
     minigameAvailable:
       state.settings.minigamesEnabled &&
       (state.phase === 'ROLES' || state.phase === 'MORNING') &&
@@ -225,5 +226,6 @@ export function viewForScreen(state: GameState, joinUrl: string | null): ScreenV
       .sort((a, b) => b.points - a.points),
     minigame: screenMinigameView(state),
     winner: state.winner ?? null,
+    muted: state.settings.screenMuted,
   };
 }

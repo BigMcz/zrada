@@ -111,6 +111,13 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
       return;
     }
 
+    case 'setScreenMuted': {
+      // Ztlumení velké obrazovky jde přepnout kdykoli.
+      requireModerator(actor);
+      state.settings.screenMuted = action.muted === true;
+      return;
+    }
+
     case 'kick': {
       requireModerator(actor);
       requirePhase(state, 'LOBBY');

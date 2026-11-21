@@ -58,6 +58,14 @@ function TopBar({ view, children }: { view: ModeratorView; children?: ReactNode 
         <a className="console-screen-link" href="/obrazovka" target="_blank" rel="noreferrer">
           Otevřít velkou obrazovku ↗
         </a>
+        <button
+          type="button"
+          className="console-screen-link"
+          aria-pressed={view.screenMuted}
+          onClick={() => void send({ type: 'setScreenMuted', muted: !view.screenMuted })}
+        >
+          {view.screenMuted ? '🔇 Obrazovka ztlumená' : '🔊 Ztlumit obrazovku'}
+        </button>
       </div>
     </header>
   );

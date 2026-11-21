@@ -5,8 +5,8 @@ import { makeButtonModule } from '../minigames/testModule.js';
 import { seededRng } from './random.js';
 import { pointsOf } from './rules.js';
 import type { GameState } from './state.js';
-import { as, lobby, MOD, must, playRandomGame, startedWith } from './testing.js';
-import { viewForScreen } from './views.js';
+import { as, GUEST, lobby, MOD, must, playRandomGame, rejected, startedWith } from './testing.js';
+import { viewForModerator, viewForScreen } from './views.js';
 
 const URL = 'http://192.168.0.10:3000/';
 
@@ -107,5 +107,21 @@ describe('Velká obrazovka – minihry', () => {
     v = checkScreen(s);
     expect(v.minigame!.step).toBe('HANDOFF');
     expect(JSON.stringify(v)).not.toContain('"winnerId"');
+  });
+});
+
+describe('Velká obrazovka – ztlumení', () => {
+  it('moderátor ztlumí obrazovku kdykoli, hráč ani host ne', () => {
+    let s = lobby(['Petra', 'Tomáš']);
+    expect(viewForScreen(s, URL).muted).toBe(false);
+    rejected(s, as('p1'), { type: 'setScreenMuted', muted: true });
+    rejected(s, GUEST, { type: 'setScreenMuted', muted: true });
+    s = must(s, MOD, { type: 'setScreenMuted', muted: true });
+    expect(viewForScreen(s, URL).muted).toBe(true);
+    expect(viewForModerator(s, new Set()).screenMuted).toBe(true);
+    let g = must(startedWith(5, ['p1']), MOD, { type: 'startVote' });
+    g = must(g, MOD, { type: 'setScreenMuted', muted: true });
+    g = must(g, MOD, { type: 'setScreenMuted', muted: false });
+    expect(viewForScreen(g, URL).muted).toBe(false);
   });
 });

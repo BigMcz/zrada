@@ -32,6 +32,8 @@ Server v terminálu vypíše dva odkazy:
 
 Telefony musí být na **stejné Wi-Fi** jako notebook.
 
+**Velká obrazovka (projektor, TV):** otevři `http://localhost:3000/obrazovka` (v konzoli je odkaz **Otevřít velkou obrazovku**), dej ji přes celou obrazovku a jednou klikni na **Zahájit**, aby šel zvuk. Ukazuje jen veřejné informace (QR kód v lobby, hlasování bez jmen hlasujících, odhalení, minihry, konec hry), takže ji klidně promítej. Zvuk ztlumíš v horní liště konzole. Hra jde dohrát i bez ní.
+
 ## Pravidla v kostce
 
 - Hráči jsou tajně Věrní, nebo Zrádci. Zrádci se znají, Věrní ne.
@@ -116,6 +118,7 @@ server/
 client/
   player/              obrazovky telefonu hráče
   moderator/           konzole moderátora
+  screen/              velká obrazovka /obrazovka (scény hry a miniher, zvuky přes Web Audio)
   minigames/           obrazovky miniher (telefon, duch, moderátor) a jejich registr
   components/          karta role, karta s pečetí, mřížka hráčů, odpočet, stopa, žebříčky
 ```

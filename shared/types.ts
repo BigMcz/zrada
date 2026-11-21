@@ -243,6 +243,8 @@ export interface ModeratorView {
   minigamesEnabled: boolean;
   /** Fyzická mise v osudí (přepínač v konzoli, kdykoli). */
   physicalMission: boolean;
+  /** Zvuky velké obrazovky ztlumené. */
+  screenMuted: boolean;
   /** Minihry, které jde dnes losovat; prázdné = jen Přeskočit. */
   minigameAvailable: boolean;
   /** Jen ve fázi MINIGAME. */
@@ -292,6 +294,8 @@ export interface ScreenView {
   ghostBoard: { id: string; points: number }[];
   minigame: ScreenMinigameView | null;
   winner: Winner | null;
+  /** Moderátor obrazovku ztlumil. */
+  muted: boolean;
 }
 
 /** Pohled zařízení, které ještě není ve hře. */
@@ -327,6 +331,7 @@ export type Intent =
   | { type: 'newGame' }
   | { type: 'setMinigames'; enabled: boolean }
   | { type: 'setPhysicalMission'; enabled: boolean }
+  | { type: 'setScreenMuted'; muted: boolean }
   | { type: 'drawMinigame' }
   | { type: 'rerollMinigame' }
   | { type: 'chooseMinigame'; id: MinigameId }

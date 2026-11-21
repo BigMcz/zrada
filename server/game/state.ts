@@ -54,6 +54,8 @@ export interface GameSettings {
   minigamesEnabled: boolean;
   /** Fyzická mise v osudí (Rozšíření 8); výchozí vypnuto. */
   physicalMission: boolean;
+  /** Velká obrazovka ztlumená z konzole (Rozšíření 9). */
+  screenMuted: boolean;
 }
 
 /**
@@ -122,7 +124,7 @@ export function createGame(): GameState {
     ghostTips: {},
     ghostTipLog: [],
     points: [],
-    settings: { minigamesEnabled: true, physicalMission: false },
+    settings: { minigamesEnabled: true, physicalMission: false, screenMuted: false },
     minigame: null,
     minigamesPlayed: [],
     minigameMemory: {},

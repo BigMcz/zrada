@@ -1,21 +1,68 @@
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ScreenMinigameView, ScreenView } from '../../shared/types';
 import { ClueView } from '../components/ClueView';
 import { GameScene } from './GameScenes';
 import { Countdown } from '../components/Countdown';
 import { initials, nameOf, phaseTag, ROLE_LABEL } from '../labels';
 import { useConnection } from '../socket';
+import { play, setAmbient, setMuted, startAudio } from './sounds';
 
 /** Velká obrazovka pro projektor (Rozšíření 9): jen sleduje stav hry, nic se na ní neovládá. */
 export function ScreenApp() {
   const { connected, view } = useConnection();
+  const [started, setStarted] = useState(false);
+  const screen = view?.kind === 'screen' ? view : null;
+  useSounds(screen);
   return (
     <div className="screen-root">
       {!connected && <div className="screen-offline">Obnovuji spojení…</div>}
-      {view?.kind === 'screen' ? <ScreenGame view={view} /> : <p className="screen-center muted">Připojuji velkou obrazovku…</p>}
+      {screen ? <ScreenGame view={screen} /> : <p className="screen-center muted">Připojuji velkou obrazovku…</p>}
+      {!started && (
+        // Prohlížeč pustí zvuk až po kliknutí, proto jedno tlačítko na začátku.
+        <button
+          type="button"
+          className="screen-start"
+          onClick={() => {
+            startAudio();
+            setStarted(true);
+          }}
+        >
+          Zahájit
+          <small>Kliknutím zapneš zvuk velké obrazovky</small>
+        </button>
+      )}
     </div>
   );
+}
+
+/** Zvuky podle změn veřejného stavu hry (sirka, zvon, ambient noci, buben, mince, karty). */
+function useSounds(view: ScreenView | null) {
+  const prev = useRef<ScreenView | null>(null);
+  useEffect(() => {
+    if (!view) return;
+    setMuted(view.muted);
+    const p = prev.current;
+    prev.current = view;
+    if (!p) return;
+    if (view.phase === 'LOBBY' && view.players.length > p.players.length) play('match');
+    if (view.phase !== p.phase) {
+      setAmbient(view.phase === 'NIGHT');
+      if (view.phase === 'MORNING') play(view.murderedId ? 'drum' : 'bell');
+      else if (view.phase !== 'NIGHT' && view.phase !== 'VOTE_RESULT' && view.phase !== 'ENDED') play('bell');
+    }
+    if (view.pot > p.pot) play('coins');
+    const g = view.minigame?.game as Record<string, unknown> | null | undefined;
+    const pg = p.minigame?.id === view.minigame?.id ? (p.minigame?.game as Record<string, unknown> | null | undefined) : null;
+    if (g && pg) {
+      const revealed = (x: Record<string, unknown>) => (Array.isArray(x.revealed) ? x.revealed.length : x.revealed ? 1 : 0);
+      if (revealed(g) > revealed(pg)) play('flip');
+      if (g.stage === 'PAUSE' && pg.stage === 'BOMB') play('drum'); // Horký brambor bouchl
+      if (typeof g.errors === 'number' && g.errors > (pg.errors as number)) play('drum'); // chyba u bomby
+      if (Array.isArray(g.attempts) && g.attempts.length > (pg.attempts as unknown[]).length) play('flip'); // pokus u trezoru
+    }
+  }, [view]);
+  useEffect(() => () => setAmbient(false), []);
 }
 
 /** Uplynulý čas od změny klíče (pro dramatické pauzy, které si obrazovka časuje sama). */
@@ -164,6 +211,12 @@ function VoteReveal({ view, name }: { view: ScreenView; name: (id: string | null
   const tally = view.tally ?? [];
   const max = Math.max(1, ...tally.map((r) => r.votes));
   const banished = view.players.find((p) => p.id === view.banishedId);
+  // Zvuk ke každému kroku odhalení: sloupce, jméno, role (gong pro Zrádce, molový akord pro Věrného).
+  const stage = t < 2500 ? 0 : t < 5500 ? 1 : 2;
+  useEffect(() => {
+    if (stage < 2) play('flip');
+    else if (banished?.revealedRole) play(banished.revealedRole === 'TRAITOR' ? 'gong' : 'minor');
+  }, [stage]);
   return (
     <div className="screen-vote">
       <div className="screen-tally">
@@ -200,6 +253,11 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
   const t = useElapsed('finale');
   const shown = Math.floor(t / 1500);
   const done = shown >= view.players.length;
+  useEffect(() => {
+    if (shown === 0) return;
+    if (!done) play('flip');
+    else if (shown === view.players.length) play(view.winner === 'TRAITOR' ? 'gong' : 'bell');
+  }, [shown]);
   return (
     <div className="screen-finale">
       {view.banishedId && t < 1500 && <p className="muted">Kulatý stůl vyhnal: {name(view.banishedId)}</p>}
