@@ -336,7 +336,7 @@ Platí vše dosavadní a navíc:
 ### Rozšíření NEobsahuje
 
 - Velkou obrazovku pro projektor a její scény
-- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4, Trezor v Rozšíření 5, Rytmus v Rozšíření 6)
+- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4, Trezor v Rozšíření 5, Rytmus v Rozšíření 6, Zneškodni bombu v Rozšíření 7)
 - Utrácení osobních bodů
 - Veřejný režim štítu (jen tajné předání)
 - Podrobné nastavení (osudí, délky časovačů, počáteční poklad); používají se výchozí hodnoty
@@ -715,3 +715,109 @@ Platí vše z Rozšíření 2 a navíc:
 | --- | --- | --- |
 | R1 | Pravidla Rytmu na serveru: kola, kalibrace, hodnocení, rušička, testy včetně utajení | Testy prochází |
 | R2 | Telefon s kruhem a ťukáním, synchronizace hodin, duch, konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Rytmus jde odehrát v 5 kartách prohlížeče, robot prochází |
+
+## Rozšíření 7: Zneškodni bombu
+
+Sedmá minihra do osudí. Podrobně v [analýze miniher](minihry-analyza.md), kapitola 2. Rámec miniher zůstává beze změny. Mechanika „jeden vidí bombu, ostatní čtou manuál“ je inspirovaná hrou *Keep Talking and Nobody Explodes*; pravidla manuálu i symboly jsou vlastní.
+
+### Cíl
+
+Pyrotechnik vidí bombu, ostatní mají stránky manuálu a musí ho navigovat. Zrádci mají v jedné stránce falešné pravidlo. Když se bomba zneškodní, pyrotechnik získá štít.
+
+### Pravidla
+
+- Hrají všichni živí hráči, podmínka **aspoň 4 živí**.
+- **Pyrotechnik** se vylosuje mezi živými hned na začátku minihry. Jediný vidí bombu, stránku manuálu nemá.
+- **Bomba** má 2 moduly: **Dráty** a **Symboly**.
+- **Manuál** má 4 stránky: *Dráty 3–4*, *Dráty 5–6*, *Symboly – sloupce 1–3*, *Symboly – sloupce 4–6*. Rozdají se dokola všem kromě pyrotechnika, každý má **1–2 stránky**. Každou stránku má aspoň jeden hráč; když je hráčů dost, aspoň dva.
+- **Příprava (20 s):** navigátoři čtou stránky, duchové tipují. Moderátor může odpočet spustit dřív tlačítkem **Spustit odpočet**.
+- **Odpočet 3:00.** Pyrotechnik popisuje bombu, ostatní hledají pravidla, pyrotechnik provádí akce.
+- **Ovládání:** ťuknutí na drát nebo symbol ho označí, akce proběhne až tlačítkem **Přestřihnout** / **Zmáčknout**.
+- **Chyba** = špatná akce. Každá chyba zrychlí zbývající čas o **10 %**. **Třetí chyba** nebo nula na odpočtu = výbuch.
+- Oba moduly vyřešené = bomba zneškodněna.
+- **Pyrotechnik se odpojí:** odpočet se pozastaví. Po 20 s nabídne konzole **Přidělit pyrotechnika znovu** (los mezi ostatními živými); bomba zůstane stejná, nový pyrotechnik si své stránky ponechá. Když se původní pyrotechnik vrátí dřív, odpočet běží dál.
+
+### Modul Dráty
+
+- 3–6 drátů, barvy červená, modrá, žlutá, bílá, černá, zelená.
+- Pro každý počet drátů je v manuálu 4–5 číslovaných pravidel „Pokud …, přestřihni …“. Platí **první pravidlo, které sedí**; poslední je „Jinak …“.
+- Správné je přestřihnout jeden drát. Špatně přestřižený drát zůstane přestřižený, správný drát se nemění.
+
+### Modul Symboly
+
+- Manuál má 6 sloupců po 7 symbolech (vlastní sada znaků).
+- Bomba ukáže 4 symboly z jednoho sloupce v náhodném pořadí. Generátor zaručí, že všechny čtyři obsahuje **jen jeden sloupec**.
+- Symboly se mačkají v pořadí, v jakém jsou ve sloupci shora dolů. Špatný symbol = chyba, už zmáčknuté symboly platí dál.
+
+### Manuál jako data
+
+- Pravidla drátů a sloupce symbolů jsou v JSON (`server/minigames/bomb/manual.cs.json`), ne v kódu.
+- Řešitel z manuálu a bomby spočítá správné řešení. Generátor vytváří jen bomby, které manuál jednoznačně řeší.
+
+### Výhoda Zrádců: falešné pravidlo
+
+- Každý Zrádce-navigátor má v **jedné své stránce jedno pozměněné pravidlo**: u drátů jiný drát, u symbolů dva prohozené symboly ve sloupci. Pozměněné je to pravidlo (nebo sloupec), které **rozhoduje o této bombě**.
+- Falešná stránka má stejné rozložení i počet pravidel jako pravá.
+- Pravidlo je veřejné: „Ve stránce manuálu, kterou mají Zrádci, je jedno pravidlo falešné.“
+- Tajná karta (stejný počet řádků pro všechny):
+  - Věrný navigátor: „Tvoje stránky manuálu jsou pravé.“ / „Pozor na rozpory.“
+  - Zrádce navigátor: „Ve stránce *…* je falešné pravidlo č. N.“ / „Pravé zní: ‚…‘“
+  - Pyrotechnik (obě role): „Jsi pyrotechnik. Jen ty vidíš bombu.“ / „Popisuj nahlas, co vidíš.“
+
+### Vyhodnocení
+
+| Výsledek | Štít | Poklad |
+| --- | --- | --- |
+| Zneškodněna | pyrotechnik | +400, minus 100 za každou chybu |
+| Výbuch | nikdo | 0 |
+
+Osobní body: pyrotechnik, který bombu zneškodní, +2 (jako u ostatních miniher).
+
+### Stopa
+
+- Seznam chyb, např. „Chyba 1: Dráty, přestřižen 3. drát (správně 5.)“.
+- U každé chyby, zda by ji vysvětlila falešná verze některé stránky („Tuto chybu by vysvětlila falešná verze stránky Dráty 3–4“). Neříká, čí stránka byla falešná.
+- Tabulka **stránka manuálu → kdo ji měl**.
+
+### Duchové
+
+- Do spuštění odpočtu tipují: **bez chyby / s 1 chybou / se 2 chybami / vybuchne**.
+- Přesný tip **3 body**, o jedno vedle **1 bod** („vybuchne“ se počítá jako 3 chyby).
+- Bombu ani stránky nevidí. Vidí pyrotechnika, odpočet a kontrolky chyb.
+
+### Utajení
+
+Platí vše z Rozšíření 2 a navíc:
+
+- Bomba (dráty, symboly) jde jen do telefonu pyrotechnika. Správné řešení nejde do žádného telefonu.
+- Každý navigátor dostane jen **své** stránky. Nikde v pohledu hráče není poznačeno, které pravidlo je falešné.
+- Pohled Věrného i Zrádce má stejná pole (pyrotechnik i navigátor).
+- Duch nedostává bombu ani stránky.
+
+### Obrazovky
+
+- **Telefon pyrotechnika:** nahoře odpočet a tři kontrolky chyb, pod tím moduly Dráty a Symboly, označení a potvrzovací tlačítko.
+- **Telefon navigátora:** jeho stránky (nadpis, číslovaná pravidla, u symbolů sloupce), pyrotechnik, kontrolky chyb, stav modulů.
+- **Duch:** tlačítka tipu, pyrotechnik, kontrolky chyb, stav modulů.
+- **Konzole moderátora:** bomba se správným řešením, rozdělení stránek s vyznačeným falešným pravidlem, chyby, tipy duchů, tlačítka Spustit odpočet, Přidělit pyrotechnika znovu a Ukončit bombu (= výbuch).
+
+### Rozšíření NEobsahuje
+
+- Moduly Tlačítko a Kódový zámek
+- Velkou obrazovku s odpočtem (přijde se scénami na velkou obrazovku)
+- Víc variant manuálu
+
+### Hotovo, když
+
+1. Zneškodni bombu se losuje s ostatními minihrami a jde odehrát v 5 kartách prohlížeče od losu po kulatý stůl.
+2. Generátor vytváří jen bomby, které manuál jednoznačně řeší, a falešné pravidlo vždy mění řešení této bomby (ověřeno testem na mnoha náhodných bombách).
+3. Akce, chyby, zrychlení odpočtu, výbuch, zneškodnění, pozastavení a nový pyrotechnik, štít, poklad a body duchů odpovídají pravidlům (ověřeno testy).
+4. **Utajení:** testy ověří, že bombu vidí jen pyrotechnik, řešení nikdo, navigátor jen své stránky, Věrný a Zrádce mají stejný tvar pohledu a duch nevidí bombu ani stránky.
+5. Robot `npm run e2e` odehraje hry i s bombou bez chyby (bot-pyrotechnik provede správnou akci s pravděpodobností 80 %).
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| B1 | Manuál jako data, generátor bomby, řešitel, falešná pravidla, pravidla na serveru a testy včetně utajení | Testy prochází |
+| B2 | Obrazovky pyrotechnika, navigátora, ducha a konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Bomba jde odehrát v 5 kartách prohlížeče, robot prochází |
