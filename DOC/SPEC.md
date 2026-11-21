@@ -336,7 +336,7 @@ Platí vše dosavadní a navíc:
 ### Rozšíření NEobsahuje
 
 - Velkou obrazovku pro projektor a její scény
-- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4, Trezor v Rozšíření 5, Rytmus v Rozšíření 6, Zneškodni bombu v Rozšíření 7)
+- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4, Trezor v Rozšíření 5, Rytmus v Rozšíření 6, Zneškodni bombu v Rozšíření 7, Fyzická mise v Rozšíření 8)
 - Utrácení osobních bodů
 - Veřejný režim štítu (jen tajné předání)
 - Podrobné nastavení (osudí, délky časovačů, počáteční poklad); používají se výchozí hodnoty
@@ -821,3 +821,79 @@ Platí vše z Rozšíření 2 a navíc:
 | --- | --- | --- |
 | B1 | Manuál jako data, generátor bomby, řešitel, falešná pravidla, pravidla na serveru a testy včetně utajení | Testy prochází |
 | B2 | Obrazovky pyrotechnika, navigátora, ducha a konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Bomba jde odehrát v 5 kartách prohlížeče, robot prochází |
+
+## Rozšíření 8: Fyzická mise
+
+Osmá, volitelná minihra. Podrobně v [analýze miniher](minihry-analyza.md), kapitola „Fyzická mise (moderátorský modul)“. Není to hra na telefonech, ale modul se stejným rozhraním jako ostatní minihry; los, předání štítu a historie kol fungují stejně.
+
+### Cíl
+
+Moderátor dá skupině fyzický úkol (stavění věže, šifra po místnosti, štafeta). Hráči ho splní mimo telefony a moderátor zapíše výsledek: poklad, štít a body duchů.
+
+### Zapnutí
+
+- Nové nastavení **Fyzická mise v osudí**, výchozí hodnota **vypnuto**.
+- Moderátor ho přepíná v konzoli **kdykoli** (v lobby i během hry).
+- Vypnutá mise se nelosuje a nejde ani vybrat ručně.
+- Podmínka: **aspoň 1 živý hráč**.
+
+### Průběh (krok Hra)
+
+1. **Zadání:** moderátor napíše zadání do textového pole (nejvýš **300 znaků**) a stiskne **Zveřejnit zadání**. Konzole nabízí tři náměty jedním ťuknutím:
+   - „Postavte z kelímků co nejvyšší věž do 3 minut.“
+   - „V místnosti jsou schované čtyři lístky s písmeny. Najděte je a složte slovo.“
+   - „Štafeta: každý donese jeden předmět z druhé strany místnosti, kdo upustí, začíná znovu.“
+2. **Plnění:** telefony ukazují zadání velkým písmem a „Plňte misi“. **Odpočet není**, moderátor sám ví, kdy mise skončila.
+3. **Výsledek:** moderátor v konzoli vybere:
+   - **změnu pokladu** −200 až +300 po 50,
+   - **štít**: jeden živý hráč, nebo nikdo,
+   - **duch s 3 body**: jeden duch, nebo nikdo,
+   - **stopu**: nepovinný text (nejvýš 300 znaků),
+
+   a stiskne **Uložit výsledek**. Minihra tím skončí a pokračuje jako ostatní (výsledek, stopa, předání štítu).
+
+### Zrádci
+
+- Výhodu na telefonu nemají.
+- Veřejné pravidlo: „Zrádci nemají žádnou výhodu na telefonu. Mohou ale misi nenápadně kazit.“
+- Tajná karta: Věrný „Snaž se, aby mise vyšla.“ / „Sleduj, kdo ji kazí.“; Zrádce „Můžeš misi nenápadně kazit.“ / „Nenech se přistihnout.“
+
+### Vyhodnocení a stopa
+
+| | |
+| --- | --- |
+| Štít | hráč, kterého vybral moderátor, nebo nikdo |
+| Poklad | změna zapsaná moderátorem (−200 až +300) |
+| Osobní body | vítěz +2 (jako u ostatních miniher) |
+| Duchové | vybraný duch 3 body |
+
+- Stopa: zadání mise, a pokud ho moderátor napsal, jeho text („Petra upustila klíč dvakrát“).
+
+### Utajení
+
+Platí vše z Rozšíření 2. Pohled Věrného i Zrádce má stejná pole; telefon nedostává nic, co by moderátor ještě nezveřejnil.
+
+### Obrazovky
+
+- **Telefon a duch:** před zveřejněním „Moderátor připravuje misi“, pak zadání velkým písmem a „Plňte misi“.
+- **Konzole moderátora:** pole pro zadání s náměty a tlačítko Zveřejnit zadání; pak volba změny pokladu, štítu, ducha a text stopy s tlačítkem Uložit výsledek.
+- **Nastavení:** přepínač Fyzická mise v osudí.
+
+### Rozšíření NEobsahuje
+
+- Odpočet mise
+- Uložené vlastní náměty mezi hrami
+- Velkou obrazovku se zadáním (přijde se scénami na velkou obrazovku)
+
+### Hotovo, když
+
+1. Se zapnutým nastavením se Fyzická mise losuje s ostatními minihrami a jde odehrát v 5 kartách prohlížeče od losu po kulatý stůl; s vypnutým se nelosuje ani nejde vybrat.
+2. Zadání, zápis výsledku, poklad, štít, body duchů a stopa odpovídají pravidlům a neplatné vstupy (dlouhý text, poklad mimo rozsah, mrtvý hráč jako vítěz) se odmítnou (ověřeno testy).
+3. Robot `npm run e2e` odehraje hry i s Fyzickou misí bez chyby.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| F1 | Nastavení Fyzická mise v osudí, modul na serveru a testy | Testy prochází |
+| F2 | Obrazovky telefonu, ducha a konzole, přepínač v konzoli, rozšíření robota `npm run e2e` | Mise jde odehrát v 5 kartách prohlížeče, robot prochází |
