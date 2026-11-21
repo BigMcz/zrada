@@ -115,7 +115,7 @@ async function connect(url: string): Promise<ClientSocket> {
 // ---------------------------------------------------------------------------
 
 /** Klíče, které by v pohledu hráče nikdy neměly být (skryté údaje miniher a štítu). */
-const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"'];
+const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"', '"solution"', '"column"'];
 
 function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   const v = bot.pv;
@@ -142,6 +142,7 @@ function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   checkQuiz(bot, report);
   checkVault(bot, report);
   checkRhythm(bot, report);
+  checkBomb(bot, report);
   if (v.minigame?.id === 'HOT_POTATO' && v.me.status === 'ALIVE' && game) {
     // Horký brambor: Věrný i Zrádce mají stejná pole, ručička je číslo 0–1 a mimo bombu stojí na nule.
     const keys = Object.keys(game).sort().join(',');
@@ -162,6 +163,22 @@ function checkGhostPotato(bot: Bot, report: Report) {
 
 const HOT_POTATO_KEYS = 'amHolder,amOut,canPassTo,eliminated,holderId,players,pressure,remaining,round,stage';
 const QUIZ_KEYS = 'answeredCount,correct,hint,index,myAnswer,question,stage,standings,total';
+const BOMB_KEYS = 'device,errors,isPyro,maxErrors,pages,paused,pyroId,stage,symbolsSolved,wiresSolved';
+
+/** Bomba: stejná pole pro všechny, bombu jen pyrotechnik, duch nic. */
+function checkBomb(bot: Bot, report: Report) {
+  const v = bot.pv;
+  if (v?.minigame?.id !== 'BOMB' || v.minigame.step !== 'PLAY' || !v.minigame.game) return;
+  const game = v.minigame.game as { device?: unknown; isPyro?: boolean };
+  if (v.me.status !== 'ALIVE') {
+    if ('device' in game || 'pages' in game) report.violation(`${bot.name}: duch vidí bombu nebo stránky`);
+    return;
+  }
+  const keys = Object.keys(game).sort().join(',');
+  if (keys !== BOMB_KEYS) report.violation(`${bot.name}: pohled bomby má jiná pole: ${keys}`);
+  if (!game.isPyro && game.device) report.violation(`${bot.name}: navigátor vidí bombu`);
+}
+
 const RHYTHM_KEYS = 'beats,bpm,displayOffsetMs,groupSync,myAccuracy,myPick,round,rounds,stage,submitted,voteTargets';
 
 /** Rytmus: stejná pole pro všechny, duch bez volby a bez posunu rytmu. */
@@ -279,6 +296,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     let quizPlayed = false;
     let vaultPlayed = false;
     let rhythmPlayed = false;
+    let bombPlayed = false;
     const signature = () => {
       const v = m();
       const g = v.minigame?.game as { stage?: string; revealed?: unknown[] | boolean } | null | undefined;
@@ -312,6 +330,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     let potatoJump = 'ne';
     let vaultReassign = 'ne';
     let rhythmDrop = 'ne';
+    let bombReassign = 'ne';
     async function maybeReconnect() {
       if (!cfg.reconnect || reconnected !== 'ne') return;
       const bot = rand(alive());
@@ -405,7 +424,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       switch (mg.step) {
         case 'DRAW':
           // Nové minihry robot volí častěji, aby se v každém běhu odehrály.
-          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ', !vaultPlayed && 'VAULT', !rhythmPlayed && 'RHYTHM'].filter(
+          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ', !vaultPlayed && 'VAULT', !rhythmPlayed && 'RHYTHM', !bombPlayed && 'BOMB'].filter(
             (id): id is string => !!id && id !== mg.id && mg.choices.some((c) => c.id === id),
           );
           if (wanted.length > 0 && chance(0.6)) {
@@ -430,6 +449,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
           if (mg.id === 'QUIZ') return playQuiz();
           if (mg.id === 'VAULT') return playVault();
           if (mg.id === 'RHYTHM') return playRhythm();
+          if (mg.id === 'BOMB') return playBomb();
           return mg.id === 'AUCTION' ? playAuction() : playDuel();
         case 'RESULT':
           await modAct({ type: 'showClue' });
@@ -704,6 +724,97 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       }
     }
 
+    async function playBomb() {
+      bombPlayed = true;
+      type BombMod = {
+        stage: string;
+        pyroId: string;
+        device: { wires: string[]; cut: number[]; symbols: string[]; pressed: string[] };
+        solution: { wire: number; order: string[] };
+        pages: Record<string, { id: string }[]>;
+        wiresSolved: boolean;
+        symbolsSolved: boolean;
+        paused: boolean;
+        reassignable: boolean;
+      };
+      const game = m().minigame!.game as BombMod;
+      const bombGame = () => m().minigame?.game as Partial<BombMod> | null | undefined;
+
+      if (game.stage === 'READY') {
+        // Stránky na telefonu musí sedět s konzolí; bombu má jen pyrotechnik (a ten ji v přípravě ještě nevidí).
+        for (const b of alive()) {
+          const v = b.pv?.minigame?.game as { pages?: { id: string }[]; device?: unknown } | undefined;
+          const mine = (v?.pages ?? []).map((p) => p.id).join(',');
+          const expected = (game.pages[b.id] ?? []).map((p) => p.id).join(',');
+          if (mine !== expected) report.violation(`${b.name}: stránky manuálu nesedí s konzolí (${mine} × ${expected})`);
+          if (v?.device) report.violation(`${b.name}: vidí bombu před spuštěním odpočtu`);
+        }
+        for (const g of tippingGhosts()) await act(g, { type: 'minigameInput', payload: { tip: Math.floor(Math.random() * 4) } });
+        await modAct({ type: 'minigameModerator', payload: { action: 'start' } });
+        return;
+      }
+      if (game.stage !== 'ARMED') {
+        await sleep(100);
+        return;
+      }
+      const pyro = bots.find((b) => b.id === game.pyroId)!;
+
+      // Jednou za hru (s návratem hráče): pyrotechnik se odpojí, odpočet musí stát, po 20 s nový pyrotechnik.
+      if (cfg.reconnect && bombReassign === 'ne' && !game.paused) {
+        pyro.socket.disconnect();
+        let until = Date.now() + 3_000;
+        while (Date.now() < until && !bombGame()?.paused) await sleep(100);
+        if (!bombGame()?.paused) report.violation(`odpočet bomby nestojí po odpojení pyrotechnika ${pyro.name}`);
+        const frozen = m().minigame?.endsAt;
+        if (frozen !== null) report.violation('pozastavená bomba má dál běžící odpočet');
+        until = Date.now() + 25_000;
+        while (Date.now() < until && !bombGame()?.reassignable) await sleep(200);
+        if (!bombGame()?.reassignable) report.violation(`po odpojení pyrotechnika ${pyro.name} nejde přidělit nového`);
+        else await modAct({ type: 'minigameModerator', payload: { action: 'reassign' } });
+        const now = bombGame();
+        if (now?.pyroId === pyro.id) report.violation('nový pyrotechnik je stejný jako odpojený');
+        await rejoin(pyro);
+        bombReassign = `pyrotechnik ${pyro.name} se odpojil/a, odpočet stál, nový pyrotechnik ${nameOf(now?.pyroId ?? '')}`;
+        return;
+      }
+
+      // Bomba je jen u pyrotechnika.
+      for (const b of alive()) {
+        const v = b.pv?.minigame?.game as { device?: unknown; isPyro?: boolean } | undefined;
+        if (b.id !== game.pyroId && v?.device) report.violation(`${b.name}: vidí bombu, ale není pyrotechnik`);
+      }
+      const pv = pyro.pv?.minigame?.game as { device?: BombMod['device'] | null; isPyro?: boolean } | undefined;
+      if (!pv?.isPyro || !pv.device) {
+        await sleep(100);
+        return;
+      }
+      if (chance(0.03)) {
+        await modAct({ type: 'minigameModerator', payload: { action: 'end' } });
+        return;
+      }
+      await sleep(300 + Math.random() * 600);
+      // Bot-pyrotechnik udělá správnou akci s pravděpodobností 80 %.
+      const right = chance(0.8);
+      let payload: unknown;
+      if (!game.wiresSolved) {
+        const wrong = game.device.wires.map((_, i) => i).filter((i) => i !== game.solution.wire && !game.device.cut.includes(i));
+        payload = { cut: right || wrong.length === 0 ? game.solution.wire : rand(wrong) };
+      } else {
+        const next = game.solution.order[game.device.pressed.length];
+        const wrong = game.device.symbols.filter((s) => s !== next && !game.device.pressed.includes(s));
+        payload = { press: right || wrong.length === 0 ? next : rand(wrong) };
+      }
+      const before = JSON.stringify([game.device.cut, game.device.pressed, m().minigame?.step]);
+      await act(pyro, { type: 'minigameInput', payload });
+      const until = Date.now() + 3_000;
+      while (Date.now() < until) {
+        const g = bombGame();
+        if (JSON.stringify([g?.device?.cut, g?.device?.pressed, m().minigame?.step]) !== before) break;
+        await sleep(50);
+      }
+      await sleep(120);
+    }
+
     async function playHotPotato() {
       potatoPlayed = true;
       const game = m().minigame!.game as {
@@ -802,7 +913,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop].filter((x, i) => i === 0 || x !== 'ne').join('; '),
+      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop, bombReassign].filter((x, i) => i === 0 || x !== 'ne').join('; '),
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,

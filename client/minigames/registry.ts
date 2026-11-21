@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { AuctionGhost, AuctionModerator, AuctionPlayer } from './auction/Auction';
+import { BombGhost, BombModerator, BombPlayer } from './bomb/Bomb';
 import { HotPotatoGhost, HotPotatoModerator, HotPotatoPlayer } from './hotPotato/HotPotato';
 import { QuizGhost, QuizModerator, QuizPlayer } from './quiz/Quiz';
 import { RhythmGhost, RhythmModerator, RhythmPlayer } from './rhythm/Rhythm';
@@ -38,4 +39,5 @@ export const MINIGAME_UI: Record<string, MinigameUi> = {
   QUIZ: { Player: QuizPlayer, Ghost: QuizGhost, Moderator: QuizModerator },
   VAULT: { Player: VaultPlayer, Ghost: VaultGhost, Moderator: VaultModerator },
   RHYTHM: { Player: RhythmPlayer, Ghost: RhythmGhost, Moderator: RhythmModerator },
+  BOMB: { Player: BombPlayer, Ghost: BombGhost, Moderator: BombModerator },
 };

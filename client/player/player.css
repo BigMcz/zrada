@@ -1095,3 +1095,163 @@
   left: 16px;
   right: 16px;
 }
+
+/* Zneškodni bombu */
+.bomb-status p {
+  margin: 2px 0;
+}
+
+.bomb-lights {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.bomb-light {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-2);
+}
+
+.bomb-light.on {
+  border-color: var(--blood);
+  background: var(--error);
+  box-shadow: 0 0 12px var(--error);
+}
+
+.bomb-paused {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.bomb-device {
+  display: grid;
+  gap: 14px;
+}
+
+.bomb-module {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.bomb-module h3,
+.bomb-page h4 {
+  margin: 0;
+}
+
+.bomb-wire {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.bomb-wire.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+.bomb-wire-no {
+  width: 18px;
+  font-weight: 600;
+}
+
+.bomb-wire-line {
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--wire);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.bomb-wire.cut .bomb-wire-line {
+  background: linear-gradient(90deg, var(--wire) 45%, transparent 45%, transparent 55%, var(--wire) 55%);
+  opacity: 0.5;
+}
+
+.wire-red { --wire: #c63a2f; }
+.wire-blue { --wire: #2f6fd6; }
+.wire-yellow { --wire: #e3c02c; }
+.wire-white { --wire: #ecebe6; }
+.wire-black { --wire: #0b0b0b; }
+.wire-green { --wire: #2f9a50; }
+
+.bomb-symbols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bomb-symbol {
+  min-height: 64px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 32px;
+}
+
+.bomb-symbol.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+.bomb-symbol.pressed {
+  border-color: var(--loyal);
+  color: var(--loyal-text);
+}
+
+.bomb-page ol {
+  margin: 4px 0 10px;
+  padding-left: 22px;
+}
+
+.bomb-page li {
+  margin: 4px 0;
+  line-height: 1.35;
+}
+
+.bomb-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.bomb-column {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+
+.bomb-symbol-cell {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.bomb-console-line {
+  margin: 4px 0;
+}
+
+.bomb-console-wire {
+  margin-right: 10px;
+}
+
+.bomb-console-wire.right {
+  color: var(--loyal-text);
+  font-weight: 600;
+}
+
+.wire-black .bomb-wire-line {
+  box-shadow: inset 0 0 0 1px #6b655c;
+}
