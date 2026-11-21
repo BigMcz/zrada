@@ -53,7 +53,12 @@ function TopBar({ view, children }: { view: ModeratorView; children?: ReactNode 
         <span className="console-brand">Zrada</span>
         <span className="console-phase">{phaseTag(view.phase, view.round)}</span>
       </div>
-      <div className="console-top-actions">{children}</div>
+      <div className="console-top-actions">
+        {children}
+        <a className="console-screen-link" href="/obrazovka" target="_blank" rel="noreferrer">
+          Otevřít velkou obrazovku ↗
+        </a>
+      </div>
     </header>
   );
 }

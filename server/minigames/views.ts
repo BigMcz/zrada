@@ -1,4 +1,4 @@
-import type { ModeratorMinigameView, PlayerMinigameView } from '../../shared/types.js';
+import type { ModeratorMinigameView, PlayerMinigameView, ScreenMinigameView } from '../../shared/types.js';
 import { isTippingGhost } from '../game/rules.js';
 import type { GameState, Player } from '../game/state.js';
 import { drawCandidates, manualChoices } from './framework.js';
@@ -92,5 +92,31 @@ export function moderatorMinigameView(state: GameState): ModeratorMinigameView |
     handoff: active.handoff
       ? { winnerId: active.handoff.winnerId, picks: { ...active.handoff.picks }, endsAt: active.handoff.endsAt }
       : null,
+  };
+}
+
+/** Minihra na velké obrazovce: jen veřejné údaje, žádná tajná karta ani předání štítu. */
+export function screenMinigameView(state: GameState): ScreenMinigameView | null {
+  const active = state.minigame;
+  if (state.phase !== 'MINIGAME' || !active) return null;
+  const module = active.id ? getMinigame(active.id) : undefined;
+  const hasState = active.state !== null && active.state !== undefined;
+
+  let endsAt: number | null = null;
+  if (module && hasState && active.step === 'PLAY') endsAt = module.endsAt(active.state);
+  if (active.step === 'HANDOFF' && active.handoff) endsAt = active.handoff.endsAt;
+
+  return {
+    id: module ? module.id : null,
+    name: module ? module.meta.name : '',
+    step: active.step,
+    rules: module ? [...module.meta.rules] : [],
+    traitorRule: module ? module.meta.traitorRule : '',
+    ghostRule: module?.meta.ghostRule ?? null,
+    candidates: active.step === 'DRAW' ? drawCandidates(state).map((m) => m.meta.name) : [],
+    game: module?.viewForScreen && hasState && GAME_STEPS.has(active.step) ? module.viewForScreen(active.state) : null,
+    endsAt,
+    result: publicResult(state),
+    clues: active.result && CLUE_STEPS.has(active.step) ? structuredClone(active.result.clues) : null,
   };
 }

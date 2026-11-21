@@ -252,6 +252,48 @@ export interface ModeratorView {
   joinUrl?: string;
 }
 
+/** Minihra na velké obrazovce: jen veřejné údaje (Rozšíření 9). */
+export interface ScreenMinigameView {
+  id: MinigameId | null;
+  name: string;
+  step: MinigameStep;
+  rules: string[];
+  traitorRule: string;
+  ghostRule: string | null;
+  /** Názvy her v osudí (pro animaci losu, jen v kroku DRAW). */
+  candidates: string[];
+  /** Scéna modulu (Rozšíření 9, krok O2); null, když ji modul nemá. */
+  game: unknown;
+  endsAt: number | null;
+  result: PlayerMinigameView['result'];
+  clues: Clue[] | null;
+}
+
+/** Pohled velké obrazovky: jen veřejné informace, nic se na ní neovládá (Rozšíření 9). */
+export interface ScreenView {
+  kind: 'screen';
+  phase: Phase;
+  round: number;
+  pot: number;
+  /** Hráči bez rolí (kromě vyhnaných a všech na konci hry). */
+  players: PublicPlayer[];
+  /** Adresa pro připojení (jen v lobby). */
+  joinUrl: string | null;
+  /** Kulatý stůl: kolik živých už hlasovalo a kolik jich je. */
+  votesCast: number | null;
+  voters: number | null;
+  /** Po hlasování: počty hlasů u jednotlivých hráčů, bez toho, kdo hlasoval. */
+  tally: { id: string; votes: number }[] | null;
+  /** Vyhnaný v tomto kole (po hlasování), nebo null. */
+  banishedId: string | null;
+  /** Ráno: oběť noci, nebo null (nikdo nezemřel). */
+  murderedId: string | null;
+  /** Žebříček duchů jen s viditelnými body (body za tipy až na konci hry). */
+  ghostBoard: { id: string; points: number }[];
+  minigame: ScreenMinigameView | null;
+  winner: Winner | null;
+}
+
 /** Pohled zařízení, které ještě není ve hře. */
 export interface GuestView {
   kind: 'guest';
@@ -259,7 +301,7 @@ export interface GuestView {
   joinOpen: boolean;
 }
 
-export type View = PlayerView | ModeratorView | GuestView;
+export type View = PlayerView | ModeratorView | GuestView | ScreenView;
 
 // ---------------------------------------------------------------------------
 // Zprávy mezi klientem a serverem
@@ -302,11 +344,14 @@ export interface HelloRequest {
   token?: string;
   /** Klíč moderátora z adresy /moderator?key=… */
   moderatorKey?: string;
+  /** Velká obrazovka (/obrazovka), bez klíče. */
+  screen?: boolean;
 }
 
 export type HelloResult =
   | { as: 'player'; playerId: string }
   | { as: 'moderator' }
+  | { as: 'screen' }
   /** `forgetToken`: token už neplatí (hráč byl odebrán), klient ho má smazat. */
   | { as: 'guest'; forgetToken: boolean; error?: string };
 

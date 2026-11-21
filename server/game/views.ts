@@ -8,10 +8,11 @@ import {
   type PlayerView,
   type PublicPlayer,
   type PublicRoundResult,
+  type ScreenView,
 } from '../../shared/types.js';
 import { isTippingGhost, pointsOf } from './rules.js';
 import { drawCandidates } from '../minigames/framework.js';
-import { moderatorMinigameView, playerMinigameView } from '../minigames/views.js';
+import { moderatorMinigameView, playerMinigameView, screenMinigameView } from '../minigames/views.js';
 import type { GameState, Player } from './state.js';
 
 /*
@@ -186,4 +187,43 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
   }
   if (state.winner) view.winner = state.winner;
   return view;
+}
+
+/** Výsledek aktuálního kola (hlasování a noc). */
+const thisRound = (state: GameState) => state.history.find((h) => h.round === state.round);
+
+/**
+ * Velká obrazovka (Rozšíření 9): jen veřejné informace. Žádné role živých hráčů, žádné volby
+ * (kdo pro koho hlasoval), noční výběry, tipy duchů ani skryté body.
+ */
+export function viewForScreen(state: GameState, joinUrl: string | null): ScreenView {
+  const alivePlayers = state.players.filter((p) => p.status === 'ALIVE');
+  const round = thisRound(state);
+  // Sloupce hlasů jen po uzavření hlasování (a na konci hry, když skončila hlasováním).
+  const afterVote = state.phase === 'VOTE_RESULT' || (state.phase === 'ENDED' && Object.keys(state.votes).length > 0);
+  let tally: ScreenView['tally'] = null;
+  if (afterVote) {
+    const counts = new Map<string, number>();
+    for (const target of Object.values(state.votes)) counts.set(target, (counts.get(target) ?? 0) + 1);
+    tally = [...counts.entries()].map(([id, votes]) => ({ id, votes })).sort((a, b) => b.votes - a.votes);
+  }
+  return {
+    kind: 'screen',
+    phase: state.phase,
+    round: state.round,
+    pot: state.pot,
+    players: state.players.map((p) => publicPlayer(state, p)),
+    joinUrl: state.phase === 'LOBBY' ? joinUrl : null,
+    votesCast: state.phase === 'VOTE' ? alivePlayers.filter((p) => p.id in state.votes).length : null,
+    voters: state.phase === 'VOTE' ? alivePlayers.length : null,
+    tally,
+    banishedId: afterVote ? (round?.banishedId ?? null) : null,
+    murderedId: state.phase === 'MORNING' ? (round?.murderedId ?? null) : null,
+    ghostBoard: state.players
+      .filter((p) => p.status !== 'ALIVE' && p.role)
+      .map((p) => ({ id: p.id, points: pointsOf(state, p.id, state.phase === 'ENDED') }))
+      .sort((a, b) => b.points - a.points),
+    minigame: screenMinigameView(state),
+    winner: state.winner ?? null,
+  };
 }

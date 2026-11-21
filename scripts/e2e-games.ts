@@ -117,6 +117,24 @@ async function connect(url: string): Promise<ClientSocket> {
 /** Klíče, které by v pohledu hráče nikdy neměly být (skryté údaje miniher a štítu). */
 const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"', '"solution"', '"column"'];
 
+/** Tajné klíče pro velkou obrazovku (sloupce hlasů tu mají legitimně pole votes). */
+const SCREEN_FORBIDDEN = [...FORBIDDEN_KEYS.filter((k) => k !== '"votes"'), '"role"', '"nightPicks"', '"secretCard"', '"handoff"', '"myVote"', '"allies"', '"pressure"', '"hint"', '"myHints"', '"device"', '"pages"', '"displayOffsetMs"'];
+
+/** Velká obrazovka: jen veřejné informace, žádné role živých, tokeny ani tajné údaje miniher. */
+function checkScreenView(v: View, all: Bot[], report: Report) {
+  if (v.kind !== 'screen') {
+    report.violation(`obrazovka dostala pohled ${v.kind}`);
+    return;
+  }
+  const json = JSON.stringify(v);
+  for (const key of SCREEN_FORBIDDEN) if (json.includes(key)) report.violation(`obrazovka: skrytý údaj ${key} (fáze ${v.phase})`);
+  for (const b of all) if (b.token && json.includes(b.token)) report.violation(`obrazovka: token hráče ${b.name}`);
+  for (const p of v.players) {
+    if (p.revealedRole && p.status !== 'BANISHED' && v.phase !== 'ENDED') report.violation(`obrazovka: vidí roli hráče ${p.name}`);
+  }
+  if (v.phase === 'VOTE' && v.tally) report.violation('obrazovka: sloupce hlasů během hlasování');
+}
+
 function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   const v = bot.pv;
   if (!v) return;
@@ -276,6 +294,13 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     const mod = new Bot(modSocket, 'Moderátor');
     await modSocket.emitWithAck('hello', { moderatorKey: KEY });
 
+    // Velká obrazovka sleduje celou hru.
+    const screenSocket = await connect(url);
+    sockets.push(screenSocket);
+    let screenViews = 0;
+    let lastScreen: View | null = null;
+    await screenSocket.emitWithAck('hello', { screen: true });
+
     // Hráči
     const bots: Bot[] = [];
     for (let i = 0; i < cfg.players; i++) {
@@ -289,6 +314,11 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       bots.push(bot);
     }
     for (const bot of bots) bot.socket.on('view', () => checkPlayerView(bot, bots, report));
+    screenSocket.on('view', (v: View) => {
+      screenViews++;
+      lastScreen = v;
+      checkScreenView(v, bots, report);
+    });
 
     const m = () => mod.view as ModeratorView;
     const nameOf = (id: string) => bots.find((b) => b.id === id)?.name ?? id;
@@ -917,6 +947,11 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     await sleep(400);
     const end = m();
     checkAgainstModerator(end, bots, report);
+    if (screenViews === 0) report.violation('obrazovka nedostala žádný pohled');
+    const finalScreen = lastScreen as View | null;
+    if (finalScreen?.kind !== 'screen' || finalScreen.phase !== 'ENDED' || finalScreen.winner !== end.winner) {
+      report.violation('obrazovka nevidí konec hry');
+    } else if (finalScreen.players.some((p) => !p.revealedRole)) report.violation('obrazovka na konci nevidí všechny role');
     const aliveTraitors = end.players.filter((p) => p.status === 'ALIVE' && p.role === 'TRAITOR').length;
     const aliveLoyal = end.players.filter((p) => p.status === 'ALIVE' && p.role === 'LOYAL').length;
     const expected = aliveTraitors === 0 ? 'LOYAL' : aliveTraitors >= aliveLoyal ? 'TRAITOR' : '?';

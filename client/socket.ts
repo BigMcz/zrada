@@ -7,7 +7,10 @@ export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
 
 const params = new URLSearchParams(location.search);
 
-export const isModeratorPage = location.pathname.replace(/\/+$/, '') === '/moderator';
+const pagePath = location.pathname.replace(/\/+$/, '');
+export const isModeratorPage = pagePath === '/moderator';
+/** Velká obrazovka pro projektor (Rozšíření 9). */
+export const isScreenPage = pagePath === '/obrazovka';
 const moderatorKey = params.get('key') ?? '';
 
 // ?hrac=3 uloží token pod jiným klíčem, aby šlo v jednom prohlížeči testovat víc hráčů v kartách.
@@ -86,7 +89,7 @@ socket.on('connect', () => {
   update({ connected: true });
   void syncClock();
   // Po každém (znovu)připojení se server dozví, kdo jsme.
-  const req = isModeratorPage ? { moderatorKey } : { token: readToken() };
+  const req = isScreenPage ? { screen: true } : isModeratorPage ? { moderatorKey } : { token: readToken() };
   socket.emit('hello', req, (res) => {
     if (res.as === 'guest') {
       if (res.forgetToken) writeToken(null);

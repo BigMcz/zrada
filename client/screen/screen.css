@@ -1,0 +1,481 @@
+/* Velká obrazovka (Rozšíření 9): na šířku 16:9, písmo podle šířky okna, čitelné z dálky. */
+.screen-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, var(--surface) 0%, var(--bg) 70%);
+  color: var(--text);
+  font-family: var(--font-body);
+  /* 1 rem obrazovky ≈ 2,2 % šířky: při 1920 px asi 42 px */
+  font-size: clamp(16px, 2.2vw, 64px);
+}
+
+.screen-offline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.2em;
+  background: var(--warn);
+  color: #000;
+  font-size: 0.6em;
+  text-align: center;
+}
+
+.screen-center {
+  display: grid;
+  place-items: center;
+  height: 100%;
+}
+
+.screen-layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  padding: 1.2em 1.6em;
+  box-sizing: border-box;
+  gap: 0.6em;
+}
+
+.screen-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.screen-phase {
+  font-family: var(--font-display);
+  font-size: 0.8em;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.screen-pot {
+  font-family: var(--font-display);
+  font-size: 1.4em;
+  color: var(--gold);
+}
+
+.screen-pot small {
+  font-size: 0.45em;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.screen-stage {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.screen-title {
+  display: grid;
+  justify-items: center;
+  gap: 0.4em;
+  text-align: center;
+}
+
+.screen-title h1,
+.screen-night h1,
+.screen-intro h1,
+.screen-result h1,
+.screen-clue h1,
+.screen-banished h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2.2em;
+  font-weight: 600;
+  color: var(--gold);
+  display: grid;
+  justify-items: center;
+  gap: 0.3em;
+}
+
+.screen-title p {
+  margin: 0;
+  font-size: 1em;
+  color: var(--text-muted);
+}
+
+.screen-dots {
+  display: flex;
+  gap: 0.3em;
+}
+
+.screen-dots span {
+  width: 0.45em;
+  height: 0.45em;
+  border: 2px solid var(--gold-dim);
+  border-radius: 50%;
+}
+
+.screen-dots span.on {
+  background: var(--gold);
+}
+
+.screen-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1em;
+}
+
+.screen-portraits {
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.screen-portraits.wrap {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.screen-portrait {
+  display: grid;
+  justify-items: center;
+  gap: 0.15em;
+  min-width: 3em;
+  transition: opacity 0.8s, filter 0.8s;
+}
+
+.screen-avatar {
+  display: grid;
+  place-items: center;
+  width: 2.2em;
+  height: 2.2em;
+  border: 2px solid var(--gold-dim);
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-size: 0.8em;
+  color: var(--gold);
+}
+
+.screen-name {
+  font-size: 0.5em;
+  max-width: 7em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screen-portrait.dim {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.screen-portrait.traitor .screen-avatar {
+  border-color: var(--blood);
+  background: var(--blood);
+  color: var(--text);
+}
+
+.screen-portrait.loyal .screen-avatar {
+  border-color: var(--loyal);
+  background: var(--loyal);
+  color: var(--text);
+}
+
+.screen-ghosts {
+  margin: 0;
+  padding: 0.4em 0.7em;
+  list-style: none;
+  border: 1px solid var(--ghost-dim);
+  border-radius: 0.4em;
+  color: var(--ghost);
+  font-size: 0.5em;
+  min-width: 8em;
+}
+
+.screen-ghosts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.screen-ghosts-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Lobby */
+.screen-lobby {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2em;
+  width: 100%;
+}
+
+.screen-qr {
+  display: grid;
+  justify-items: center;
+  gap: 0.3em;
+  font-size: 0.7em;
+}
+
+.screen-qr svg {
+  width: 11em;
+  height: 11em;
+  border-radius: 0.3em;
+}
+
+.screen-qr p {
+  margin: 0;
+}
+
+.screen-joined {
+  display: grid;
+  justify-items: center;
+  gap: 0.8em;
+}
+
+.screen-logo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2.6em;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+}
+
+/* Noc */
+.phase-night {
+  background: #050403;
+}
+
+.screen-night {
+  display: grid;
+  justify-items: center;
+  gap: 0.3em;
+}
+
+.screen-candle {
+  font-size: 3em;
+  animation: candle 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes candle {
+  from {
+    opacity: 0.7;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+/* Hlasování */
+.screen-vote {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 2em;
+  width: 100%;
+}
+
+.screen-tally {
+  display: grid;
+  gap: 0.35em;
+}
+
+.screen-bar {
+  display: grid;
+  grid-template-columns: 6em 1fr 1.5em;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.8em;
+  transition: opacity 0.6s;
+}
+
+.screen-bar.dim {
+  opacity: 0.3;
+}
+
+.screen-bar-fill {
+  height: 0.7em;
+  border-radius: 0.35em;
+  background: var(--gold);
+  animation: bar-grow 1.2s ease-out;
+  transform-origin: left;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.screen-bar-count {
+  font-family: var(--font-display);
+  color: var(--gold);
+}
+
+.screen-banished {
+  display: grid;
+  justify-items: center;
+  gap: 0.3em;
+  text-align: center;
+}
+
+.screen-banished p {
+  margin: 0;
+}
+
+.screen-role {
+  font-family: var(--font-display);
+  font-size: 1.6em;
+  animation: reveal 0.8s ease-out;
+}
+
+.screen-role.traitor {
+  color: var(--traitor-text);
+  text-shadow: 0 0 0.5em var(--blood);
+}
+
+.screen-role.loyal {
+  color: var(--loyal-text);
+}
+
+.screen-role.pending {
+  color: var(--text-muted);
+  animation: none;
+}
+
+/* Konec hry */
+.screen-finale {
+  display: grid;
+  justify-items: center;
+  gap: 1em;
+}
+
+/* Minihry */
+.screen-intro {
+  display: grid;
+  justify-items: center;
+  gap: 0.5em;
+  max-width: 80%;
+}
+
+.screen-intro ul {
+  margin: 0;
+  padding-left: 1em;
+  font-size: 0.8em;
+  line-height: 1.4;
+}
+
+.screen-traitor-rule {
+  margin: 0;
+  font-size: 0.8em;
+  color: var(--traitor-text);
+  font-style: italic;
+}
+
+.screen-countdown {
+  font-family: var(--font-display);
+  font-size: 1.2em;
+  color: var(--text);
+}
+
+.screen-countdown .countdown.urgent {
+  color: var(--error);
+}
+
+.screen-spin {
+  opacity: 0.7;
+}
+
+.screen-drawn {
+  animation: reveal 0.8s ease-out;
+}
+
+.screen-result {
+  display: grid;
+  justify-items: center;
+  gap: 0.3em;
+  text-align: center;
+}
+
+.screen-result p {
+  margin: 0;
+}
+
+.screen-result-line {
+  font-family: var(--font-display);
+  color: var(--gold);
+}
+
+.screen-clue {
+  display: grid;
+  gap: 0.5em;
+  width: 80%;
+  font-size: 0.7em;
+}
+
+.screen-clue h1 {
+  font-size: 1.6em;
+}
+
+.screen-clue .clue,
+.screen-clue .clue li {
+  font-size: 1em;
+}
+
+/* Na dálku větší portréty v lobby a na konci hry */
+.screen-portraits.wrap {
+  font-size: 1.5em;
+  gap: 0.6em;
+  max-width: 90vw;
+}
+
+.screen-name {
+  font-size: 0.6em;
+}
+
+.screen-qr {
+  font-size: 0.8em;
+}
+
+.screen-bottom .screen-portraits {
+  font-size: 1.15em;
+}
+
+.screen-countdown .countdown {
+  font-size: 1em;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+/* Stopa potřebuje celou plochu. */
+.step-clue .screen-bottom {
+  display: none;
+}
+
+.screen-clue {
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.screen-ghosts {
+  font-size: 0.6em;
+}
+
+.screen-note {
+  font-family: var(--font-display);
+  font-size: 0.5em;
+  color: var(--text-muted);
+}
+
+.screen-portrait.traitor .screen-note {
+  color: var(--traitor-text);
+}
+
+.screen-portrait.loyal .screen-note {
+  color: var(--loyal-text);
+}

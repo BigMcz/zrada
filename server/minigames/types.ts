@@ -66,4 +66,6 @@ export interface MinigameModule<S = any> {
   viewForPlayer(state: S, playerId: string): unknown;
   viewForGhost?(state: S, ghostId: string): unknown;
   viewForModerator(state: S): unknown;
+  /** Scéna pro velkou obrazovku: jen veřejné informace (Rozšíření 9). */
+  viewForScreen?(state: S): unknown;
 }

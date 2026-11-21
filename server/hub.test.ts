@@ -212,4 +212,19 @@ describe('server přes skutečné sockety', () => {
     const petra = await player('Petra');
     expect(await petra.socket.emitWithAck('join', 'Petra 2')).toEqual({ ok: false, error: 'Už jsi ve hře.' });
   });
+
+  it('velká obrazovka dostane veřejný pohled bez klíče, nemůže hrát ani řídit hru', async () => {
+    const { connect, player } = await startServer();
+    const screen = await connect();
+    expect(await screen.socket.emitWithAck('hello', { screen: true })).toEqual({ as: 'screen' });
+    const petra = await player('Petra');
+    const view = await screen.waitFor((v) => v.kind === 'screen' && v.players.length === 1);
+    expect(view).toMatchObject({ kind: 'screen', phase: 'LOBBY', joinUrl: 'http://192.168.0.10:3000/' });
+    expect(JSON.stringify(screen.views)).not.toContain(petra.token);
+    expect(await screen.socket.emitWithAck('intent', { type: 'startGame', traitorCount: 1 })).toEqual({
+      ok: false,
+      error: 'Na tohle nemáš oprávnění.',
+    });
+    expect(await screen.socket.emitWithAck('join', 'Vetřelec')).toEqual({ ok: false, error: 'Už jsi ve hře.' });
+  });
 });

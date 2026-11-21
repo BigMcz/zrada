@@ -12,13 +12,13 @@ import {
 import { apply, type Action, type Actor } from './game/engine.js';
 import { cryptoRng, type Rng } from './game/random.js';
 import { createGame, type GameState } from './game/state.js';
-import { viewForModerator, viewForPlayer } from './game/views.js';
+import { viewForModerator, viewForPlayer, viewForScreen } from './game/views.js';
 
 type GameServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 /** Kdo je na druhém konci připojení. Určuje ho server, nikdy ne obsah zprávy. */
-type Session = { as: 'guest' } | { as: 'player'; playerId: string } | { as: 'moderator' };
+type Session = { as: 'guest' } | { as: 'player'; playerId: string } | { as: 'moderator' } | { as: 'screen' };
 
 export interface HubOptions {
   moderatorKey: string;
@@ -136,6 +136,7 @@ export function attachGame(io: GameServer, options: HubOptions) {
       return { ...viewForModerator(state, connectedPlayerIds()), joinUrl: options.joinUrl };
     }
     if (session.as === 'player') return viewForPlayer(state, session.playerId) ?? guestView();
+    if (session.as === 'screen') return viewForScreen(state, options.joinUrl);
     return guestView();
   }
 
@@ -184,7 +185,10 @@ export function attachGame(io: GameServer, options: HubOptions) {
       const moderatorKey = typeof req?.moderatorKey === 'string' ? req.moderatorKey : undefined;
       const token = typeof req?.token === 'string' ? req.token : undefined;
 
-      if (moderatorKey !== undefined) {
+      if (req?.screen === true) {
+        sessions.set(socket.id, { as: 'screen' });
+        respond(reply, { as: 'screen' });
+      } else if (moderatorKey !== undefined) {
         if (keysMatch(moderatorKey, options.moderatorKey)) {
           sessions.set(socket.id, { as: 'moderator' });
           respond(reply, { as: 'moderator' });
