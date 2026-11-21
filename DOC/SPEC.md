@@ -336,7 +336,7 @@ Platí vše dosavadní a navíc:
 ### Rozšíření NEobsahuje
 
 - Velkou obrazovku pro projektor a její scény
-- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4, Trezor v Rozšíření 5)
+- Minihry Trezor, Zneškodni bombu, Rytmus a Fyzickou misi (přijdou později po jedné; Horký brambor je v Rozšíření 3, Insider kvíz v Rozšíření 4, Trezor v Rozšíření 5, Rytmus v Rozšíření 6)
 - Utrácení osobních bodů
 - Veřejný režim štítu (jen tajné předání)
 - Podrobné nastavení (osudí, délky časovačů, počáteční poklad); používají se výchozí hodnoty
@@ -620,3 +620,98 @@ Platí vše z Rozšíření 2 a navíc:
 | --- | --- | --- |
 | T1 | Generátor kódu a nápověd, pravidla Trezoru na serveru a testy, včetně utajení | Testy prochází |
 | T2 | Obrazovky telefonu, zámečníka, ducha a konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Trezor jde odehrát v 5 kartách prohlížeče, robot prochází |
+
+## Rozšíření 6: Rytmus
+
+Šestá minihra do osudí. Podrobně v [analýze miniher](minihry-analyza.md), kapitola 3. Rámec miniher zůstává beze změny.
+
+### Cíl
+
+Všichni ťukají do telefonu do rytmu. Štít získá nejpřesnější hráč, poklad roste podle synchronizace skupiny. Zrádci mají rušičku, která jednomu hráči v kole 2 posune rytmus, takže pak vypadá jako sabotér.
+
+### Pravidla
+
+- Hrají všichni živí hráči, podmínka **aspoň 3 živí**.
+- **Synchronizace hodin:** na začátku Rytmu si telefon znovu zjistí rozdíl svých hodin a hodin serveru z **10 výměn zpráv** a použije tu s nejkratší odezvou.
+- **Zobrazení rytmu:** uprostřed obrazovky je kruh, ke kterému se stahuje prstenec. Doba je ve chvíli, kdy se prstenec dotkne kruhu; kruh v tu chvíli blikne. Hráč ťuká kamkoli na obrazovku. Telefony nehrají zvuk.
+- **Kola:**
+
+| Kolo | Doby | Tempo | Poznámka |
+| --- | --- | --- | --- |
+| Cvičné | 8 | 80 BPM | nepočítá se, slouží ke kalibraci |
+| 1 | 16 | 80 BPM | |
+| 2 | 16 | 100 BPM | před ním volba rušičky a ochrany |
+| 3 | 16 | 120 BPM | synkopa: každá 4. doba přijde o půl doby dřív |
+
+- Před každým kolem odpočet **3–2–1**. Po každém kole **4 s mezikrok**: telefon ukáže tvoji přesnost a synchronizaci skupiny (cizí přesnosti ne). Moderátor může mezikrok zkrátit tlačítkem **Další kolo**.
+- **Volba před kolem 2 (15 s):** všichni živí vidí stejnou mřížku všech živých kromě sebe. Zrádce volí cíl rušičky, Věrný koho chrání. Nadpis mřížky je pro všechny stejný: „Vyber jednoho hráče“; co volba znamená, říká jen tajná karta (jinak by šlo roli přečíst přes rameno). U dvou Zrádců platí volba toho, kdo potvrdil později. Moderátor může volbu ukončit dřív.
+- **Odeslání ťuknutí:** telefon měří čas ťuknutí v události `pointerdown` přes `performance.now()`, převede ho na čas serveru a všechna ťuknutí kola pošle najednou po jeho konci. Server na ně čeká nejvýš **2 s**. Kdo je nepošle (odpojení), má celé kolo vynechané.
+
+### Hodnocení
+
+- **Kalibrace:** typické zpoždění hráče = medián odchylek ťuknutí od dob ve cvičném kole, nejvýš ±150 ms (bez ťuknutí 0). V ostrých kolech se od časů ťuknutí odečítá.
+- **Párování:** každá doba si vezme nejbližší ještě nepoužité ťuknutí do ±250 ms. Doba bez ťuknutí = chyba **250 ms**. Každé nespárované ťuknutí navíc přidá do průměru chybu **250 ms**.
+- **Přesnost kola** = 100 − průměrná chyba / 2,5 (0–100 %). **Přesnost hráče** = průměr přesností kol 1–3.
+- **Synchronizace skupiny** = průměr přesností všech živých hráčů.
+
+### Výhoda Zrádců: rušička
+
+- Rušička posune cíli **v kole 2** zobrazení rytmu o **150 ms** (prstenec dosedá později). Hodnocení na serveru počítá vždy se skutečnými dobami, takže cíl ťuká mimo.
+- Pokud na cíl míří **aspoň jedna ochrana** Věrného, rušička nezabere.
+- Pole `displayOffsetMs` má v pohledu **každý** hráč; mimo zasažený cíl v kole 2 je 0.
+- Pravidlo je veřejné: „Zrádci mají rušičku. Jednomu hráči na jedno kolo posunou rytmus.“
+- Tajná karta: Věrný „Před 2. kolem můžeš jednoho hráče ochránit před rušičkou.“ / „Rušička mu posune rytmus.“; Zrádce „Před 2. kolem pošlete ozvěnu: vybraný hráč bude ťukat mimo.“ / „Věrní ho mohou ochránit.“
+
+### Vyhodnocení
+
+| | |
+| --- | --- |
+| Štít | nejvyšší přesnost; při shodě menší nejhorší chyba; při úplné shodě nikdo |
+| Poklad | +300 × (synchronizace − 50 %) / 50 %, zaokrouhleno na desítky; pod 50 % beze změny |
+| Osobní body | vítěz +2 (jako u ostatních miniher) |
+
+### Stopa
+
+- Tabulka **hráč → přesnost v kolech 1 / 2 / 3**.
+- Jedna věta: „Rušička zasáhla jednoho hráče.“, „Rušičku někdo zablokoval.“, nebo „Rušička nebyla použita.“ **Koho** zasáhla, stopa neříká.
+
+### Duchové
+
+- Hrají **celý rytmus mimo soutěž**, včetně cvičného kola s kalibrací.
+- Nevolí a rušička na ně nepůsobí. Jejich přesnost se nepočítá do synchronizace ani do štítu.
+- Nejpřesnější duch 3 body, druhý 2, třetí 1 (při shodě stejné místo; jen duchové, kteří ťukali).
+
+### Utajení
+
+Platí vše z Rozšíření 2 a navíc:
+
+- Cíl rušičky, ochrany ani volby ostatních nejdou do žádného telefonu.
+- Pohled Věrného i Zrádce má stejná pole a mřížka volby má pro oba stejný nadpis.
+- Telefon nevidí cizí přesnosti, jen svou a synchronizaci skupiny.
+
+### Obrazovky
+
+- **Telefon:** celá obrazovka je dotyková plocha, uprostřed kruh se stahujícím se prstencem, nahoře kolo a tempo, po ťuknutí krátký záblesk na místě dotyku. Mezi koly tvoje přesnost a synchronizace skupiny. Před kolem 2 mřížka volby.
+- **Duch:** stejný rytmus bez volby, mezi koly vlastní přesnost a pořadí duchů.
+- **Konzole moderátora:** kolo a stav, přesnosti všech hráčů a duchů po kolech, cíl rušičky, ochrany a zda zabrala, tlačítka Ukončit volbu a Další kolo.
+
+### Rozšíření NEobsahuje
+
+- Zvuk a metronom
+- Velkou obrazovku se synchronizací v reálném čase (přijde se scénami na velkou obrazovku)
+- Ochranu proti upravenému telefonu, který pošle vymyšlené časy ťuknutí
+
+### Hotovo, když
+
+1. Rytmus se losuje s ostatními minihrami a jde odehrát v 5 kartách prohlížeče od losu po kulatý stůl.
+2. Kalibrace, párování ťuknutí, přesnost, synchronizace, rušička a ochrana, štít, poklad a body duchů odpovídají pravidlům (ověřeno testy).
+3. **Utajení:** testy ověří, že telefon nedostane cíl rušičky, ochrany ani cizí přesnosti a že Věrný a Zrádce mají stejný tvar pohledu.
+4. Robot `npm run e2e` odehraje hry i s Rytmem bez chyby (bot ťuká s náhodnou chybou 20–120 ms).
+5. Zkouška na skutečných telefonech (iPhone i Android) udělá uživatel; nálezy se opraví v dalším kroku.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| R1 | Pravidla Rytmu na serveru: kola, kalibrace, hodnocení, rušička, testy včetně utajení | Testy prochází |
+| R2 | Telefon s kruhem a ťukáním, synchronizace hodin, duch, konzole, zařazení do osudí, rozšíření robota `npm run e2e` | Rytmus jde odehrát v 5 kartách prohlížeče, robot prochází |
