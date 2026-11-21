@@ -297,6 +297,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     let vaultPlayed = false;
     let rhythmPlayed = false;
     let bombPlayed = false;
+    let physicalPlayed = false;
     const signature = () => {
       const v = m();
       const g = v.minigame?.game as { stage?: string; revealed?: unknown[] | boolean } | null | undefined;
@@ -361,6 +362,12 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     // --- Lobby ---
     await sleep(300);
     if (m().minigamesEnabled !== cfg.minigames) await modAct({ type: 'setMinigames', enabled: cfg.minigames });
+    // Fyzická mise je volitelná: zapne se jen v části her.
+    if (cfg.minigames && chance(0.6)) {
+      await act(mod, { type: 'setPhysicalMission', enabled: true });
+      await sleep(150);
+      if (!m().physicalMission) report.violation('přepínač Fyzická mise v osudí nezabral');
+    }
     await modAct({ type: 'startGame', traitorCount: cfg.traitors });
 
     let loops = 0;
@@ -424,7 +431,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       switch (mg.step) {
         case 'DRAW':
           // Nové minihry robot volí častěji, aby se v každém běhu odehrály.
-          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ', !vaultPlayed && 'VAULT', !rhythmPlayed && 'RHYTHM', !bombPlayed && 'BOMB'].filter(
+          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ', !vaultPlayed && 'VAULT', !rhythmPlayed && 'RHYTHM', !bombPlayed && 'BOMB', !physicalPlayed && 'PHYSICAL'].filter(
             (id): id is string => !!id && id !== mg.id && mg.choices.some((c) => c.id === id),
           );
           if (wanted.length > 0 && chance(0.6)) {
@@ -450,6 +457,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
           if (mg.id === 'VAULT') return playVault();
           if (mg.id === 'RHYTHM') return playRhythm();
           if (mg.id === 'BOMB') return playBomb();
+          if (mg.id === 'PHYSICAL') return playPhysical();
           return mg.id === 'AUCTION' ? playAuction() : playDuel();
         case 'RESULT':
           await modAct({ type: 'showClue' });
@@ -813,6 +821,37 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
         await sleep(50);
       }
       await sleep(120);
+    }
+
+    async function playPhysical() {
+      physicalPlayed = true;
+      type PhysicalMod = { stage: string; text: string | null; suggestions: string[]; ghosts: string[] };
+      const game = m().minigame!.game as PhysicalMod;
+      const phoneText = (b: Bot) => (b.pv?.minigame?.game as { text?: string | null } | undefined)?.text;
+
+      if (game.stage === 'BRIEF') {
+        for (const b of alive()) if (phoneText(b) != null) report.violation(`${b.name}: vidí zadání mise před zveřejněním`);
+        await modAct({ type: 'minigameModerator', payload: { action: 'publish', text: rand(game.suggestions) } });
+        return;
+      }
+      if (game.stage !== 'RUN') {
+        await sleep(100);
+        return;
+      }
+      for (const b of alive()) if (phoneText(b) !== game.text) report.violation(`${b.name}: na telefonu není zveřejněné zadání mise`);
+
+      // Moderátor zapíše náhodný výsledek; poklad, štít a body ducha musí sedět přesně.
+      const potDelta = rand([-200, -100, 0, 50, 150, 300]);
+      const winnerId = chance(0.7) ? rand(alive()).id : null;
+      const ghostId = game.ghosts.length > 0 && chance(0.6) ? rand(game.ghosts) : null;
+      const potBefore = m().pot;
+      await modAct({ type: 'minigameModerator', payload: { action: 'result', potDelta, winnerId, ghostId, note: chance(0.5) ? 'Robot zapsal poznámku.' : '' } });
+      const until = Date.now() + 3_000;
+      while (Date.now() < until && m().minigame?.step === 'PLAY') await sleep(50);
+      const res = m().minigame?.result;
+      if (m().pot !== Math.max(0, potBefore + potDelta)) report.violation(`Fyzická mise: poklad ${m().pot}, správně ${Math.max(0, potBefore + potDelta)}`);
+      if ((res?.shieldWinnerId ?? null) !== winnerId) report.violation(`Fyzická mise: štít ${res?.shieldWinnerId}, zapsáno ${winnerId}`);
+      if (ghostId && !(res?.ghostWinnerIds ?? []).includes(ghostId)) report.violation(`Fyzická mise: duch ${nameOf(ghostId)} nedostal body`);
     }
 
     async function playHotPotato() {

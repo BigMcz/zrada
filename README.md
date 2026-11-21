@@ -51,6 +51,7 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 - **Trezor** – skupina skládá kód z nápověd na telefonech a zvolený zámečník má 3 pokusy; Zrádci mají jednu nápovědu falešnou. Otevře-li zámečník trezor, získá štít.
 - **Rytmus** – všichni ťukají do rytmu kruhu na telefonu, štít získá nejpřesnější hráč, poklad roste podle synchronizace skupiny. Zrádci mají rušičku, která jednomu hráči v kole 2 posune rytmus.
 - **Zneškodni bombu** – jen pyrotechnik vidí bombu (dráty a symboly), ostatní mu radí podle stránek manuálu; Zrádci mají ve stránce jedno pravidlo falešné. Zneškodní-li pyrotechnik bombu, získá štít. Manuál je v `server/minigames/bomb/manual.cs.json`.
+- **Fyzická mise** (volitelná, zapíná se v konzoli přepínačem Fyzická mise v osudí) – moderátor zadá úkol mimo telefony a sám zapíše výsledek: změnu pokladu, kdo získá štít a body pro jednoho ducha.
 
 Na konci hry je poklad, žebříček hráčů podle osobních bodů a žebříček duchů. Celá pravidla jsou v [SPEC.md](DOC/SPEC.md).
 
@@ -111,6 +112,7 @@ server/
     vault/             Trezor (generátor kódu a nápověd v hints.ts)
     rhythm/            Rytmus (hodnocení ťuknutí v scoring.ts)
     bomb/              Zneškodni bombu (manuál v manual.cs.json, generátor a řešitel v manual.ts)
+    physical/          Fyzická mise (výsledek zapisuje moderátor)
 client/
   player/              obrazovky telefonu hráče
   moderator/           konzole moderátora

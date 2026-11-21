@@ -114,6 +114,16 @@ function Lobby({ view }: { view: ModeratorView }) {
             />
             {view.minigamesEnabled ? 'Minihry zapnuté' : 'Minihry vypnuté (hra jako bez miniher)'}
           </label>
+          {view.minigamesEnabled && (
+            <label className="lobby-toggle">
+              <input
+                type="checkbox"
+                checked={view.physicalMission}
+                onChange={(e) => run({ type: 'setPhysicalMission', enabled: e.target.checked })}
+              />
+              {view.physicalMission ? 'Fyzická mise v osudí' : 'Fyzická mise mimo osudí'}
+            </label>
+          )}
 
           <h2>Počet Zrádců</h2>
           {options.length === 0 ? (
@@ -410,6 +420,16 @@ function Control({ view }: { view: ModeratorView }) {
                     ? 'Dnes se nedá hrát žádná minihra.'
                     : `Po stisknutí: ${step.next}`}
               </p>
+              {view.minigamesEnabled && (view.phase === 'ROLES' || view.phase === 'MORNING') && (
+                <label className="lobby-toggle">
+                  <input
+                    type="checkbox"
+                    checked={view.physicalMission}
+                    onChange={(e) => run({ type: 'setPhysicalMission', enabled: e.target.checked })}
+                  />
+                  {view.physicalMission ? 'Fyzická mise v osudí' : 'Fyzická mise mimo osudí'}
+                </label>
+              )}
             </>
           )}
           {error && <p className="error">{error}</p>}
