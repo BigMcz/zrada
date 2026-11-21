@@ -86,6 +86,14 @@ function isInt(v: unknown, min: number, max: number): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
 }
 
+/** Velká obrazovka: počet nabídek a odhalené karty; neodhalené nabídky ne. */
+export interface AuctionScreenView {
+  stage: AuctionStage;
+  submitted: number;
+  total: number;
+  revealed: { playerId: string; bid: number }[];
+}
+
 export const auction: MinigameModule<AuctionState> = {
   id: AUCTION_ID,
   meta: {
@@ -223,6 +231,15 @@ export const auction: MinigameModule<AuctionState> = {
     return {
       stage: state.stage,
       myBid: playerId in state.bids ? state.bids[playerId] : null,
+      submitted: Object.keys(state.bids).length,
+      total: state.players.length,
+      revealed: revealedList(state),
+    };
+  },
+
+  viewForScreen(state): AuctionScreenView {
+    return {
+      stage: state.stage,
       submitted: Object.keys(state.bids).length,
       total: state.players.length,
       revealed: revealedList(state),

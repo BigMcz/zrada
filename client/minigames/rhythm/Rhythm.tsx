@@ -28,7 +28,7 @@ function RoundTitle({ game }: { game: { round: number; rounds: number; bpm: numb
  * Kruh se stahujícím se prstencem. Kreslí se mimo React přes requestAnimationFrame,
  * aby každý snímek nepřekresloval celou obrazovku.
  */
-function Beat({ beats, offset }: { beats: number[]; offset: number }) {
+export function Beat({ beats, offset }: { beats: number[]; offset: number }) {
   const ring = useRef<HTMLDivElement>(null);
   const core = useRef<HTMLDivElement>(null);
   const count = useRef<HTMLDivElement>(null);

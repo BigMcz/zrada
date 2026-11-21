@@ -118,7 +118,7 @@ async function connect(url: string): Promise<ClientSocket> {
 const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"', '"solution"', '"column"'];
 
 /** Tajné klíče pro velkou obrazovku (sloupce hlasů tu mají legitimně pole votes). */
-const SCREEN_FORBIDDEN = [...FORBIDDEN_KEYS.filter((k) => k !== '"votes"'), '"role"', '"nightPicks"', '"secretCard"', '"handoff"', '"myVote"', '"allies"', '"pressure"', '"hint"', '"myHints"', '"device"', '"pages"', '"displayOffsetMs"'];
+const SCREEN_FORBIDDEN = [...FORBIDDEN_KEYS.filter((k) => k !== '"votes"'), '"role"', '"nightPicks"', '"secretCard"', '"handoff"', '"myVote"', '"allies"', '"pressure"', '"hint"', '"myHints"', '"device"', '"pages"', '"displayOffsetMs"', '"wires"', '"bets"', '"taps"', '"outcome"'];
 
 /** Velká obrazovka: jen veřejné informace, žádné role živých, tokeny ani tajné údaje miniher. */
 function checkScreenView(v: View, all: Bot[], report: Report) {
@@ -133,6 +133,11 @@ function checkScreenView(v: View, all: Bot[], report: Report) {
     if (p.revealedRole && p.status !== 'BANISHED' && v.phase !== 'ENDED') report.violation(`obrazovka: vidí roli hráče ${p.name}`);
   }
   if (v.phase === 'VOTE' && v.tally) report.violation('obrazovka: sloupce hlasů během hlasování');
+  // Scény miniher (krok O2): každá minihra má ve hře svou scénu; kvíz neprozradí odpověď předčasně.
+  const mg = v.minigame;
+  if (mg?.step === 'PLAY' && mg.game === null) report.violation(`obrazovka: minihra ${mg.id} nemá scénu`);
+  const g = mg?.game as { stage?: string; correct?: number | null } | null | undefined;
+  if (mg?.id === 'QUIZ' && g?.stage === 'QUESTION' && g.correct !== null) report.violation('obrazovka: správná odpověď kvízu před koncem otázky');
 }
 
 function checkPlayerView(bot: Bot, all: Bot[], report: Report) {

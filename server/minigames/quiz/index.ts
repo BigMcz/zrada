@@ -207,6 +207,18 @@ const publicQuestion = (s: QuizState): QuizPublicQuestion => ({
   options: [...s.questions[s.index].options],
 });
 
+/** Velká obrazovka: otázka a možnosti bez svíčky, správná odpověď až po otázce. */
+export interface QuizScreenView {
+  stage: QuizStage;
+  index: number;
+  total: number;
+  question: QuizPublicQuestion;
+  correct: number | null;
+  answeredCount: number;
+  playerCount: number;
+  standings: QuizRow[];
+}
+
 export const quiz: MinigameModule<QuizState> = {
   id: QUIZ_ID,
   meta: {
@@ -378,6 +390,19 @@ export const quiz: MinigameModule<QuizState> = {
       correct: closed ? state.questions[state.index].correct : null,
       standings: totals(state, state.players, lastClosed(state)),
       ghostStandings: totals(state, state.ghosts, lastClosed(state)),
+    };
+  },
+
+  viewForScreen(state): QuizScreenView {
+    return {
+      stage: state.stage,
+      index: state.index,
+      total: state.questions.length,
+      question: publicQuestion(state),
+      correct: state.stage !== 'QUESTION' ? state.questions[state.index].correct : null,
+      answeredCount: state.players.filter((id) => state.answers[state.index]?.[id]).length,
+      playerCount: state.players.length,
+      standings: totals(state, state.players, lastClosed(state)),
     };
   },
 

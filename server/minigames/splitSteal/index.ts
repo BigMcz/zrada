@@ -100,6 +100,13 @@ function drawDuelists(players: string[], past: string[], rng: Rng): [string, str
   return shuffle(rng, [a, b]) as [string, string];
 }
 
+/** Velká obrazovka: duelisté a jejich volby až po odhalení. */
+export interface SplitStealScreenView {
+  stage: DuelStage;
+  duelists: [string, string];
+  revealed: Record<string, Choice> | null;
+}
+
 export const splitSteal: MinigameModule<SplitStealState> = {
   id: SPLIT_STEAL_ID,
   meta: {
@@ -254,6 +261,14 @@ export const splitSteal: MinigameModule<SplitStealState> = {
         state.stage === 'DONE'
           ? Object.fromEntries(state.duelists.map((d) => [d, choiceOf(state, d)]))
           : null,
+    };
+  },
+
+  viewForScreen(state): SplitStealScreenView {
+    return {
+      stage: state.stage,
+      duelists: [...state.duelists] as [string, string],
+      revealed: state.stage === 'DONE' ? Object.fromEntries(state.duelists.map((d) => [d, choiceOf(state, d)])) : null,
     };
   },
 

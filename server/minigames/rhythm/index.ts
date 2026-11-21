@@ -211,6 +211,16 @@ const JAM_SENTENCE: Record<JamOutcome, string> = {
   UNUSED: 'Rušička nebyla použita.',
 };
 
+/** Velká obrazovka: skutečné doby kola (bez rušičky) a synchronizace skupiny po kole. */
+export interface RhythmScreenView {
+  stage: RhythmStage;
+  round: number;
+  rounds: number;
+  bpm: number;
+  beats: number[];
+  groupSync: number | null;
+}
+
 export const rhythm: MinigameModule<RhythmState> = {
   id: RHYTHM_ID,
   meta: {
@@ -375,6 +385,18 @@ export const rhythm: MinigameModule<RhythmState> = {
       submitted: !!state.taps[state.round]?.[ghostId] && live,
       myAccuracy: scored >= 0 ? (state.scores[scored]?.[ghostId]?.accuracy ?? null) : null,
       ghostStandings: totals(state, state.ghosts),
+    };
+  },
+
+  viewForScreen(state): RhythmScreenView {
+    const scored = lastScored(state);
+    return {
+      stage: state.stage,
+      round: state.round,
+      rounds: lastRound,
+      bpm: ROUNDS[state.round].bpm,
+      beats: [...state.beats],
+      groupSync: scored >= 1 ? syncOf(state, scored) : null,
     };
   },
 

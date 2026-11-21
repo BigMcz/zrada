@@ -148,6 +148,8 @@ export const physical: MinigameModule<PhysicalState> = {
   viewForPlayer: (state): PhysicalPlayerView => ({ stage: state.stage, text: state.text }),
   viewForGhost: (state): PhysicalPlayerView => ({ stage: state.stage, text: state.text }),
 
+  viewForScreen: (state): PhysicalPlayerView => ({ stage: state.stage, text: state.text }),
+
   viewForModerator: (state): PhysicalModeratorView => ({
     stage: state.stage,
     text: state.text,

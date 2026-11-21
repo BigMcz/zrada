@@ -128,6 +128,18 @@ export function ghostPoints(tip: VaultTip, result: VaultTip): number {
 
 const codeText = (c: number[]) => c.join(' ');
 
+/** Velká obrazovka: zámečník, okénka, pokusy; kód až po konci, nápovědy ani hlasy ne. */
+export interface VaultScreenView {
+  stage: VaultStage;
+  digits: number;
+  votedCount: number;
+  playerCount: number;
+  locksmithId: string | null;
+  attempts: VaultAttempt[];
+  attemptsLeft: number;
+  revealedCode: number[] | null;
+}
+
 export const vault: MinigameModule<VaultState> = {
   id: VAULT_ID,
   meta: {
@@ -302,6 +314,19 @@ export const vault: MinigameModule<VaultState> = {
       attemptsLeft: MAX_ATTEMPTS - state.attempts.length,
       myTip: state.ghostTips[ghostId] ?? null,
       canTip: state.stage !== 'DONE' && state.attempts.length === 0,
+      revealedCode: state.stage === 'DONE' ? [...state.code] : null,
+    };
+  },
+
+  viewForScreen(state): VaultScreenView {
+    return {
+      stage: state.stage,
+      digits: state.digits,
+      votedCount: Object.keys(state.votes).length,
+      playerCount: state.players.length,
+      locksmithId: state.locksmithId,
+      attempts: state.attempts.map((a) => ({ ...a, guess: [...a.guess] })),
+      attemptsLeft: MAX_ATTEMPTS - state.attempts.length,
       revealedCode: state.stage === 'DONE' ? [...state.code] : null,
     };
   },

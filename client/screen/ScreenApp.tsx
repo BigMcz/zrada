@@ -2,6 +2,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { ScreenMinigameView, ScreenView } from '../../shared/types';
 import { ClueView } from '../components/ClueView';
+import { GameScene } from './GameScenes';
 import { Countdown } from '../components/Countdown';
 import { initials, nameOf, phaseTag, ROLE_LABEL } from '../labels';
 import { useConnection } from '../socket';
@@ -220,7 +221,7 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
   );
 }
 
-/** Společné scény miniher; vlastní scény jednotlivých her přidá krok O2. */
+/** Společné scény miniher; ve hře scéna konkrétní minihry (GameScenes). */
 function MinigameScene({ mg, name }: { mg: ScreenMinigameView; name: (id: string | null | undefined) => string }) {
   switch (mg.step) {
     case 'DRAW':
@@ -238,7 +239,19 @@ function MinigameScene({ mg, name }: { mg: ScreenMinigameView; name: (id: string
         </div>
       );
     case 'PLAY':
-      return (
+      return mg.game ? (
+        <div className="screen-play">
+          <div className="screen-play-head">
+            <h2>{mg.name}</h2>
+            <span className="screen-countdown">
+              <Countdown endsAt={mg.endsAt} />
+            </span>
+          </div>
+          <div className="screen-play-scene">
+            <GameScene id={mg.id} game={mg.game} name={name} />
+          </div>
+        </div>
+      ) : (
         <Title sub="Hra běží na telefonech.">
           {mg.name}
           <span className="screen-countdown">
@@ -250,6 +263,12 @@ function MinigameScene({ mg, name }: { mg: ScreenMinigameView; name: (id: string
       return (
         <div className="screen-result">
           <h1>{mg.name}</h1>
+          {/* Konečný stav hry (otočené karty duelu, všechny nabídky aukce, kód trezoru…) jako na telefonech. */}
+          {mg.game != null && mg.id !== 'RHYTHM' && (
+            <div className="screen-result-scene">
+              <GameScene id={mg.id} game={mg.game} name={name} />
+            </div>
+          )}
           {mg.result && (
             <>
               <p>{mg.result.summary}</p>

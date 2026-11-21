@@ -196,6 +196,17 @@ export function explainedBy(s: BombState, err: BombError): string | null {
 
 const ORD = (i: number) => `${i + 1}.`;
 
+/** Velká obrazovka: pyrotechnik, kontrolky chyb a stav modulů; bomba samotná ne. */
+export interface BombScreenView {
+  stage: BombStage;
+  pyroId: string;
+  errors: number;
+  maxErrors: number;
+  wiresSolved: boolean;
+  symbolsSolved: boolean;
+  paused: boolean;
+}
+
 export const bomb: MinigameModule<BombState> = {
   id: BOMB_ID,
   meta: {
@@ -390,6 +401,18 @@ export const bomb: MinigameModule<BombState> = {
       paused: state.stage === 'ARMED' && state.endsAt === null,
       myTip: state.ghostTips[ghostId] ?? null,
       canTip: state.stage === 'READY',
+    };
+  },
+
+  viewForScreen(state): BombScreenView {
+    return {
+      stage: state.stage,
+      pyroId: state.pyroId,
+      errors: state.errors.length,
+      maxErrors: MAX_ERRORS,
+      wiresSolved: state.wiresSolved,
+      symbolsSolved: state.symbolsSolved,
+      paused: state.stage === 'ARMED' && state.endsAt === null,
     };
   },
 

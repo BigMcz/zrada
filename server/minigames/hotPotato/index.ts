@@ -159,6 +159,15 @@ function ghostScores(s: HotPotatoState): Record<string, number> {
   );
 }
 
+/** Velká obrazovka: kdo drží bombu a pořadí vyřazení; ručička tlaku ne. */
+export interface HotPotatoScreenView {
+  stage: PotatoStage;
+  round: number;
+  remaining: string[];
+  eliminated: string[];
+  holderId: string | null;
+}
+
 export const hotPotato: MinigameModule<HotPotatoState> = {
   id: HOT_POTATO_ID,
   meta: {
@@ -368,6 +377,16 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
       holderId: state.holderId,
       canTip: state.stage === 'READY',
       myTip: { ...(state.ghostTips[ghostId] ?? { survivorId: null, firstId: null }) },
+    };
+  },
+
+  viewForScreen(state): HotPotatoScreenView {
+    return {
+      stage: state.stage,
+      round: state.round,
+      remaining: [...state.remaining],
+      eliminated: [...state.eliminated],
+      holderId: state.holderId,
     };
   },
 
