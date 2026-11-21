@@ -128,7 +128,7 @@ Podrobnější vizuální návrh je v [zradci-design.md](zradci-design.md). Pro 
 - Verbování Věrných na stranu Zrádců
 - Finálové hlasování „ukončit hru / vyhnat dalšího“
 - ~~Režim duchů s body a žebříčkem pro vyřazené~~ – doplněno v části [Rozšíření 1: Duchové](#rozšíření-1-duchové)
-- Zvláštní velkou obrazovku pro projektor, odhalování hlasů jeden po druhém, animace a zvuky
+- ~~Zvláštní velkou obrazovku pro projektor, animace a zvuky~~ – doplněno v části [Rozšíření 9: Velká obrazovka](#rozšíření-9-velká-obrazovka); odhalování hlasů jeden po druhém zůstává mimo
 - Chat Zrádců (domlouvají se jinak, např. pohledem; při rozdílné volbě rozhodne los)
 - Druhé kolo hlasování při remíze (rozhodne rovnou los)
 - Zveřejnění, kdo pro koho hlasoval (ukáže se jen výsledek)
@@ -897,3 +897,110 @@ Platí vše z Rozšíření 2. Pohled Věrného i Zrádce má stejná pole; tele
 | --- | --- | --- |
 | F1 | Nastavení Fyzická mise v osudí, modul na serveru a testy | Testy prochází |
 | F2 | Obrazovky telefonu, ducha a konzole, přepínač v konzoli, rozšíření robota `npm run e2e` | Mise jde odehrát v 5 kartách prohlížeče, robot prochází |
+
+## Rozšíření 9: Velká obrazovka
+
+Třetí rozhraní hry vedle telefonu a konzole: projektor nebo TV, která provází hrou. Podklady jsou v [návrhu designu](zradci-design.md) (kapitola Velká obrazovka), v [analýze miniher](minihry-analyza.md) (princip 7 a scény u jednotlivých her) a v [architektuře](architektura.md) (`viewForScreen`, `/obrazovka`).
+
+### Cíl
+
+Hráči sledují průběh hry, odhalení a minihry na jedné společné obrazovce. Vzniká tím atmosféra večera. Pravidla hry se nemění: obrazovka ukazuje jen to, co je veřejné, a hra jde dohrát i bez ní.
+
+### Přístup a vzhled
+
+- Stránka **`/obrazovka`** na stejném serveru, **bez klíče**. Nic se na ní neovládá.
+- Server pro ni počítá vlastní pohled **`viewForScreen`** jen s veřejnými informacemi: žádné role živých hráčů, volby, noční výběry, tipy duchů ani nic, co minihry tají.
+- V konzoli je odkaz **Otevřít velkou obrazovku**.
+- Rozložení na šířku 16:9, písmo škálované podle šířky okna (nejméně 40 px při 1080p), vizuální jazyk podle návrhu designu.
+- Stálé prvky během hry: název fáze a kolo uprostřed nahoře, **poklad** vpravo nahoře, řada portrétů živých hráčů dole, malý **žebříček duchů** vpravo dole.
+- Při výpadku obrazovky telefony dál dostávají vše potřebné ke hře.
+
+### Scény základní hry
+
+| Fáze | Obrazovka |
+| --- | --- |
+| Lobby | QR kód a adresa pro připojení, jména připojených hráčů |
+| Rozdání rolí | „Role byly rozdány“ |
+| Kulatý stůl (hlasování) | „Hlasovalo N z M“ |
+| Výsledek hlasování | sloupce hlasů u jednotlivých hráčů (**bez toho, kdo hlasoval**), pak vyhnaný a po 3 s napětí jeho role |
+| Noc | téměř černá obrazovka se svíčkou a nápisem „Noc“ |
+| Ráno | jméno oběti, nebo „Tuto noc nikdo nezemřel“ |
+| Konec hry | role všech hráčů postupně jedna po druhé, pak vítězná strana a poklad |
+
+Pravidlo tajného hlasování zůstává: kdo pro koho hlasoval, se nezveřejňuje ani na obrazovce.
+
+### Společné scény miniher
+
+| Krok minihry | Obrazovka |
+| --- | --- |
+| Los | „Osud vybírá…“ s názvy her, pak vylosovaná hra |
+| Pravidla | název, pravidla a veřejné pravidlo o Zrádcích |
+| Hra | scéna konkrétní minihry (viz níže), jinak název a odpočet |
+| Výsledek | shrnutí, kdo vyhrál štít, změna pokladu, vítěz mezi duchy |
+| Stopa | stopa z minihry |
+| Předání štítu | „Probíhá tajné předání štítu“ |
+
+### Scény jednotlivých miniher
+
+Každá minihra dostane vlastní `viewForScreen` jen s veřejnými informacemi.
+
+| Minihra | Obrazovka |
+| --- | --- |
+| Tajná aukce | otáčení karet nabídek ve stejném pořadí jako na telefonech |
+| Rozdělit, nebo ukrást | dvě karty duelistů, které se po odhalení otočí současně |
+| Horký brambor | jméno držitele bomby velkým písmem, výbuch, pořadí vyřazení; **bez ručičky tlaku** |
+| Insider kvíz | otázka a možnosti, odpočet; po otázce správná odpověď a průběžné pořadí; **bez svíčky** |
+| Trezor | zámečník, okénka kódu, pokusy „N z 4“, odpočet |
+| Rytmus | pulzující kruh podle dob kola; po každém kole synchronizace skupiny |
+| Zneškodni bombu | pyrotechnik, velký odpočet a kontrolky chyb; **ne bomba samotná** |
+| Fyzická mise | zadání velkým písmem |
+
+### Tempo
+
+- Obrazovka jen sleduje stav hry; moderátor nemá kvůli ní žádná nová tlačítka.
+- Dramatické pauzy si časuje sama (3 s před rolí vyhnaného, postupné odkrývání rolí na konci).
+
+### Zvuky
+
+- Zvuky hraje **jen** velká obrazovka, syntézou v prohlížeči (Web Audio), bez zvukových souborů.
+
+| Událost | Zvuk |
+| --- | --- |
+| Hráč se připojil | zapálení sirky |
+| Nová fáze | úder do zvonu z dálky |
+| Hlas / karta otočena | otočení karty |
+| Odhalen Zrádce | nízký gong |
+| Odhalen Věrný | tichý molový akord |
+| Noc | tichý ambient |
+| Oběť noci | úder bubnu |
+| Poklad roste | cinkání mincí |
+
+- Při prvním otevření obrazovka vyžádá jedno kliknutí **Zahájit** (prohlížeče jinak zvuk nepustí).
+- V konzoli je přepínač **Ztlumit obrazovku**.
+
+### Rozšíření NEobsahuje
+
+- Odhalování hlasů jeden po druhém se jmény hlasujících (pravidlo tajného hlasování zůstává)
+- Fotky hráčů (portréty jsou iniciály)
+- Ovládání na obrazovce a přístupový klíč
+- Zvukové soubory a hudbu
+
+### Utajení
+
+- Testy ověří, že `viewForScreen` nikdy neobsahuje role živých hráčů, volby hlasování ani noční výběry, tajné údaje miniher (ručička tlaku, svíčka, kód trezoru, nápovědy, bomba, rušička, nabídky před odhalením, volby duelistů před odhalením) ani tokeny.
+- Robot `npm run e2e` připojí i obrazovku a hlídá totéž během celé hry.
+
+### Hotovo, když
+
+1. Celá hra s minihrami jde sledovat na `/obrazovka` bez pohledu do telefonu: od lobby po konec hry.
+2. Každá minihra má svou scénu podle tabulky.
+3. Utajení obrazovky ověřují testy i robot e2e.
+4. Zvuky hrají po kliknutí na Zahájit a jdou ztlumit z konzole.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| O1 | `viewForScreen` na serveru, stránka `/obrazovka`, scény základní hry a společné scény miniher, odkaz v konzoli, testy utajení, obrazovka v robotovi | Testy a robot prochází, hra jde sledovat v prohlížeči |
+| O2 | Scény jednotlivých miniher (`viewForScreen` v každém modulu) | Testy a robot prochází, každá minihra má scénu |
+| O3 | Zvuky přes Web Audio, tlačítko Zahájit, ztlumení v konzoli | Zvuky hrají a jdou ztlumit |
