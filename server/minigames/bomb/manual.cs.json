@@ -1,0 +1,41 @@
+{
+  "name": "Manuál pyrotechnika",
+  "lang": "cs",
+  "wires": {
+    "3": [
+      { "if": { "type": "firstIs", "color": "yellow" }, "cut": { "pos": 3 } },
+      { "if": { "type": "countIs", "color": "green", "n": 2 }, "cut": { "first": "green" } },
+      { "if": { "type": "none", "color": "black" }, "cut": { "pos": 2 } },
+      { "cut": { "pos": 1 } }
+    ],
+    "4": [
+      { "if": { "type": "countMore", "color": "white", "n": 1 }, "cut": { "last": "white" } },
+      { "if": { "type": "lastIs", "color": "blue" }, "cut": { "pos": 1 } },
+      { "if": { "type": "countIs", "color": "red", "n": 1 }, "cut": { "first": "red" } },
+      { "if": { "type": "none", "color": "yellow" }, "cut": { "pos": 3 } },
+      { "cut": { "pos": 4 } }
+    ],
+    "5": [
+      { "if": { "type": "firstIs", "color": "black" }, "cut": { "pos": 5 } },
+      { "if": { "type": "countMore", "color": "blue", "n": 2 }, "cut": { "last": "blue" } },
+      { "if": { "type": "none", "color": "green" }, "cut": { "pos": 4 } },
+      { "if": { "type": "countIs", "color": "white", "n": 1 }, "cut": { "first": "white" } },
+      { "cut": { "pos": 2 } }
+    ],
+    "6": [
+      { "if": { "type": "none", "color": "red" }, "cut": { "pos": 6 } },
+      { "if": { "type": "lastIs", "color": "yellow" }, "cut": { "first": "yellow" } },
+      { "if": { "type": "countMore", "color": "black", "n": 2 }, "cut": { "pos": 3 } },
+      { "if": { "type": "firstIs", "color": "green" }, "cut": { "last": "green" } },
+      { "cut": { "pos": 5 } }
+    ]
+  },
+  "symbols": [
+    ["★", "☾", "Ω", "ψ", "♞", "✿", "¶"],
+    ["§", "★", "☂", "♣", "ψ", "∞", "⌘"],
+    ["☀", "♪", "☾", "⚓", "♣", "✂", "λ"],
+    ["Ж", "¿", "¶", "⚓", "☯", "Ω", "ϟ"],
+    ["Ξ", "ϟ", "♪", "¤", "♠", "✿", "§"],
+    ["∞", "☯", "♠", "λ", "¤", "★", "☀"]
+  ]
+}
