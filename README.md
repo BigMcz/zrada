@@ -49,6 +49,7 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 - **Horký brambor** – bomba se posílá z telefonu na telefon, u koho bouchne, vypadá; poslední přeživší získá štít. Zrádcům ukazuje ručička tlaku skutečný čas do výbuchu.
 - **Insider kvíz** – 7 otázek po 15 s, svíčka (nápověda) ukazuje Zrádcům správnou odpověď, Věrným náhodnou; nejlepší hráč získá štít. Otázky jsou v `server/minigames/quiz/questions/`.
 - **Trezor** – skupina skládá kód z nápověd na telefonech a zvolený zámečník má 3 pokusy; Zrádci mají jednu nápovědu falešnou. Otevře-li zámečník trezor, získá štít.
+- **Rytmus** – všichni ťukají do rytmu kruhu na telefonu, štít získá nejpřesnější hráč, poklad roste podle synchronizace skupiny. Zrádci mají rušičku, která jednomu hráči v kole 2 posune rytmus.
 
 Na konci hry je poklad, žebříček hráčů podle osobních bodů a žebříček duchů. Celá pravidla jsou v [SPEC.md](DOC/SPEC.md).
 
@@ -107,6 +108,7 @@ server/
     hotPotato/         Horký brambor
     quiz/              Insider kvíz (otázky v questions/*.json)
     vault/             Trezor (generátor kódu a nápověd v hints.ts)
+    rhythm/            Rytmus (hodnocení ťuknutí v scoring.ts)
 client/
   player/              obrazovky telefonu hráče
   moderator/           konzole moderátora

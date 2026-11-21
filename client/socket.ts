@@ -56,18 +56,26 @@ function update(patch: Partial<Connection>) {
 
 let clockOffset = 0;
 
+/** Místní hodiny s přesností pod milisekundu (stejný základ jako `event.timeStamp`). */
+const localNow = () => performance.timeOrigin + performance.now();
+
 /** Odhad času serveru podle hodin telefonu. */
 export function serverNow(): number {
-  return Date.now() + clockOffset;
+  return localNow() + clockOffset;
 }
 
-/** 5 výměn zpráv, vezme se ta s nejkratší cestou (nejpřesnější). */
-async function syncClock() {
+/** Čas serveru pro časovou značku události (`event.timeStamp` z pointerdown). */
+export function serverTimeOf(eventTimeStamp: number): number {
+  return performance.timeOrigin + eventTimeStamp + clockOffset;
+}
+
+/** Několik výměn zpráv (`samples`), vezme se ta s nejkratší cestou (nejpřesnější). */
+export async function syncClock(samples = 5) {
   let best: { rtt: number; offset: number } | null = null;
-  for (let i = 0; i < 5; i++) {
-    const t0 = Date.now();
+  for (let i = 0; i < samples; i++) {
+    const t0 = localNow();
     const server = await socket.emitWithAck('time');
-    const t1 = Date.now();
+    const t1 = localNow();
     const sample = { rtt: t1 - t0, offset: server - (t0 + t1) / 2 };
     if (!best || sample.rtt < best.rtt) best = sample;
   }

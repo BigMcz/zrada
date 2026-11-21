@@ -2,6 +2,7 @@ import { auction } from './auction/index.js';
 import { hotPotato } from './hotPotato/index.js';
 import { quiz } from './quiz/index.js';
 import { registerMinigame } from './registry.js';
+import { rhythm } from './rhythm/index.js';
 import { splitSteal } from './splitSteal/index.js';
 import { vault } from './vault/index.js';
 
@@ -12,4 +13,5 @@ export function registerAllMinigames(): void {
   registerMinigame(hotPotato);
   registerMinigame(quiz);
   registerMinigame(vault);
+  registerMinigame(rhythm);
 }

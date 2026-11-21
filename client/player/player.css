@@ -989,3 +989,109 @@
   color: var(--warn);
   font-weight: 600;
 }
+
+/* Rytmus */
+.rhythm-title {
+  margin: 0;
+  letter-spacing: 0.06em;
+}
+
+.rhythm-pad {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 56vh;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.rhythm-beat {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  pointer-events: none;
+}
+
+.rhythm-core,
+.rhythm-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.rhythm-core {
+  background: var(--surface-2);
+  border: 2px solid var(--gold-dim);
+  transition: background 60ms, box-shadow 60ms;
+}
+
+.rhythm-core.on {
+  background: var(--gold);
+  box-shadow: 0 0 40px var(--gold-glow);
+}
+
+.rhythm-ring {
+  border: 3px solid var(--gold);
+  opacity: 0;
+  will-change: transform;
+}
+
+.rhythm-count {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--gold);
+}
+
+.rhythm-spark {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  background: var(--gold-glow);
+  pointer-events: none;
+  animation: rhythm-spark 0.35s ease-out forwards;
+}
+
+@keyframes rhythm-spark {
+  from {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.rhythm-hint {
+  margin: 0;
+  pointer-events: none;
+}
+
+.rhythm-console-jam {
+  margin: 4px 0 8px;
+  font-weight: 600;
+}
+
+.rhythm-pad .rhythm-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+}

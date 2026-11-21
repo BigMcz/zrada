@@ -115,7 +115,7 @@ async function connect(url: string): Promise<ClientSocket> {
 // ---------------------------------------------------------------------------
 
 /** Klíče, které by v pohledu hráče nikdy neměly být (skryté údaje miniher a štítu). */
-const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"'];
+const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"'];
 
 function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   const v = bot.pv;
@@ -141,6 +141,7 @@ function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   checkGhostPotato(bot, report);
   checkQuiz(bot, report);
   checkVault(bot, report);
+  checkRhythm(bot, report);
   if (v.minigame?.id === 'HOT_POTATO' && v.me.status === 'ALIVE' && game) {
     // Horký brambor: Věrný i Zrádce mají stejná pole, ručička je číslo 0–1 a mimo bombu stojí na nule.
     const keys = Object.keys(game).sort().join(',');
@@ -161,6 +162,21 @@ function checkGhostPotato(bot: Bot, report: Report) {
 
 const HOT_POTATO_KEYS = 'amHolder,amOut,canPassTo,eliminated,holderId,players,pressure,remaining,round,stage';
 const QUIZ_KEYS = 'answeredCount,correct,hint,index,myAnswer,question,stage,standings,total';
+const RHYTHM_KEYS = 'beats,bpm,displayOffsetMs,groupSync,myAccuracy,myPick,round,rounds,stage,submitted,voteTargets';
+
+/** Rytmus: stejná pole pro všechny, duch bez volby a bez posunu rytmu. */
+function checkRhythm(bot: Bot, report: Report) {
+  const v = bot.pv;
+  if (v?.minigame?.id !== 'RHYTHM' || v.minigame.step !== 'PLAY' || !v.minigame.game) return;
+  const game = v.minigame.game as object;
+  if (v.me.status !== 'ALIVE') {
+    if ('voteTargets' in game || 'displayOffsetMs' in game) report.violation(`${bot.name}: duch má v Rytmu volbu nebo posun rytmu`);
+    return;
+  }
+  const keys = Object.keys(game).sort().join(',');
+  if (keys !== RHYTHM_KEYS) report.violation(`${bot.name}: pohled Rytmu má jiná pole: ${keys}`);
+}
+
 const VAULT_KEYS = 'attempts,attemptsLeft,digits,isLocksmith,locksmithId,myHints,myVote,revealedCode,stage,voteTargets,votedCount';
 
 /** Trezor: stejná pole pro všechny, kód až po konci, duch bez nápověd. */
@@ -262,6 +278,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     let potatoPlayed = false;
     let quizPlayed = false;
     let vaultPlayed = false;
+    let rhythmPlayed = false;
     const signature = () => {
       const v = m();
       const g = v.minigame?.game as { stage?: string; revealed?: unknown[] | boolean } | null | undefined;
@@ -294,6 +311,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     let reconnected = 'ne';
     let potatoJump = 'ne';
     let vaultReassign = 'ne';
+    let rhythmDrop = 'ne';
     async function maybeReconnect() {
       if (!cfg.reconnect || reconnected !== 'ne') return;
       const bot = rand(alive());
@@ -387,11 +405,12 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       switch (mg.step) {
         case 'DRAW':
           // Nové minihry robot volí častěji, aby se v každém běhu odehrály.
-          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ', !vaultPlayed && 'VAULT'].filter(
+          const wanted = [!potatoPlayed && 'HOT_POTATO', !quizPlayed && 'QUIZ', !vaultPlayed && 'VAULT', !rhythmPlayed && 'RHYTHM'].filter(
             (id): id is string => !!id && id !== mg.id && mg.choices.some((c) => c.id === id),
           );
           if (wanted.length > 0 && chance(0.6)) {
-            await modAct({ type: 'chooseMinigame', id: rand(wanted) });
+            // Nejnovější minihra (poslední v seznamu) má přednost, aby se v běhu odehrála určitě.
+            await modAct({ type: 'chooseMinigame', id: chance(0.5) ? wanted[wanted.length - 1] : rand(wanted) });
           } else if (mg.canReroll && chance(0.3)) await modAct({ type: 'rerollMinigame' });
           else if (mg.choices.length > 1 && chance(0.3)) await modAct({ type: 'chooseMinigame', id: rand(mg.choices).id });
           else await modAct({ type: 'confirmMinigame' });
@@ -410,6 +429,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
           if (mg.id === 'HOT_POTATO') return playHotPotato();
           if (mg.id === 'QUIZ') return playQuiz();
           if (mg.id === 'VAULT') return playVault();
+          if (mg.id === 'RHYTHM') return playRhythm();
           return mg.id === 'AUCTION' ? playAuction() : playDuel();
         case 'RESULT':
           await modAct({ type: 'showClue' });
@@ -603,6 +623,87 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       }
     }
 
+    async function playRhythm() {
+      rhythmPlayed = true;
+      type RhythmMod = {
+        stage: string;
+        round: number;
+        jamTarget: string | null;
+        jam: string | null;
+        accuracy: Record<string, number>[];
+        submitted: string[];
+      };
+      type RhythmPhone = { stage: string; round: number; beats: number[]; submitted: boolean; displayOffsetMs?: number; voteTargets?: string[] };
+      const game = m().minigame!.game as RhythmMod;
+      const rhythmGame = () => m().minigame?.game as Partial<RhythmMod> | null | undefined;
+      const phones = () => bots.filter((b) => b.pv?.minigame?.id === 'RHYTHM' && b.pv.minigame.game);
+
+      if (game.stage === 'VOTE') {
+        for (const b of alive()) {
+          const targets = (b.pv?.minigame?.game as RhythmPhone | undefined)?.voteTargets ?? [];
+          if (targets.includes(b.id)) report.violation(`${b.name}: může v Rytmu vybrat sám sebe`);
+          if (targets.length > 0 && chance(0.85)) await act(b, { type: 'minigameInput', payload: { pick: rand(targets) } });
+        }
+        await sleep(100);
+        await modAct({ type: 'minigameModerator', payload: { action: 'endVote' } });
+        return;
+      }
+      if (game.stage === 'PAUSE') {
+        await sleep(300);
+        const endsAt = m().minigame?.endsAt ?? 0;
+        if (chance(0.5) && endsAt - Date.now() > 1_500) await modAct({ type: 'minigameModerator', payload: { action: 'next' } });
+        else await sleep(200);
+        return;
+      }
+      if (game.stage !== 'ROUND') {
+        await sleep(100);
+        return;
+      }
+
+      // Rušička: posun zobrazení má jen zasažený cíl v kole 2, ostatní 0.
+      for (const b of phones()) {
+        const g = b.pv!.minigame!.game as RhythmPhone;
+        if (b.pv!.me.status !== 'ALIVE' || g.round !== game.round) continue;
+        const expected = game.round === 2 && game.jam === 'HIT' && game.jamTarget === b.id ? 150 : 0;
+        if ((g.displayOffsetMs ?? 0) !== expected) report.violation(`${b.name}: posun rytmu ${g.displayOffsetMs}, správně ${expected}`);
+      }
+
+      // Jednou za hru (s návratem hráče): hráč se v kole 1 odpojí a ťuknutí nepošle; server na něj nečeká.
+      let dropped: Bot | null = null;
+      if (cfg.reconnect && rhythmDrop === 'ne' && game.round === 1) {
+        dropped = rand(alive());
+        dropped.socket.disconnect();
+      }
+
+      // Boti ťukají s chybou 20–120 ms (občas dobu vynechají) a pošlou ťuknutí hned, server je bere i během kola.
+      for (const b of phones()) {
+        if (b === dropped) continue;
+        const g = b.pv!.minigame!.game as RhythmPhone;
+        if (g.stage !== 'ROUND' || g.round !== game.round || g.submitted) continue;
+        const lag = (g.displayOffsetMs ?? 0) + (chance(0.5) ? 1 : -1) * (20 + Math.random() * 100);
+        const taps = g.beats.filter(() => chance(0.92)).map((t) => Math.round(t + lag + (Math.random() - 0.5) * 60));
+        await act(b, { type: 'minigameInput', payload: { round: g.round, taps } });
+      }
+
+      // Čekání na konec kola a vyhodnocení (po poslední době + nejvýš 2 s sběru).
+      const until = Date.now() + 25_000;
+      while (Date.now() < until) {
+        const g = rhythmGame();
+        if (!g || g.round !== game.round || (g.stage !== 'ROUND' && g.stage !== 'COLLECT')) break;
+        await sleep(100);
+      }
+      const after = rhythmGame();
+      if (after?.round === game.round && (after.stage === 'ROUND' || after.stage === 'COLLECT')) {
+        report.violation(`Rytmus: kolo ${game.round} se nevyhodnotilo`);
+      }
+      if (dropped) {
+        const acc = after?.accuracy?.[game.round]?.[dropped.id];
+        if (acc !== 0) report.violation(`${dropped.name}: odpojený má v kole ${game.round} přesnost ${acc}, správně 0`);
+        await rejoin(dropped);
+        rhythmDrop = `${dropped.name} se v Rytmu odpojil/a, kolo se vyhodnotilo bez něj`;
+      }
+    }
+
     async function playHotPotato() {
       potatoPlayed = true;
       const game = m().minigame!.game as {
@@ -701,7 +802,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected: [reconnected, potatoJump, vaultReassign].filter((x, i) => i === 0 || x !== 'ne').join('; '),
+      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop].filter((x, i) => i === 0 || x !== 'ne').join('; '),
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,
