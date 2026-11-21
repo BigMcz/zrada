@@ -37,6 +37,7 @@ const MODERATOR_INTENTS = new Set([
   'endNight',
   'newGame',
   'setMinigames',
+  'setPhysicalMission',
   'drawMinigame',
   'rerollMinigame',
   'chooseMinigame',
@@ -97,6 +98,8 @@ export function parseIntent(raw: unknown): Intent | null {
       return isId(r.id) ? { type: 'chooseMinigame', id: r.id } : null;
     case 'setMinigames':
       return typeof r.enabled === 'boolean' ? { type: 'setMinigames', enabled: r.enabled } : null;
+    case 'setPhysicalMission':
+      return typeof r.enabled === 'boolean' ? { type: 'setPhysicalMission', enabled: r.enabled } : null;
     case 'startGame':
       return typeof r.traitorCount === 'number' ? { type: 'startGame', traitorCount: r.traitorCount } : null;
     default:

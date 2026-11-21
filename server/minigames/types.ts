@@ -41,6 +41,8 @@ export interface MinigameModule<S = any> {
     traitorRule: string;
     /** Co v minihře dělají duchové (prázdné = jen sledují). */
     ghostRule?: string;
+    /** Losuje se jen se zapnutým nastavením Fyzická mise v osudí. */
+    optIn?: boolean;
   };
   /** Další podmínka losu (např. aukce potřebuje poklad aspoň 200). */
   canRun?(ctx: MinigameContext): boolean;

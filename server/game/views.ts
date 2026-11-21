@@ -170,6 +170,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     playerPoints: Object.fromEntries(state.players.map((p) => [p.id, pointsOf(state, p.id, true)])),
     shieldHolderId: state.shieldHolderId,
     minigamesEnabled: state.settings.minigamesEnabled,
+    physicalMission: state.settings.physicalMission,
     minigameAvailable:
       state.settings.minigamesEnabled &&
       (state.phase === 'ROLES' || state.phase === 'MORNING') &&

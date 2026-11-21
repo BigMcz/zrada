@@ -15,6 +15,7 @@ export const REROLLS_PER_DAY = 1;
 /** Akce, které obsluhuje rámec miniher (ostatní řeší engine). */
 export const MINIGAME_ACTIONS = new Set<Action['type']>([
   'setMinigames',
+  'setPhysicalMission',
   'drawMinigame',
   'rerollMinigame',
   'chooseMinigame',
@@ -46,8 +47,9 @@ function contextFor(state: GameState, id: MinigameId): MinigameContext {
   return { ...minigameContext(state), memory: state.minigameMemory[id] };
 }
 
-/** Minihra se dnes dá hrát: dost živých hráčů a splněná vlastní podmínka. */
+/** Minihra se dnes dá hrát: zapnutá, dost živých hráčů a splněná vlastní podmínka. */
 function fits(state: GameState, module: MinigameModule): boolean {
+  if (module.meta.optIn && !state.settings.physicalMission) return false;
   return module.meta.minPlayers <= alive(state).length && (module.canRun?.(contextFor(state, module.id)) ?? true);
 }
 
@@ -171,6 +173,13 @@ export function reduceMinigame(state: GameState, actor: Actor, action: Action, r
       requireModerator(actor);
       if (state.phase !== 'LOBBY') fail(WRONG_PHASE);
       state.settings.minigamesEnabled = action.enabled === true;
+      return true;
+    }
+
+    case 'setPhysicalMission': {
+      // Jde přepnout kdykoli: úkol nemusí být připravený od začátku hry.
+      requireModerator(actor);
+      state.settings.physicalMission = action.enabled === true;
       return true;
     }
 

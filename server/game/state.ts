@@ -52,6 +52,8 @@ export interface ActiveMinigame {
 
 export interface GameSettings {
   minigamesEnabled: boolean;
+  /** Fyzická mise v osudí (Rozšíření 8); výchozí vypnuto. */
+  physicalMission: boolean;
 }
 
 /**
@@ -120,7 +122,7 @@ export function createGame(): GameState {
     ghostTips: {},
     ghostTipLog: [],
     points: [],
-    settings: { minigamesEnabled: true },
+    settings: { minigamesEnabled: true, physicalMission: false },
     minigame: null,
     minigamesPlayed: [],
     minigameMemory: {},

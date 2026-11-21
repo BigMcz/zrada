@@ -241,6 +241,8 @@ export interface ModeratorView {
   shieldHolderId: string | null;
   /** Zda jsou minihry zapnuté (přepínač v lobby). */
   minigamesEnabled: boolean;
+  /** Fyzická mise v osudí (přepínač v konzoli, kdykoli). */
+  physicalMission: boolean;
   /** Minihry, které jde dnes losovat; prázdné = jen Přeskočit. */
   minigameAvailable: boolean;
   /** Jen ve fázi MINIGAME. */
@@ -282,6 +284,7 @@ export type Intent =
   | { type: 'endNight' }
   | { type: 'newGame' }
   | { type: 'setMinigames'; enabled: boolean }
+  | { type: 'setPhysicalMission'; enabled: boolean }
   | { type: 'drawMinigame' }
   | { type: 'rerollMinigame' }
   | { type: 'chooseMinigame'; id: MinigameId }
