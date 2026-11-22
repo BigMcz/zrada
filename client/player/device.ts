@@ -40,6 +40,36 @@ export function useWakeLock(): boolean {
 }
 
 /**
+ * Zavibruje, pokud to telefon umí. Prohlížeč vibraci pustí až po prvním ťuknutí na stránku
+ * (jinak jen zapíše chybu do konzole), proto se do té doby nic neděje.
+ */
+export function buzz(pattern: number | number[]): void {
+  const activated = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive ?? true;
+  if (activated) navigator.vibrate?.(pattern);
+}
+
+/** Krátké cuknutí po potvrzení vlastní volby (hlas, odpověď, tah) – Rozšíření 14. */
+export const CONFIRM_BUZZ = 35;
+
+/**
+ * Haptika veřejného dění v minihrách (Rozšíření 14): výbuch Horkého bramboru a chyba u bomby.
+ * Obojí vidí všichni, takže vibrace nic neprozradí.
+ */
+export function useEventHaptics(view: View | null): void {
+  const mg = view?.kind === 'player' && view.phase === 'MINIGAME' ? view.minigame : undefined;
+  const game = mg?.game as { eliminated?: unknown[]; errors?: unknown } | null | undefined;
+  const boom = mg?.id === 'HOT_POTATO' && Array.isArray(game?.eliminated) ? game.eliminated.length : null;
+  const bombErrors = mg?.id === 'BOMB' && typeof game?.errors === 'number' ? game.errors : null;
+  const last = useRef<{ boom: number | null; bombErrors: number | null } | null>(null);
+  useEffect(() => {
+    const prev = last.current;
+    if (prev && boom !== null && prev.boom !== null && boom > prev.boom) buzz([120, 60, 320]);
+    if (prev && bombErrors !== null && prev.bombErrors !== null && bombErrors > prev.bombErrors) buzz([80, 50, 80, 50, 220]);
+    last.current = { boom, bombErrors };
+  }, [boom, bombErrors]);
+}
+
+/**
  * Úkol, při jehož začátku telefon zavibruje. Stejný pro všechny hráče (Věrné, Zrádce i duchy),
  * aby vibrace nic neprozradila: role rozdány, hlasování, noc, start minihry, finálové hlasování.
  */
@@ -59,8 +89,7 @@ export function useTaskVibration(view: View | null): void {
   useEffect(() => {
     // První pohled po načtení stránky nevibruje (návrat do hry není nový úkol).
     // Prohlížeč vibraci pustí až po prvním ťuknutí na stránku (jinak jen zapíše chybu do konzole).
-    const activated = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive ?? true;
-    if (last.current !== undefined && key && key !== last.current && activated) navigator.vibrate?.(200);
+    if (last.current !== undefined && key && key !== last.current) buzz(200);
     last.current = key;
   }, [key]);
 }

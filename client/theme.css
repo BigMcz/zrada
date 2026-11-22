@@ -415,3 +415,44 @@ body::after {
 .role-card.revealed > :not(.seal-crack) {
   animation: phase-in 0.35s ease-out 0.15s both;
 }
+
+/* Rozšíření 14: barvy miniher – tenký pruh nahoře a jemná záře v barvě minihry. */
+.mg-auction { --mg: #d4a93c; }
+.mg-split_steal { --mg: #c8ccd4; }
+.mg-hot_potato { --mg: #e8833a; }
+.mg-quiz { --mg: #4f8fd9; }
+.mg-vault { --mg: #7d93a8; }
+.mg-rhythm { --mg: #a46bd6; }
+.mg-bomb { --mg: #d23b2f; }
+.mg-physical { --mg: #5fae6a; }
+
+.mg-accent {
+  position: relative;
+  background-image: radial-gradient(110% 45% at 50% 0%, color-mix(in srgb, var(--mg) 16%, transparent) 0%, transparent 70%);
+}
+
+.mg-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--mg), transparent);
+  box-shadow: 0 0 12px var(--mg);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Erb */
+.crest {
+  display: block;
+  margin: 0 auto;
+  width: 88px;
+  height: auto;
+  filter: drop-shadow(0 0 12px var(--gold-glow));
+}
+
+.crest.big {
+  width: clamp(3em, 9vh, 6.5em);
+}

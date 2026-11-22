@@ -5,6 +5,7 @@ import { GhostBoard, PlayerBoard } from '../components/GhostBoard';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
 import { Candle } from '../components/Candle';
+import { Crest } from '../components/Crest';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
@@ -12,13 +13,14 @@ import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
 import { MinigameScreen } from '../minigames/MinigameScreen';
 import { initials, nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { join, send, useConnection } from '../socket';
-import { useTaskVibration, useWakeHint, useWakeLock } from './device';
+import { useEventHaptics, useTaskVibration, useWakeHint, useWakeLock } from './device';
 
 export function PlayerApp() {
   const { connected, view } = useConnection();
   const wakeSupported = useWakeLock();
   const [showWakeHint, hideWakeHint] = useWakeHint(wakeSupported);
   useTaskVibration(view);
+  useEventHaptics(view);
 
   return (
     <div
@@ -27,6 +29,8 @@ export function PlayerApp() {
         view?.kind === 'player' && view.ghost && view.phase !== 'ENDED' ? 'ghost-mode' : '',
         // Rozšíření 14: ráno telefon „svítá“ z noční tmy do teplého tónu.
         view?.kind === 'player' && view.phase === 'MORNING' ? 'dawn' : '',
+        // Barva minihry (Rozšíření 14): jemný akcent podle id, stejný pro všechny role.
+        view?.kind === 'player' && view.phase === 'MINIGAME' && view.minigame?.id ? `mg-accent mg-${view.minigame.id.toLowerCase()}` : '',
       ].join(' ')}
     >
       {!connected && <div className="connection-bar">Obnovuji spojení…</div>}
@@ -68,6 +72,7 @@ function JoinScreen({ open }: { open: boolean }) {
   if (!open) {
     return (
       <Screen tag="Zrada">
+        <Crest />
         <h1 className="title">Zrada</h1>
         <p className="center">Hra už běží nebo je plná. Připojit se teď nejde.</p>
       </Screen>
@@ -93,6 +98,7 @@ function JoinScreen({ open }: { open: boolean }) {
           </PrimaryButton>
         }
       >
+        <Crest />
         <h1 className="title">Zrada</h1>
         <div className="divider">✦</div>
         <label className="field">

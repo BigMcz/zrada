@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { buzz, CONFIRM_BUZZ } from './player/device';
 import type { ClientToServerEvents, Intent, JoinResult, NewPhoneResult, Result, ServerToClientEvents, View } from '../shared/types';
 
 // Stejná adresa a port, ze kterých přišla stránka.
@@ -130,8 +131,11 @@ export async function join(name: string): Promise<JoinResult> {
   return res;
 }
 
-export function send(intent: Intent): Promise<Result> {
-  return socket.emitWithAck('intent', intent);
+export async function send(intent: Intent): Promise<Result> {
+  const res = await socket.emitWithAck('intent', intent);
+  // Telefon hráče krátce cukne, když server vlastní volbu přijal (Rozšíření 14).
+  if (res.ok && !isModeratorPage && !isScreenPage) buzz(CONFIRM_BUZZ);
+  return res;
 }
 
 /** Moderátor: nový odkaz pro hráče na jiném telefonu (Rozšíření 10). */

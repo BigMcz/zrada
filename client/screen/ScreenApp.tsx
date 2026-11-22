@@ -2,6 +2,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ScreenMinigameView, ScreenView } from '../../shared/types';
 import { Candle } from '../components/Candle';
+import { Crest } from '../components/Crest';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
@@ -91,7 +92,7 @@ function useElapsed(key: string): number {
 function ScreenGame({ view }: { view: ScreenView }) {
   const name = (id: string | null | undefined) => nameOf(view.players, id);
   return (
-    <div className={`screen-layout phase-${view.phase.toLowerCase()}${view.minigame?.step === 'CLUE' ? ' step-clue' : ''}`}>
+    <div className={`screen-layout phase-${view.phase.toLowerCase()}${view.minigame?.step === 'CLUE' ? ' step-clue' : ''}${view.phase === 'MINIGAME' && view.minigame?.id ? ` mg-accent mg-${view.minigame.id.toLowerCase()}` : ''}`}>
       {/* Jiskry a kouř v noci a ve finále (Rozšíření 14). */}
       {(view.phase === 'NIGHT' || (view.inFinale && view.phase !== 'ENDED')) && <Embers />}
       <header className="screen-top">
@@ -219,6 +220,7 @@ function Lobby({ view }: { view: ScreenView }) {
         <p className="muted">{view.joinUrl}</p>
       </div>
       <div className="screen-joined">
+        <Crest className="big" />
         <h1 className="screen-logo">Z R A D A</h1>
         <div className="screen-portraits wrap">
           {view.players.map((p) => (
