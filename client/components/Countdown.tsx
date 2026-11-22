@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import { serverNow } from '../socket';
 
-/** Zbývající čas do `endsAt` (čas serveru). Klient si odpočet kreslí sám. */
+/**
+ * Zbývající čas do `endsAt` (čas serveru). Klient si odpočet kreslí sám.
+ * Čas se bere při každém vykreslení: uložený „teď“ by po změně `endsAt` (např. hra → předání štítu)
+ * na chvíli ukázal úplně jiné číslo.
+ */
 export function useRemaining(endsAt: number | null): number | null {
-  const [now, setNow] = useState(serverNow());
+  const [, setTick] = useState(0);
   useEffect(() => {
     if (endsAt === null) return;
-    const id = setInterval(() => setNow(serverNow()), 250);
+    const id = setInterval(() => setTick((t) => t + 1), 250);
     return () => clearInterval(id);
   }, [endsAt]);
-  return endsAt === null ? null : Math.max(0, endsAt - now);
+  return endsAt === null ? null : Math.max(0, endsAt - serverNow());
 }
 
 export function formatMs(ms: number): string {
