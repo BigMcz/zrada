@@ -126,7 +126,7 @@ Podrobnější vizuální návrh je v [zradci-design.md](zradci-design.md). Pro 
 - Mise a poklad – poklad doplněn v části [Rozšíření 2: Minihry](#rozšíření-2-minihry)
 - Štít proti noční vraždě – doplněn v části [Rozšíření 2: Minihry](#rozšíření-2-minihry)
 - Verbování Věrných na stranu Zrádců
-- Finálové hlasování „ukončit hru / vyhnat dalšího“
+- ~~Finálové hlasování „ukončit hru / vyhnat dalšího“~~ – doplněno v části [Rozšíření 11: Finále a konec večera](#rozšíření-11-finále-a-konec-večera)
 - ~~Režim duchů s body a žebříčkem pro vyřazené~~ – doplněno v části [Rozšíření 1: Duchové](#rozšíření-1-duchové)
 - ~~Zvláštní velkou obrazovku pro projektor, animace a zvuky~~ – doplněno v části [Rozšíření 9: Velká obrazovka](#rozšíření-9-velká-obrazovka); odhalování hlasů jeden po druhém zůstává mimo
 - Chat Zrádců (domlouvají se jinak, např. pohledem; při rozdílné volbě rozhodne los)
@@ -135,8 +135,8 @@ Podrobnější vizuální návrh je v [zradci-design.md](zradci-design.md). Pro 
 - Body za noční tip Věrných (tip se nikam nepočítá)
 - Časové limity na hlasování (fáze ukončuje vždy moderátor tlačítkem)
 - Fotky hráčů, jen jména
-- Ruční zásahy moderátora během hry (pauza, opakování hlasování, ruční vyřazení, přihlášení na jiném telefonu)
-- Víc her najednou, uložení hry po restartu, statistiky
+- ~~Ruční zásahy moderátora během hry (pauza, opakování hlasování, ruční vyřazení, přihlášení na jiném telefonu)~~ – doplněno v části [Rozšíření 10: Spolehlivost](#rozšíření-10-spolehlivost)
+- Víc her najednou, statistiky (~~uložení hry po restartu~~ – doplněno v části [Rozšíření 10: Spolehlivost](#rozšíření-10-spolehlivost))
 - Nasazení na internet, přihlašování, jiné jazyky než čeština
 
 ## Hotovo, když
@@ -1004,3 +1004,148 @@ Každá minihra dostane vlastní `viewForScreen` jen s veřejnými informacemi.
 | O1 | `viewForScreen` na serveru, stránka `/obrazovka`, scény základní hry a společné scény miniher, odkaz v konzoli, testy utajení, obrazovka v robotovi | Testy a robot prochází, hra jde sledovat v prohlížeči |
 | O2 | Scény jednotlivých miniher (`viewForScreen` v každém modulu) | Testy a robot prochází, každá minihra má scénu |
 | O3 | Zvuky přes Web Audio, tlačítko Zahájit, ztlumení v konzoli | Zvuky hrají a jdou ztlumit |
+
+## Rozšíření 10: Spolehlivost
+
+Ochrana živého večera před nejčastějšími problémy: pád serveru, usínající telefony, hráč, který odejde nebo vymění telefon. Pravidla hry se nemění.
+
+### Obnova po pádu serveru
+
+- Server po každé změně uloží **celý stav hry** do souboru `data/zrada-stav.json` (zápis přes dočasný soubor, aby se při pádu nepoškodil). Ukládá se stav, ne přehrávání akcí, protože los v jádru je náhodný.
+- Po startu server stav načte a hra pokračuje tam, kde skončila. Odpočty miniher jsou v absolutním čase, takže po restartu doběhnou samy.
+- Uloží se i **klíč moderátora**: otevřená konzole funguje dál. Telefony se vrátí samy podle svého tokenu.
+- Soubor je v `.gitignore`. Tlačítko **Nová hra** stav přepíše.
+
+### Telefon nezhasne
+
+- Telefon při prvním ťuknutí požádá o podržení rozsvíceného displeje (Wake Lock API) a po návratu do prohlížeče požádá znovu.
+- Kde to prohlížeč neumí, ukáže telefon nenápadné upozornění „Nezhasínej displej“.
+
+### Vibrace
+
+- Krátká vibrace (200 ms) **u všech hráčů současně**, když začne nový úkol: role rozdány, hlasování otevřeno, noc, start minihry, finálové hlasování.
+- Nikdy jen jednomu hráči, aby nic neprozradila. Kde prohlížeč vibrace neumí (iPhone), nestane se nic.
+
+### Pauza a zásahy moderátora
+
+| Zásah | Kdy | Co udělá |
+| --- | --- | --- |
+| **Pauza / Pokračovat** | kdykoli během hry | Zastaví odpočty miniher a předání štítu, hráči nemůžou nic zadávat, telefony i obrazovka ukážou „Pauza“. Po pokračování odpočty běží dál od stejného místa. |
+| **Vynulovat hlasy** | během hlasování | Smaže dosavadní hlasy, hlasuje se znovu. |
+| **Vyřadit hráče** | mimo minihru | Hráč, který odešel. Počítá se jako mrtvý (stav „odešel/a“), role se nezveřejní, stane se duchem. Po vyřazení se zkontroluje konec hry. |
+| **Nový telefon** | kdykoli | Konzole u hráče vygeneruje nový odkaz s QR kódem. Hráč se na něm přihlásí jako on sám, starý telefon přestane platit. |
+
+### Rozšíření NEobsahuje
+
+- Vrácení už vyhnaného nebo zavražděného hráče
+- Úpravu bodů nebo pokladu ručně
+
+### Hotovo, když
+
+1. Po restartu serveru (i uprostřed minihry) hra pokračuje, konzole i telefony se připojí samy (ověřeno testem).
+2. Pauza zastaví a obnoví odpočty, během pauzy jsou akce hráčů odmítnuté (ověřeno testy).
+3. Vynulování hlasů, vyřazení hráče a nový telefon fungují podle tabulky (ověřeno testy).
+4. Telefon drží displej rozsvícený a vibruje u všech současně (ověřeno v prohlížeči, kde to jde).
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| S1 | Ukládání a načtení stavu, uložený klíč moderátora | Testy, restart dev serveru uprostřed hry |
+| S2 | Wake Lock, upozornění, vibrace | Prohlížeč |
+| S3 | Pauza, vynulování hlasů, vyřazení hráče, nový telefon | Testy, robot, prohlížeč |
+
+## Rozšíření 11: Finále a konec večera
+
+Konec hry jako v televizi: hráči sami rozhodují, jestli hru ukončí. Poklad tím dostane smysl. Na konci večera rekapitulace a ceny.
+
+### Finálové hlasování
+
+- Automatický konec zůstává: žádný Zrádce = výhra Věrných; Zrádců stejně nebo víc než Věrných = výhra Zrádců.
+- Když je **4 a méně živých**, nabídne konzole ráno (místo minihry a kulatého stolu) tlačítko **Spustit finále**. Moderátor ho použít nemusí.
+- **Finálové hlasování** (nová fáze `FINAL_VOTE`): každý živý tajně zvolí **Ukončit hru** („Věřím, že tu zbyli jen Věrní.“), nebo **Vyhnat dalšího** („Mezi námi je pořád Zrádce.“). Telefony mají dvě velké karty, stejné pro obě role.
+- Moderátor hlasování uzavře. Hru ukončí jen **jednomyslné** „Ukončit hru“; jinak následuje kulatý stůl s vyhnáním (bez minihry a bez noci) a po něm znovu finálové hlasování.
+- Velká obrazovka: „Hlasovalo N z M“, po uzavření jen výsledek („Jednomyslně ukončit“ / „Hra pokračuje“), ne kdo jak hlasoval.
+- **Konec po finále:**
+  - zbyli jen Věrní: vyhráli a **dělí se o poklad** rovným dílem (zaokrouhleno dolů na celé body),
+  - zbyl Zrádce: vyhrávají Zrádci a **celý poklad** si rozdělí živí Zrádci.
+- Podíl z pokladu se připíše jako osobní body (důvod „poklad“). Při automatickém konci bez finále se poklad rozdělí stejně.
+
+### Rekapitulace a ceny
+
+- Po vyhlášení vítěze velká obrazovka (a telefony na konci hry) ukáže **časovou osu kol**: kdo byl vyhnán (s rolí), kdo zemřel v noci, minihra a kdo vyhrál štít.
+- **Ceny** (jen jména a počty):
+  - **Detektiv**: nejvíc hlasů u kulatého stolu pro Zrádce,
+  - **Mistr klamu**: Zrádce s nejmenším počtem hlasů proti sobě,
+  - **Nejpodezřelejší Věrný**: Věrný s nejvíc hlasy proti sobě.
+- Server si k tomu pamatuje hlasy všech kol. Ven jdou jen ceny, nikdy kompletní seznam, kdo pro koho hlasoval (pokud není zapnuté veřejné hlasování, Rozšíření 12).
+- Při shodě cenu získají všichni se stejným počtem; když nikdo nesplňuje podmínku, cena se neudělí.
+
+### Hotovo, když
+
+1. Finále jde spustit jen při 4 a méně živých, ukončí ho jen jednomyslný hlas, jinak kulatý stůl a nové finále (ověřeno testy).
+2. Poklad se na konci rozdělí podle pravidel a připíše jako osobní body (ověřeno testy).
+3. Časová osa a ceny odpovídají průběhu hry a neprozradí, kdo pro koho hlasoval (ověřeno testy).
+4. Robot `npm run e2e` hraje i finále.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| K1 | Finálové hlasování, dělení pokladu, obrazovky telefonu, konzole a velké obrazovky, robot | Testy, robot, prohlížeč |
+| K2 | Časová osa a ceny na konci hry | Testy, prohlížeč |
+
+## Rozšíření 12: Moderátor a obrazovka
+
+### Veřejné hlasování (volitelné)
+
+- Nové nastavení v lobby **Veřejné hlasování**, výchozí **vypnuto**.
+- Zapnuté: velká obrazovka po uzavření hlasování otáčí karty „Petra → Marek“ jednu po druhé (1,5 s), pak vyhnaný a jeho role. Telefony dál ukazují jen výsledek.
+- Hráči se o zapnutém veřejném hlasování dozví v lobby a v pravidlech na telefonu.
+- Vypnuté: platí tajné hlasování jako dosud.
+
+### Scénář pro moderátora
+
+- V konzoli u každé fáze a kroku minihry **1–2 věty k přečtení nahlas** (např. „Slunce zapadá. Zrádci, otevřete oči… na telefonu.“).
+- Texty jsou v datovém souboru `client/moderator/script.cs.json`, aby šly upravit bez programování.
+- Scénář jde v konzoli skrýt (pamatuje si to prohlížeč).
+
+### Hotovo, když
+
+1. S vypnutým veřejným hlasováním obrazovka hlasy nezveřejní; se zapnutým je odhalí jeden po druhém (ověřeno testy pohledu obrazovky).
+2. Konzole ukazuje scénář ke každé fázi a kroku minihry a jde skrýt.
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| M1 | Veřejné hlasování: nastavení, pohled obrazovky, scéna odhalení | Testy, prohlížeč |
+| M2 | Scénář pro moderátora | Prohlížeč |
+
+## Rozšíření 13: Kurz
+
+### Boti
+
+- V lobby tlačítko **Přidat bota** („Bot 1“, „Bot 2“, … až do maxima hráčů) a u bota tlačítko Odebrat.
+- Boti hrají **na serveru sami** s krátkou náhodnou prodlevou (1–3 s): potvrdí roli a tajnou kartu, hlasují náhodně, Zrádce-bot vybírá oběť, duch-bot tipuje.
+- V minihrách hrají jednoduchou strategií: každý modul dostane funkci pro tah bota (inspirovanou robotem z e2e). Bot může být i zámečník nebo pyrotechnik.
+- Boti se v konzoli i na obrazovce poznají podle jména; jinak jsou to běžní hráči.
+
+### Sady otázek
+
+- Všechny soubory `*.json` ve složce `server/minigames/quiz/questions/` se načtou automaticky. Vlastní sada = nový soubor ve stejném formátu a restart serveru.
+- V lobby zaškrtávátka, ze kterých sad kvíz bere otázky; výchozí jsou všechny. Kvíz se nelosuje, když ve vybraných sadách není dost otázek.
+- Nová ukázková sada **Filmy a seriály** (asi 30 otázek).
+
+### Hotovo, když
+
+1. Hra s boty doplněnými do 6–8 hráčů jde odehrát od lobby po konec včetně miniher, jen se dvěma lidmi a moderátorem (ověřeno testem a v prohlížeči).
+2. Nová sada otázek se načte sama a výběr sad v lobby ovlivní otázky kvízu (ověřeno testy).
+
+### Kroky vývoje
+
+| Krok | Obsah | Ověření |
+| --- | --- | --- |
+| B1 | Boti v základní hře: přidání, odebrání, tahy na serveru | Testy, prohlížeč |
+| B2 | Tahy botů ve všech minihrách | Testy, robot |
+| Q1 | Sady otázek: automatické načtení, výběr v lobby, sada Filmy a seriály | Testy, prohlížeč |
