@@ -57,7 +57,7 @@ body {
 
 body {
   /* Teplé světlo svíčky shora, stejné pro všechny obrazovky. */
-  background: radial-gradient(120% 60% at 50% 0%, #241c13 0%, var(--bg) 60%) fixed, var(--bg);
+  background: radial-gradient(120% 60% at 50% 0%, var(--bg-glow, #241c13) 0%, var(--bg) 60%) fixed, var(--bg);
 }
 
 .role-traitor {
@@ -508,4 +508,45 @@ body::after {
 .crest-option:disabled {
   opacity: 0.25;
   cursor: default;
+}
+
+/* Rozšíření 16: barevné palety témat (data-theme na <html> nastaví klient podle tématu ze serveru).
+   Názvy proměnných zůstávají (--gold = hlavní akcent), mění se jen hodnoty. */
+:root[data-theme='space'] {
+  --bg: #070b14;
+  --bg-glow: #12233d;
+  --surface: #0f1626;
+  --surface-2: #172137;
+  --line: #263453;
+  --text: #e3ecf7;
+  --text-muted: #8796ad;
+  --gold: #5cc8ff;
+  --gold-dim: #2f6f95;
+  --gold-glow: rgba(92, 200, 255, 0.35);
+}
+
+:root[data-theme='office'] {
+  --bg: #121314;
+  --bg-glow: #2a2420;
+  --surface: #1c1e20;
+  --surface-2: #26292c;
+  --line: #383c40;
+  --text: #ebebea;
+  --text-muted: #9a9c9e;
+  --gold: #f08a3c;
+  --gold-dim: #8a5228;
+  --gold-glow: rgba(240, 138, 60, 0.35);
+}
+
+:root[data-theme='pirate'] {
+  --bg: #120c07;
+  --bg-glow: #2e1e10;
+  --surface: #1e140c;
+  --surface-2: #2a1c11;
+  --line: #45301e;
+  --text: #efe2cc;
+  --text-muted: #a8957a;
+  --gold: #d6a85a;
+  --gold-dim: #7a5f30;
+  --gold-glow: rgba(214, 168, 90, 0.35);
 }

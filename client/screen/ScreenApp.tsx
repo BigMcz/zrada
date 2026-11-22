@@ -15,6 +15,7 @@ import { Countdown } from '../components/Countdown';
 import { nameOf, phaseTag, ROLE_LABEL } from '../labels';
 import { useConnection } from '../socket';
 import { play, setAmbient, setMuted, startAudio } from './sounds';
+import { theme, winnersWord } from '../themeStore';
 
 /** Velká obrazovka pro projektor (Rozšíření 9): jen sleduje stav hry, nic se na ní neovládá. */
 export function ScreenApp() {
@@ -101,7 +102,7 @@ function ScreenGame({ view }: { view: ScreenView }) {
       {/* Jiskry a kouř v noci a ve finále (Rozšíření 14). */}
       {(view.phase === 'NIGHT' || (view.inFinale && view.phase !== 'ENDED')) && <Embers />}
       <header className="screen-top">
-        <span className="screen-phase">{view.phase === 'LOBBY' ? 'Zrada' : phaseTag(view.phase, view.round)}</span>
+        <span className="screen-phase">{view.phase === 'LOBBY' ? theme().title : phaseTag(view.phase, view.round)}</span>
         {view.phase !== 'LOBBY' && (
           <span className="screen-pot">
             <small>Poklad</small> <PotCounter value={view.pot} />
@@ -210,7 +211,7 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
     case 'VOTE':
       return (
         <Title sub={`${view.inFinale ? 'Hra pokračuje. ' : ''}Hlasovalo ${view.votesCast ?? 0} z ${view.voters ?? 0}`}>
-          {view.inFinale ? 'Finále: kulatý stůl' : 'Kulatý stůl'}
+          {view.inFinale ? `Finále: ${theme().tableAcc}` : theme().table}
           <span className="screen-dots">
             {Array.from({ length: view.voters ?? 0 }, (_, i) => (
               <span key={i} className={i < (view.votesCast ?? 0) ? 'on' : ''} />
@@ -240,7 +241,7 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
       );
     case 'MORNING':
       return view.murderedId ? (
-        <Title sub="Zrádci si tuto noc vybrali svou oběť.">
+        <Title sub={`${theme().traitor.pl} si tuto noc vybrali svou oběť.`}>
           <Portrait label={name(view.murderedId)} crest={view.players.find((p) => p.id === view.murderedId)?.crest} dim />
           Tuto noc zemřel/a {name(view.murderedId)}
         </Title>
@@ -275,7 +276,7 @@ function HallOfFame({ boards }: { boards: ScreenView['hallOfFame'] }) {
   const board = boards[Math.floor(t / 8000) % boards.length];
   return (
     <div className="screen-hall" key={board.key}>
-      <h2>Síň slávy · {board.title}</h2>
+      <h2>Síň slávy · {board.key === 'TRAITOR' ? `Nejlepší ${theme().traitor.sg}` : board.title}</h2>
       <ol>
         {board.rows.map((r) => (
           <li key={r.name}>
@@ -299,7 +300,7 @@ function Lobby({ view }: { view: ScreenView }) {
       </div>
       <div className="screen-joined">
         <Crest className="big" />
-        <h1 className="screen-logo">Z R A D A</h1>
+        <h1 className="screen-logo">{theme().title.toLocaleUpperCase('cs').split('').join(' ')}</h1>
         <div className="screen-portraits wrap">
           {view.players.map((p) => (
             // Nově připojený hráč se rozhoří jako uhlík (animace jen při objevení).
@@ -360,7 +361,7 @@ function VoteReveal({ view, name }: { view: ScreenView; name: (id: string | null
       {t > 2500 &&
         (banished ? (
           <div className="screen-banished">
-            <p className="muted">Kulatý stůl vyhnal</p>
+            <p className="muted">{theme().banishedBy}</p>
             <h1>{banished.name}</h1>
             {/* 3D karta role: po 3 s napětí se otočí, za ní se rozlije záře v barvě role (Rozšíření 14). */}
             <div
@@ -395,14 +396,14 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
   if (view.recap && t > recapAt) {
     return (
       <div className="screen-recap">
-        <h1>{view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}: rekapitulace večera</h1>
+        <h1>{`Vyhráli ${winnersWord(view.winner)}`}: rekapitulace večera</h1>
         <Recap recap={view.recap} players={view.players} className="big" />
       </div>
     );
   }
   return (
     <div className="screen-finale">
-      {view.banishedId && t < 1500 && <p className="muted">Kulatý stůl vyhnal: {name(view.banishedId)}</p>}
+      {view.banishedId && t < 1500 && <p className="muted">{theme().banishedBy}: {name(view.banishedId)}</p>}
       <div className="screen-portraits wrap">
         {view.players.map((p, i) => (
           <Portrait
@@ -423,7 +424,7 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
               : `Poklad ${view.pot.toLocaleString('cs')}`
           }
         >
-          {view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}
+          {`Vyhráli ${winnersWord(view.winner)}`}
         </Title>
       )}
       {/* Poklad se rozsype k vítězům (Rozšíření 14). */}

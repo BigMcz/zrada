@@ -510,3 +510,43 @@ button.console-screen-link {
 .script-hint.hidden {
   padding: 4px 14px;
 }
+
+/* Rozšíření 16: výběr tématu */
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-option img {
+  width: 34px;
+  height: auto;
+}
+
+.theme-option span {
+  display: grid;
+}
+
+.theme-option small {
+  color: var(--text-muted);
+}
+
+.theme-option.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+}

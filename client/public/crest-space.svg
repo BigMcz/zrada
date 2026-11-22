@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72">
+  <title>Sabotáž</title>
+  <path d="M32 4 L58 12 V34 C58 52 46 63 32 68 C18 63 6 52 6 34 V12 Z" fill="#0f1626" stroke="#5cc8ff" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M32 9 L53 15.5 V34 C53 49 43 58 32 62.5 C21 58 11 49 11 34 V15.5 Z" fill="none" stroke="#2f6f95" stroke-width="1"/>
+  <path d="M32 15 C38 20 39 30 37 42 H27 C25 30 26 20 32 15 Z" fill="#e3ecf7"/>
+  <circle cx="32" cy="28" r="3.2" fill="#0f1626" stroke="#5cc8ff" stroke-width="1.5"/>
+  <path d="M27 36 L21 44 L27 42 Z M37 36 L43 44 L37 42 Z" fill="#5cc8ff"/>
+  <path d="M29 43 C29 48 32 53 32 53 C32 53 35 48 35 43 Z" fill="#ffb347"/>
+  <path d="M31 43 C31 46 32 49 32 49 C32 49 33 46 33 43 Z" fill="#fff1b8"/>
+  <path d="M18 22 l1 2 2 1 -2 1 -1 2 -1 -2 -2 -1 2 -1 z M46 48 l.8 1.6 1.6 .8 -1.6 .8 -.8 1.6 -.8 -1.6 -1.6 -.8 1.6 -.8 z" fill="#5cc8ff"/>
+</svg>

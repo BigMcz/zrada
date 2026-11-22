@@ -2,25 +2,21 @@ import type { ScreenView } from '../../shared/types';
 import { Crest } from '../components/Crest';
 import { Sigil } from '../components/Sigil';
 import { ROLE_LABEL } from '../labels';
+import { awardText, introLines, theme, winnersWord } from '../themeStore';
 
-/** Věty úvodu (Rozšíření 16); každá má na obrazovce 3 s. */
-export const INTRO_LINES = [
-  'Vítejte na hradě…',
-  'Dnes večer tu nejste všichni přátelé.',
-  'Mezi vámi se skrývají Zrádci.',
-  'Věrní je musí odhalit. Zrádci musí přežít.',
-];
+/** Úvod má 4 věty podle tématu (Rozšíření 16); každá má na obrazovce 3 s. */
 export const INTRO_LINE_MS = 3000;
-export const INTRO_MS = INTRO_LINES.length * INTRO_LINE_MS;
+export const INTRO_MS = 4 * INTRO_LINE_MS;
 
 /** Filmový úvod po startu hry; čas si měří volající (useElapsed), ať jde snadno přeskočit do rozdání rolí. */
 export function Intro({ elapsed }: { elapsed: number }) {
-  const i = Math.min(INTRO_LINES.length - 1, Math.floor(elapsed / INTRO_LINE_MS));
+  const lines = introLines();
+  const i = Math.min(lines.length - 1, Math.floor(elapsed / INTRO_LINE_MS));
   return (
     <div className="screen-intro">
       {i === 0 && <Crest className="big intro-crest" />}
       <p key={i} className={i === 0 ? 'intro-line first' : 'intro-line'}>
-        {INTRO_LINES[i]}
+        {lines[i]}
       </p>
     </div>
   );
@@ -47,8 +43,8 @@ export function Credits({ view, elapsed }: { view: ScreenView; elapsed: number }
     <div className="screen-credits" aria-label="Závěrečné titulky">
       <div className="credits-roll" style={{ animationDuration: `${CREDITS_MS}ms` }}>
         <Crest className="big" />
-        <h1>Zrada</h1>
-        <p className="credits-sub">{view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}</p>
+        <h1>{theme().title}</h1>
+        <p className="credits-sub">{`Vyhráli ${winnersWord(view.winner)}`}</p>
 
         <h2>Hráli</h2>
         {view.players.map((p) => (
@@ -68,7 +64,7 @@ export function Credits({ view, elapsed }: { view: ScreenView; elapsed: number }
             <h2>Ocenění</h2>
             {view.recap.awards.map((a) => (
               <p key={a.key} className="credits-row">
-                <span className="credits-role">{a.title}</span>
+                <span className="credits-role">{awardText(a).title}</span>
                 <span className="credits-name">{a.ids.map(name).join(', ')}</span>
               </p>
             ))}

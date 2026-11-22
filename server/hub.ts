@@ -1,5 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { isCrest } from '../shared/crests.js';
+import { isTheme } from '../shared/themes.js';
 import type { Server, Socket } from 'socket.io';
 import {
   MAX_PLAYERS,
@@ -56,6 +57,7 @@ const MODERATOR_INTENTS = new Set([
   'setScreenMuted',
   'setPublicVotes',
   'setReactions',
+  'setTheme',
   'setQuizSets',
   'pause',
   'resume',
@@ -142,6 +144,8 @@ export function parseIntent(raw: unknown): Intent | null {
       return typeof r.muted === 'boolean' ? { type: 'setScreenMuted', muted: r.muted } : null;
     case 'setQuizSets':
       return r.sets === null || (Array.isArray(r.sets) && r.sets.every((x) => typeof x === 'string')) ? { type: 'setQuizSets', sets: r.sets as string[] | null } : null;
+    case 'setTheme':
+      return isTheme(r.theme) ? { type: 'setTheme', theme: r.theme } : null;
     case 'setReactions':
       return typeof r.enabled === 'boolean' ? { type: 'setReactions', enabled: r.enabled } : null;
     case 'setPublicVotes':
@@ -189,6 +193,7 @@ export function attachGame(io: GameServer, options: HubOptions) {
   const guestView = (): GuestView => ({
     kind: 'guest',
     joinOpen: state.phase === 'LOBBY' && state.players.length < MAX_PLAYERS,
+    theme: state.settings.theme,
   });
 
   function viewFor(session: Session): View {

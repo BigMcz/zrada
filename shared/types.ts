@@ -1,4 +1,5 @@
 import type { Crest } from './crests.js';
+import type { ThemeId } from './themes.js';
 // Typy sdílené serverem a klientem. Pohledy (co klient dostane) přibudou v kroku 3.
 
 export type Phase =
@@ -186,6 +187,8 @@ export interface GhostRank {
 
 export interface PlayerView {
   kind: 'player';
+  /** Téma hry (Rozšíření 16). */
+  theme: ThemeId;
   phase: Phase;
   round: number;
   /** Smí teď poslat reakci na obrazovku (ráno a u kulatého stolu, živý hráč, reakce zapnuté). */
@@ -279,6 +282,7 @@ export interface ModeratorGhost extends GhostRank {
 
 export interface ModeratorView {
   kind: 'moderator';
+  theme: ThemeId;
   phase: Phase;
   round: number;
   /** Reakce hráčů na obrazovku zapnuté (Rozšíření 16). */
@@ -353,6 +357,7 @@ export interface HallBoard {
 
 export interface ScreenView {
   kind: 'screen';
+  theme: ThemeId;
   /** Síň slávy; jen v čekárně, jinak prázdná. */
   hallOfFame: HallBoard[];
   phase: Phase;
@@ -394,6 +399,7 @@ export interface GuestView {
   kind: 'guest';
   /** Zda se dá připojit (jen v lobby a když hra není plná). */
   joinOpen: boolean;
+  theme: ThemeId;
 }
 
 export type View = PlayerView | ModeratorView | GuestView | ScreenView;
@@ -427,6 +433,7 @@ export type Intent =
   | { type: 'setScreenMuted'; muted: boolean }
   | { type: 'setPublicVotes'; enabled: boolean }
   | { type: 'setReactions'; enabled: boolean }
+  | { type: 'setTheme'; theme: ThemeId }
   | { type: 'setQuizSets'; sets: string[] | null }
   | { type: 'pause' }
   | { type: 'resume' }

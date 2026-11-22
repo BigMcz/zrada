@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { buzz, CONFIRM_BUZZ } from './player/device';
 import type { ClientToServerEvents, Intent, Reaction, JoinResult, NewPhoneResult, Result, ServerToClientEvents, View } from '../shared/types';
+import { applyTheme } from './themeStore';
 
 // Stejná adresa a port, ze kterých přišla stránka.
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
@@ -62,6 +63,8 @@ let current: Connection = { connected: socket.connected, view: null, helloError:
 const listeners = new Set<() => void>();
 
 function update(patch: Partial<Connection>) {
+  // Téma se přepne dřív, než se komponenty překreslí (Rozšíření 16).
+  if (patch.view) applyTheme(patch.view.theme);
   current = { ...current, ...patch };
   for (const l of listeners) l();
 }

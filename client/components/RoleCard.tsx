@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Role } from '../../shared/types';
 import { SealCrack } from './SealCrack';
+import { theme } from '../themeStore';
 
 interface Props {
   role: Role;
@@ -20,11 +21,11 @@ export function RoleCard({ role, allies, shieldLine }: Props) {
   let title: string;
   let line: string;
   if (role === 'TRAITOR') {
-    title = 'Jsi Zrádce';
+    title = `Jsi ${theme().traitor.sg}`;
     line = allies.length > 0 ? `Tví spojenci: ${allies.map((a) => a.name).join(', ')}` : 'Jsi sám. Nikdo tě nesmí odhalit.';
   } else {
-    title = 'Jsi Věrný';
-    line = 'Najdi Zrádce dřív, než najdou tebe.';
+    title = `Jsi ${theme().loyal.sg}`;
+    line = `Najdi ${theme().traitor.accPl} dřív, než najdou tebe.`;
   }
 
   return (

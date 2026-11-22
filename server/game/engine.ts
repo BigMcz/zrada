@@ -1,6 +1,7 @@
 import { FINAL_MAX_ALIVE, GHOST_TIP_PHASES, MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Intent, type Winner } from '../../shared/types.js';
 import type { Rng } from './random.js';
 import { CRESTS, isCrest } from '../../shared/crests.js';
+import { isTheme } from '../../shared/themes.js';
 import {
   alive,
   aliveWithRole,
@@ -233,6 +234,15 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
       const player = state.players.find((p) => p.id === action.playerId);
       if (!player) fail(INVALID_TARGET);
       player.token = action.token;
+      return;
+    }
+
+    case 'setTheme': {
+      // Téma mění názvy rolí, proto jen v čekárně.
+      requireModerator(actor);
+      requirePhase(state, 'LOBBY');
+      if (!isTheme(action.theme)) fail('Takové téma není.');
+      state.settings.theme = action.theme;
       return;
     }
 

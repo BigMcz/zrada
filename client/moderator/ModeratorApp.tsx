@@ -7,6 +7,8 @@ import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { requestNewPhone, resetHallOfFame, send, useConnection } from '../socket';
 import { ScriptHint } from './ScriptHint';
 import { MinigamePanel } from './MinigamePanel';
+import { theme, winnersWord } from '../themeStore';
+import { THEME, THEMES } from '../../shared/themes';
 
 export function ModeratorApp() {
   const { connected, view, helloError } = useConnection();
@@ -24,7 +26,7 @@ export function ModeratorApp() {
         )
       ) : (
         <div className="console-message">
-          <h1>Zrada · moderátor</h1>
+          <h1>{theme().title} · moderátor</h1>
           {view ? (
             <p>{helloError ?? 'Neplatný klíč moderátora.'} Otevři odkaz pro moderátora, který vypsal server při spuštění.</p>
           ) : (
@@ -52,7 +54,7 @@ function TopBar({ view, children }: { view: ModeratorView; children?: ReactNode 
   return (
     <header className="console-top">
       <div>
-        <span className="console-brand">Zrada</span>
+        <span className="console-brand">{theme().title}</span>
         <span className="console-phase">{phaseTag(view.phase, view.round)}</span>
       </div>
       <div className="console-top-actions">
@@ -136,6 +138,27 @@ function Lobby({ view }: { view: ModeratorView }) {
             🤖 Přidat bota
           </button>
 
+          <h2>Téma hry</h2>
+          <div className="theme-picker">
+            {THEMES.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={view.theme === id ? 'theme-option selected' : 'theme-option'}
+                aria-pressed={view.theme === id}
+                onClick={() => run({ type: 'setTheme', theme: id })}
+              >
+                <img src={THEME[id].crest} alt="" aria-hidden="true" />
+                <span>
+                  <b>{THEME[id].title}</b>
+                  <small>
+                    {THEME[id].label} · {THEME[id].loyal.sg} / {THEME[id].traitor.sg}
+                  </small>
+                </span>
+              </button>
+            ))}
+          </div>
+
           {view.hallOfFameSize > 0 && (
             <button
               type="button"
@@ -194,7 +217,7 @@ function Lobby({ view }: { view: ModeratorView }) {
             </div>
           )}
 
-          <h2>Počet Zrádců</h2>
+          <h2>Počet {theme().traitor.genPl}</h2>
           {options.length === 0 ? (
             <p className="muted">Ke hře jsou potřeba aspoň {MIN_PLAYERS} hráči.</p>
           ) : (
@@ -275,7 +298,7 @@ function PlayersTable({ view, hideRoles }: { view: ModeratorView; hideRoles: boo
       </span>
       {p.role && (
         <span className={hideRoles ? 'role-badge hidden' : `role-badge ${p.role === 'TRAITOR' ? 'traitor' : 'loyal'}`}>
-          {hideRoles ? '•' : p.role === 'TRAITOR' ? 'Z' : 'V'}
+          {hideRoles ? '•' : p.role === 'TRAITOR' ? theme().traitor.sg[0] : theme().loyal.sg[0]}
         </span>
       )}
       <span className="state">
@@ -358,7 +381,7 @@ function GhostsPanel({ view, hideRoles }: { view: ModeratorView; hideRoles: bool
               {name(g.id)}
               <small>
                 {!g.canTip
-                  ? 'Zrádce, netipuje'
+                  ? `${theme().traitor.sg}, netipuje`
                   : g.tip
                     ? `tipuje: ${name(g.tip)}`
                     : '… zatím netipoval/a'}
@@ -369,9 +392,9 @@ function GhostsPanel({ view, hideRoles }: { view: ModeratorView; hideRoles: bool
                 className={
                   hideRoles ? 'role-badge hidden' : `role-badge ${g.tipOnTraitor ? 'traitor' : 'loyal'}`
                 }
-                title={hideRoles ? '' : g.tipOnTraitor ? 'tip míří na Zrádce' : 'tip míří na Věrného'}
+                title={hideRoles ? '' : g.tipOnTraitor ? `tip míří na ${theme().traitor.genSg}` : `tip míří na ${theme().loyal.genSg}`}
               >
-                {hideRoles ? '•' : g.tipOnTraitor ? 'Z' : 'V'}
+                {hideRoles ? '•' : g.tipOnTraitor ? theme().traitor.sg[0] : theme().loyal.sg[0]}
               </span>
             )}
             <span className="state">{g.canTip ? (hideRoles ? '• bodů' : `${g.points} ${pointsWord(g.points)}`) : ''}</span>
@@ -406,14 +429,14 @@ function phaseStep(view: ModeratorView): PhaseStep {
             {saw < view.players.length && ' Počkej, až ji uvidí všichni.'}
           </>
         ),
-        button: 'Začít kulatý stůl',
+        button: `Začít ${theme().tableAcc}`,
         intent: { type: 'startVote' },
         next: 'Hráči začnou hlasovat, koho vyhnat.',
       };
     }
     case 'VOTE':
       return {
-        title: 'Kulatý stůl – hlasování',
+        title: `${theme().table} – hlasování`,
         detail: (
           <>
             Hlasovalo <b>{done}</b> z {alive.length} hráčů. Kdo nehlasuje, nepočítá se.
@@ -435,7 +458,7 @@ function phaseStep(view: ModeratorView): PhaseStep {
         ),
         button: 'Uzavřít finálové hlasování',
         intent: { type: 'closeFinalVote' },
-        next: 'Jednomyslně „Ukončit“: konec hry a odhalení rolí. Jinak kulatý stůl a nové finále.',
+        next: `Jednomyslně „Ukončit“: konec hry a odhalení rolí. Jinak ${theme().tableAcc} a nové finále.`,
       };
     }
     case 'VOTE_RESULT': {
@@ -466,7 +489,7 @@ function phaseStep(view: ModeratorView): PhaseStep {
         ),
         button: 'Začít noc',
         intent: { type: 'startNight' },
-        next: 'Zrádci vyberou oběť, Věrní tipují Zrádce.',
+        next: `${theme().traitor.pl} vyberou oběť, ${theme().loyal.pl} tipují ${theme().traitor.accPl}.`,
       };
     }
     case 'NIGHT':
@@ -474,11 +497,11 @@ function phaseStep(view: ModeratorView): PhaseStep {
         title: 'Noc',
         detail: view.traitorsDone ? (
           <>
-            Zrádci: <b>vybráno</b>.
+            {theme().traitor.pl}: <b>vybráno</b>.
           </>
         ) : (
           <>
-            Zrádci: <b>ještě vybírají</b>. Když nevyberou, oběť určí los.
+            {theme().traitor.pl}: <b>ještě vybírají</b>. Když nevyberou, oběť určí los.
           </>
         ),
         button: 'Ukončit noc',
@@ -494,12 +517,12 @@ function phaseStep(view: ModeratorView): PhaseStep {
               Tuto noc zemřel/a: <b>{nameOf(view.players, round.murderedId)}</b>
             </>
           ) : (
-            <>Tuto noc nikdo nezemřel – Zrádci vybrali hráče se štítem.</>
+            <>Tuto noc nikdo nezemřel – {theme().traitor.pl} vybrali hráče se štítem.</>
           )
         ),
         button: 'Další kolo',
         intent: { type: 'startVote' },
-        next: `Začne ${view.round + 1}. kolo kulatého stolu.`,
+        next: `Začne ${view.round + 1}. kolo ${theme().tableGen}.`,
       };
     default:
       throw new Error(`Fáze ${view.phase} nemá řízení`);
@@ -558,7 +581,7 @@ function Control({ view }: { view: ModeratorView }) {
               )}
               <p className="muted">
                 {offerMinigame
-                  ? 'Přeskočení vede rovnou ke kulatému stolu.'
+                  ? `Přeskočení vede rovnou ${theme().toTable}.`
                   : view.minigamesEnabled && (view.phase === 'ROLES' || view.phase === 'MORNING')
                     ? 'Dnes se nedá hrát žádná minihra.'
                     : `Po stisknutí: ${step.next}`}
@@ -605,7 +628,7 @@ function Ended({ view }: { view: ModeratorView }) {
         <ScriptHint view={view} />
         <p className="muted">Vyhráli</p>
         <h1 className={view.winner === 'TRAITOR' ? 'winner traitor' : 'winner loyal'}>
-          {view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}
+          {winnersWord(view.winner)}
         </h1>
         <ul className="console-players final">
           {view.players.map((p) => (
@@ -615,7 +638,7 @@ function Ended({ view }: { view: ModeratorView }) {
                 {p.name}
               </span>
               <span className={`role-badge ${p.role === 'TRAITOR' ? 'traitor' : 'loyal'}`}>
-                {p.role === 'TRAITOR' ? 'Z' : 'V'}
+                {p.role === 'TRAITOR' ? theme().traitor.sg[0] : theme().loyal.sg[0]}
               </span>
               <span className="state">
                 {p.role && ROLE_LABEL[p.role]} · {STATUS_LABEL[p.status]}

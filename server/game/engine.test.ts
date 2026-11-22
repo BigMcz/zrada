@@ -23,6 +23,15 @@ describe('připojení do lobby', () => {
     for (const c of crests) expect(CRESTS).toContain(c);
   });
 
+  it('téma nastaví jen moderátor a jen v čekárně (Rozšíření 16)', () => {
+    const state = lobby(['A', 'B', 'C', 'D']);
+    expect(must(state, MOD, { type: 'setTheme', theme: 'SPACE' }).settings.theme).toBe('SPACE');
+    expect(rejected(state, as('p1'), { type: 'setTheme', theme: 'SPACE' })).toBeTruthy();
+    expect(rejected(state, MOD, { type: 'setTheme', theme: 'MARS' as never })).toMatch(/není/);
+    const started = must(state, MOD, { type: 'startGame', traitorCount: 1 });
+    expect(rejected(started, MOD, { type: 'setTheme', theme: 'OFFICE' })).toBeTruthy();
+  });
+
   it('znak jde v lobby změnit jen na volný a platný', () => {
     const state = lobby(['Anna', 'Bára']);
     const taken = state.players[1].crest!;

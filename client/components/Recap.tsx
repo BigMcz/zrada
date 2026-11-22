@@ -1,5 +1,6 @@
 import type { PublicPlayer, Recap as RecapData } from '../../shared/types';
 import { nameOf, ROLE_LABEL } from '../labels';
+import { awardText } from '../themeStore';
 
 /** Rekapitulace večera (Rozšíření 11): časová osa kol a ceny. Telefon i velká obrazovka. */
 export function Recap({ recap, players, className = '' }: { recap: RecapData; players: PublicPlayer[]; className?: string }) {
@@ -14,10 +15,10 @@ export function Recap({ recap, players, className = '' }: { recap: RecapData; pl
         <div className="recap-awards">
           {recap.awards.map((a) => (
             <div key={a.key} className="recap-award">
-              <span className="recap-award-title">{a.title}</span>
+              <span className="recap-award-title">{awardText(a).title}</span>
               <span className="recap-award-names">{a.ids.map((id) => name(id)).join(', ')}</span>
               <span className="recap-award-note">
-                {a.note} · {a.count}
+                {awardText(a).note} · {a.count}
               </span>
             </div>
           ))}

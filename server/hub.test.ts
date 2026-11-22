@@ -89,7 +89,7 @@ describe('server přes skutečné sockety', () => {
   it('nové zařízení je host a může se připojit', async () => {
     const { connect } = await startServer();
     const c = await connect();
-    expect(await c.waitFor((v) => v.kind === 'guest')).toEqual({ kind: 'guest', joinOpen: true });
+    expect(await c.waitFor((v) => v.kind === 'guest')).toEqual({ kind: 'guest', joinOpen: true, theme: 'CASTLE' });
   });
 
   it('bez správného klíče nikdo nedostane pohled moderátora', async () => {

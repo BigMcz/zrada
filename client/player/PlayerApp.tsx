@@ -18,6 +18,7 @@ import { MinigameScreen } from '../minigames/MinigameScreen';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { join, send, useConnection } from '../socket';
 import { useEventHaptics, useTaskVibration, useWakeHint, useWakeLock } from './device';
+import { theme, winnersWord } from '../themeStore';
 
 export function PlayerApp() {
   const { connected, view } = useConnection();
@@ -52,7 +53,7 @@ export function PlayerApp() {
       )}
       <div className="rotate-hint">Otoč telefon na výšku</div>
       {!view ? (
-        <Screen tag="Zrada">
+        <Screen tag={theme().title}>
           <p className="muted center">Připojuji se ke hře…</p>
         </Screen>
       ) : view.kind === 'player' ? (
@@ -75,9 +76,9 @@ function JoinScreen({ open }: { open: boolean }) {
 
   if (!open) {
     return (
-      <Screen tag="Zrada">
+      <Screen tag={theme().title}>
         <Crest />
-        <h1 className="title">Zrada</h1>
+        <h1 className="title">{theme().title}</h1>
         <p className="center">Hra už běží nebo je plná. Připojit se teď nejde.</p>
       </Screen>
     );
@@ -95,7 +96,7 @@ function JoinScreen({ open }: { open: boolean }) {
       }}
     >
       <Screen
-        tag="Zrada"
+        tag={theme().title}
         action={
           <PrimaryButton type="submit" disabled={busy || name.trim().length === 0}>
             Vstoupit
@@ -103,7 +104,7 @@ function JoinScreen({ open }: { open: boolean }) {
         }
       >
         <Crest />
-        <h1 className="title">Zrada</h1>
+        <h1 className="title">{theme().title}</h1>
         <div className="divider">✦</div>
         <label className="field">
           <span>Jak ti mají ostatní říkat?</span>
@@ -337,7 +338,7 @@ function Vote({ view, tag, corner }: ScreenProps) {
         </PrimaryButton>
       }
     >
-      {view.inFinale && <p className="center muted">Finále: hra pokračuje, mezi vámi je podle vás pořád Zrádce.</p>}
+      {view.inFinale && <p className="center muted">Finále: hra pokračuje, mezi vámi je podle vás pořád {theme().traitor.sg}.</p>}
       <h2 className="question">Koho vyženeš?</h2>
       <PlayerGrid players={aliveOthers(view)} selectedId={selected} onSelect={setSelected} />
       <p className="hint">
@@ -368,8 +369,8 @@ function FinalVote({ view, tag, corner }: ScreenProps) {
   return (
     <Screen tag={tag} corner={corner}>
       <h2 className="question">Ukončit hru?</h2>
-      {card('END', 'Ukončit hru', 'Věřím, že tu zbyli jen Věrní.')}
-      {card('CONTINUE', 'Vyhnat dalšího', 'Mezi námi je pořád Zrádce.')}
+      {card('END', 'Ukončit hru', `Věřím, že tu zbyli jen ${theme().loyal.pl}.`)}
+      {card('CONTINUE', 'Vyhnat dalšího', `Mezi námi je pořád ${theme().traitor.sg}.`)}
       <p className="hint">
         {choice ? 'Hlas odevzdán. Dokud moderátor hlasování neuzavře, můžeš ho změnit.' : 'Hru ukončí jen jednomyslné „Ukončit hru“.'}
       </p>
@@ -389,7 +390,7 @@ function VoteResult({ view, tag, corner }: ScreenProps) {
     <Screen tag={tag} corner={corner}>
       {banished ? (
         <>
-          <p className="center">Kulatý stůl vyhnal</p>
+          <p className="center">{theme().banishedBy}</p>
           <p className="headline center">{banished.name}</p>
           <p className={`center reveal ${roleClass(banished.revealedRole)}`}>
             {banished.revealedRole && ROLE_LABEL[banished.revealedRole]}
@@ -432,7 +433,7 @@ function Night({ view, tag, corner }: ScreenProps) {
         </PrimaryButton>
       }
     >
-      <h2 className="question">{isTraitor ? 'Koho tuto noc umlčíte?' : 'Kdo je podle tebe Zrádce?'}</h2>
+      <h2 className="question">{isTraitor ? 'Koho tuto noc umlčíte?' : `Kdo je podle tebe ${theme().traitor.sg}?`}</h2>
       <PlayerGrid players={aliveOthers(view)} selectedId={selected} onSelect={setSelected} blocked={night.blocked} />
       <p className="hint">{hint}</p>
       {error && <p className="error">{error}</p>}
@@ -461,7 +462,7 @@ function Morning({ view, tag, corner }: ScreenProps) {
 function currentEvent(view: PlayerView): string {
   const round = lastRound(view);
   if (view.phase === 'VOTE_RESULT') {
-    return round?.banishedId ? `Kulatý stůl vyhnal: ${nameOf(view.players, round.banishedId)}` : 'Nikdo nebyl vyhnán.';
+    return round?.banishedId ? `${theme().banishedBy}: ${nameOf(view.players, round.banishedId)}` : 'Nikdo nebyl vyhnán.';
   }
   if (view.phase === 'MORNING') {
     return round?.murderedId ? `Tuto noc zemřel/a: ${nameOf(view.players, round.murderedId)}` : 'Tuto noc nikdo nezemřel.';
@@ -482,13 +483,13 @@ function Ghost({ view, tag, corner }: ScreenProps) {
   const ghost = view.ghost!;
   const [selected, setSelected] = useState<string | null>(ghost.myTip);
   const changed = selected !== ghost.myTip;
-  const how = view.me.status === 'BANISHED' ? 'Kulatý stůl tě vyhnal.' : 'Zrádci tě umlčeli.';
+  const how = view.me.status === 'BANISHED' ? `Vyhnali tě ${theme().atTable}.` : `${theme().traitor.pl} tě umlčeli.`;
 
   if (!ghost.canTip) {
     return (
       <Screen tag={tag} corner={corner}>
         <p className="headline center">Jsi duch</p>
-        <p className="center">Jako Zrádce netipuješ, jen sleduješ hru.</p>
+        <p className="center">Jako {theme().traitor.sg} netipuješ, jen sleduješ hru.</p>
         <p className="hint center">{currentEvent(view)}</p>
         <PlayerList view={view} />
       </Screen>
@@ -502,7 +503,7 @@ function Ghost({ view, tag, corner }: ScreenProps) {
         <p className="center">{how}</p>
         <p className="center">{currentEvent(view)}</p>
         <p className="muted center">
-          Další tip můžeš dát od kulatého stolu. Odevzdané tipy: {ghost.tipsGiven}
+          Další tip můžeš dát od {theme().tableGen}. Odevzdané tipy: {ghost.tipsGiven}
         </p>
         <PlayerList view={view} />
       </Screen>
@@ -521,7 +522,7 @@ function Ghost({ view, tag, corner }: ScreenProps) {
       }
     >
       <p className="muted center">{currentEvent(view)}</p>
-      <h2 className="question">Kdo je podle tebe Zrádce?</h2>
+      <h2 className="question">Kdo je podle tebe {theme().traitor.sg}?</h2>
       <PlayerGrid players={alivePlayers} selectedId={selected} onSelect={setSelected} />
       <p className="hint">
         Tvůj tip v tomto kole: {nameOf(view.players, ghost.myTip)}
@@ -539,7 +540,7 @@ function Ended({ view, tag }: ScreenProps) {
   return (
     <Screen tag={tag}>
       <p className="center">Vyhráli</p>
-      <p className={`headline center ${roleClass(view.winner)}`}>{view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}</p>
+      <p className={`headline center ${roleClass(view.winner)}`}>{winnersWord(view.winner)}</p>
       {view.potShare && (
         <p className="center">
           Poklad {view.pot.toLocaleString('cs')} bodů: každý vítěz získává <b>{view.potShare.each.toLocaleString('cs')}</b> (

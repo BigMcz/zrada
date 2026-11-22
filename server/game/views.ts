@@ -111,6 +111,7 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
 
   const view: PlayerView = {
     kind: 'player',
+    theme: state.settings.theme,
     phase: state.phase,
     round: state.round,
     me: {
@@ -180,6 +181,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
 
   const view: ModeratorView = {
     kind: 'moderator',
+    theme: state.settings.theme,
     // Síň slávy je mimo stav hry; skutečný počet doplní hub (Rozšíření 16).
     hallOfFameSize: 0,
     phase: state.phase,
@@ -250,6 +252,7 @@ export function viewForScreen(state: GameState, joinUrl: string | null): ScreenV
   }
   return {
     kind: 'screen',
+    theme: state.settings.theme,
     // Žebříčky síně slávy doplní hub (jsou mimo stav hry).
     hallOfFame: [],
     phase: state.phase,

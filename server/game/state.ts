@@ -12,6 +12,7 @@ import type {
 } from '../../shared/types.js';
 import type { MinigameResult } from '../minigames/types.js';
 import type { Crest } from '../../shared/crests.js';
+import type { ThemeId } from '../../shared/themes.js';
 
 /**
  * Úplný stav hry. Existuje jen na serveru a nikdy se neposílá klientům celý;
@@ -69,6 +70,8 @@ export interface GameSettings {
   quizSets: string[] | null;
   /** Reakce hráčů na obrazovku (Rozšíření 16); výchozí zapnuto. */
   reactions: boolean;
+  /** Téma hry (Rozšíření 16); výchozí hrad. */
+  theme: ThemeId;
 }
 
 /**
@@ -147,7 +150,7 @@ export function createGame(): GameState {
     ghostTips: {},
     ghostTipLog: [],
     points: [],
-    settings: { minigamesEnabled: true, physicalMission: false, screenMuted: false, publicVotes: false, quizSets: null, reactions: true },
+    settings: { minigamesEnabled: true, physicalMission: false, screenMuted: false, publicVotes: false, quizSets: null, reactions: true, theme: 'CASTLE' },
     minigame: null,
     minigamesPlayed: [],
     minigameMemory: {},

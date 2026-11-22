@@ -4,6 +4,7 @@ import { ClueView } from '../components/ClueView';
 import { Countdown } from '../components/Countdown';
 import { nameOf } from '../labels';
 import { MINIGAME_UI } from '../minigames/registry';
+import { theme } from '../themeStore';
 
 interface Props {
   view: ModeratorView;
@@ -163,7 +164,7 @@ export function MinigamePanel({ view, run, busy }: Props) {
             Štít na dnešní noc: <b>{view.shieldHolderId ? name(view.shieldHolderId) : 'nikdo'}</b>
           </p>
           <button type="button" className="console-primary big" disabled={busy} onClick={() => run({ type: 'startVote' })}>
-            Začít kulatý stůl
+            Začít {theme().tableAcc}
           </button>
         </>
       );

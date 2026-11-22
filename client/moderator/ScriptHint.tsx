@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { ModeratorView } from '../../shared/types';
 import script from './script.cs.json';
+import { theme } from '../themeStore';
+import { themeText } from '../../shared/themes';
 
 const STORAGE_KEY = 'zrada-scenar-skryty';
 const TEXTS = script as Record<string, string>;
@@ -33,7 +35,9 @@ export function ScriptHint({ view }: { view: ModeratorView }) {
       // bez úložiště si to prohlížeč jen nezapamatuje
     }
   };
-  const text = TEXTS[scriptKey(view)];
+  const raw = TEXTS[scriptKey(view)];
+  // Scénář je psaný pro hrad; v jiném tématu se přepíšou role, stůl a místo (Rozšíření 16).
+  const text = raw && themeText(raw, theme());
   if (!text) return null;
   return (
     <aside className={hidden ? 'script-hint hidden' : 'script-hint'}>

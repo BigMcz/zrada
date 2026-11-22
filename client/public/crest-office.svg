@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72">
+  <title>Krtek</title>
+  <path d="M32 4 L58 12 V34 C58 52 46 63 32 68 C18 63 6 52 6 34 V12 Z" fill="#1c1e20" stroke="#f08a3c" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M32 9 L53 15.5 V34 C53 49 43 58 32 62.5 C21 58 11 49 11 34 V15.5 Z" fill="none" stroke="#8a5228" stroke-width="1"/>
+  <path d="M26 27 V23.5 C26 22 27 21 28.5 21 H35.5 C37 21 38 22 38 23.5 V27" fill="none" stroke="#f08a3c" stroke-width="2.4"/>
+  <rect x="17" y="27" width="30" height="20" rx="2.5" fill="#ebebea"/>
+  <path d="M17 35 H47" stroke="#9a9c9e" stroke-width="1.2"/>
+  <rect x="29.5" y="33" width="5" height="4.5" rx="1" fill="#f08a3c"/>
+  <circle cx="44" cy="52" r="5" fill="#1c1e20" stroke="#f08a3c" stroke-width="2"/>
+  <path d="M47.5 55.5 L51 59" stroke="#f08a3c" stroke-width="2.4" stroke-linecap="round"/>
+</svg>
