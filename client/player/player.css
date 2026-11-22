@@ -1550,3 +1550,26 @@
     animation: none;
   }
 }
+
+/* Štít (obrázek) ve výsledku minihry a při předání */
+.shield-art {
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.shield-art.dim {
+  filter: grayscale(0.8) brightness(0.5);
+}
+
+.phone-shield.shield-art {
+  display: block;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto;
+}
+
+.phone-shield.shield-art.small {
+  width: 90px;
+  height: 90px;
+}

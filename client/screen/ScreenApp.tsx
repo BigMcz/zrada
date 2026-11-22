@@ -8,6 +8,7 @@ import type { Crest as CrestId } from '../../shared/crests';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
+import { ShieldArt } from '../components/ShieldArt';
 import { CoinBurst, Embers, Reactions } from './Effects';
 import { Credits, Intro, INTRO_MS } from './Cinematics';
 import { GameScene } from './GameScenes';
@@ -198,9 +199,10 @@ function Portrait({
   );
 }
 
-function Title({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
+function Title({ children, sub, art }: { children: ReactNode; sub?: ReactNode; art?: ReactNode }) {
   return (
     <div className="screen-title">
+      {art}
       <h1>{children}</h1>
       {sub && <p>{sub}</p>}
     </div>
@@ -251,7 +253,9 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
           Tuto noc zemřel/a {name(view.murderedId)}
         </Title>
       ) : (
-        <Title sub="Všichni se probudili.">Tuto noc nikdo nezemřel</Title>
+        <Title sub="Všichni se probudili." art={<ShieldArt className="screen-shield" />}>
+          Tuto noc nikdo nezemřel
+        </Title>
       );
     case 'MINIGAME':
       return view.minigame ? <MinigameScene mg={view.minigame} name={name} /> : null;
@@ -489,7 +493,10 @@ function MinigameScene({ mg, name }: { mg: ScreenMinigameView; name: (id: string
           {mg.result && (
             <>
               <p>{mg.result.summary}</p>
-              <p className="screen-result-line">Štít: {mg.result.shieldWinnerId ? name(mg.result.shieldWinnerId) : 'nikdo'}</p>
+              <p className="screen-result-line">
+                <ShieldArt className="screen-shield-inline" dim={!mg.result.shieldWinnerId} />
+                Štít: {mg.result.shieldWinnerId ? name(mg.result.shieldWinnerId) : 'nikdo'}
+              </p>
               <p className="screen-result-line">
                 Poklad: {mg.result.potDelta > 0 ? '+' : ''}
                 {mg.result.potDelta}
@@ -510,7 +517,7 @@ function MinigameScene({ mg, name }: { mg: ScreenMinigameView; name: (id: string
       );
     case 'HANDOFF':
       return (
-        <Title sub="Vítěz se rozhoduje, komu štít dá.">
+        <Title sub="Vítěz se rozhoduje, komu štít dá." art={<ShieldArt className="screen-shield" />}>
           Probíhá tajné předání štítu
           <span className="screen-countdown">
             <Countdown endsAt={mg.endsAt} />

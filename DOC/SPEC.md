@@ -1337,6 +1337,7 @@ Hra pustí až 18 hráčů místo 10. Minimum zůstává 4, pravidla kol beze zm
 - Dokumentace (README, SPEC, architektura) uvádí 4–18 hráčů.
 - **Předej bombu:** Horký brambor se přejmenuje a dostane kreslenou bombu a výbuch (img/bomb.png, img/bomb_explode.png, zmenšené do client/public) na telefonu i obrazovce. Při výbuchu se obrázek výbuchu ukáže všem.
 - **Trezor:** kreslený trezor (img/trezor.png, img/trezor_open.png). Na obrazovce zavřený trezor během volby a lámání kódu (po špatném pokusu cukne), po otevření otevřený s pokladem, při neúspěchu ztlumený. Na telefonu jen ve výsledku, během hry tam zůstává místo pro klávesnici a nápovědy.
+- **Štít:** kreslený štít (img/stit.png) jen tam, kde je stejný pro všechny: výsledek minihry (obrazovka i telefon), tajné předání štítu (obrazovka i telefony všech živých) a ráno bez oběti na obrazovce. Na kartě role ne, prozradil by držitele.
 
 ### Pozor na délku
 

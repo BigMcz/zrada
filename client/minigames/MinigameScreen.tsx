@@ -6,6 +6,7 @@ import { Countdown } from '../components/Countdown';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { SealedCard } from '../components/SealedCard';
 import { PrimaryButton, Screen } from '../components/Screen';
+import { ShieldArt } from '../components/ShieldArt';
 import { nameOf } from '../labels';
 import { send } from '../socket';
 import { MINIGAME_UI } from './registry';
@@ -145,6 +146,7 @@ function Result({ mg, name }: { mg: PlayerMinigameView; name: (id: string | null
   return (
     <>
       <p className="center">{r.summary}</p>
+      <ShieldArt className="phone-shield" dim={!r.shieldWinnerId} />
       <p className="headline center">{r.shieldWinnerId ? `Štít: ${name(r.shieldWinnerId)}` : 'Štít nikdo'}</p>
       {r.shieldWinnerId && <p className="muted center">Vítěz minihry získává +2 body.</p>}
       <p className="center">
@@ -197,6 +199,8 @@ function Handoff({
         </PrimaryButton>
       }
     >
+      {/* Stejný obrázek pro všechny živé: kdo štít vyhrál, je veřejné, komu ho dá, ne. */}
+      <ShieldArt className="phone-shield small" />
       <SealedCard lines={lines} label="Štít – podrž prst" />
       <PlayerGrid players={others} selectedId={choice} onSelect={setSelected} />
       {error}
