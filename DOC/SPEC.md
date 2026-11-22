@@ -1150,3 +1150,63 @@ Konec hry jako v televizi: hráči sami rozhodují, jestli hru ukončí. Poklad 
 | B1 | Boti v základní hře: přidání, odebrání, tahy na serveru | Testy, prohlížeč |
 | B2 | Tahy botů ve všech minihrách | Testy, robot |
 | Q1 | Sady otázek: automatické načtení, výběr v lobby, sada Filmy a seriály | Testy, prohlížeč |
+
+## Rozšíření 14: Vzhled
+
+Grafické vylepšení podle [návrhu designu](zradci-design.md): hra má působit jako večer na hradě, ne jako webová stránka. Pravidla hry se nemění. Vše je kreslené v CSS, SVG nebo canvasu, bez obrázků a bez nových knihoven.
+
+### Zásady
+
+- **Utajení má přednost:** efekty vypadají pro Věrného i Zrádce stejně. Barva role se ukazuje jen tam, kde je role veřejná (vyhnaný hráč, konec hry).
+- **Méně pohybu:** když má telefon nebo počítač zapnuté „omezit pohyb“ (`prefers-reduced-motion`), animace se vypnou nebo zkrátí na prolnutí.
+- Velká obrazovka je jeviště (nejvíc efektů), telefon zůstává klidný a čitelný.
+
+### Atmosféra (všude)
+
+1. **Živá svíčka:** svíčka nakreslená v CSS (vosk, knot, mihotavý plamen a záře) místo emoji. Na obrazovce v noci a v pauze, na telefonu v pauze a čekání. Svíčka jako nápověda v kvízu zůstává malá ikona.
+2. **Zrnitost a vinětace:** jemná zrnitá textura (SVG šum) a ztmavené okraje na telefonu i obrazovce.
+3. **Plynulé přechody:** obsah se při změně fáze nebo kroku prolne (krátké zesvětlení a posun), nepřeskočí.
+
+### Poklad a čas
+
+4. **Poklad jako počítadlo:** při změně se číslo pokladu na obrazovce a v hlavičce telefonu během ~1 s protočí ke nové hodnotě. Při přírůstku zlatě zazáří, při úbytku krátce zčervená.
+5. **Svítání:** ráno obrazovka i telefony přejdou během ~3 s z téměř černé noci do teplého ranního tónu. Na obrazovce oběť noci pomalu vybledne do šedi.
+
+### Dramatické momenty
+
+6. **Praskající pečeť:** na telefonu se při podržení karty s rolí nebo tajnou zprávou vosková pečeť rozlomí na dvě poloviny, které odletí, a pak se objeví text. Stejně pro obě role.
+7. **3D odhalení role:** na obrazovce se karta vyhnaného otočí ve 3D a za ní se rozlije záře v barvě role (rudá Zrádce, zelená Věrný).
+8. **Rozhoření portrétu:** nově připojený hráč se na obrazovce v lobby rozhoří jako uhlík (oranžová záře, která zvolna pohasne do zlata).
+9. **Rozsypaný poklad:** na konci hry se na obrazovce z pokladu rozletí zlaté mince ke jménům vítězů.
+10. **Jiskry a kouř:** na obrazovce v noci a ve finále pomalu stoupají jiskry a tenký kouř (canvas, nízký výkon).
+
+### Identita
+
+11. **Erb:** jednoduchý erb hry v SVG (štít, meč, svíčka). V lobby na obrazovce, na úvodní obrazovce telefonu a jako ikona stránky.
+12. **Barvy miniher:** každá minihra má vlastní jemný akcent (tenký pruh a záře): Tajná aukce zlatá, Rozdělit, nebo ukrást stříbrná, Horký brambor oranžová, Insider kvíz modrá, Trezor ocelová, Rytmus fialová, Zneškodni bombu rudá, Fyzická mise zelená. Na telefonu i obrazovce během minihry.
+
+### Telefon
+
+13. **Haptika podle situace:** kratší vibrace při potvrzení vlastní volby (hlas, odpověď, tah), delší vzorec u výbuchu Horkého bramboru a chyby u bomby. Jen u veřejného dění nebo vlastní akce, nikdy jen jednomu hráči kvůli tajné informaci. Vibruje až po prvním ťuknutí na stránku (omezení prohlížeče).
+
+### Rozšíření NEobsahuje
+
+- Fotky hráčů (zůstávají iniciály)
+- Obrázky, ilustrace a hudbu
+- Světlý režim
+
+### Hotovo, když
+
+1. Všechny efekty jsou vidět v prohlížeči na telefonu i obrazovce a s „omezit pohyb“ se vypnou.
+2. Věrný a Zrádce mají stejné efekty (testy pohledů se nemění, robot `npm run e2e` prochází).
+3. Hra zůstává plynulá i na slabším telefonu (efekty náročnější na výkon jen na velké obrazovce).
+
+### Kroky vývoje
+
+| Krok | Obsah |
+| --- | --- |
+| V1 | Svíčka, zrnitost a vinětace, přechody |
+| V2 | Počítadlo pokladu, svítání |
+| V3 | Praskající pečeť, 3D odhalení role, rozhoření portrétu |
+| V4 | Rozsypaný poklad, jiskry a kouř |
+| V5 | Erb, barvy miniher, haptika |
