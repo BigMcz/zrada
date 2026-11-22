@@ -1210,3 +1210,31 @@ Grafické vylepšení podle [návrhu designu](zradci-design.md): hra má působi
 | V3 | Praskající pečeť, 3D odhalení role, rozhoření portrétu |
 | V4 | Rozsypaný poklad, jiskry a kouř |
 | V5 | Erb, barvy miniher, haptika |
+
+## Rozšíření 15: Hráči v minihře na obrazovce
+
+Spodní řada portrétů na velké obrazovce během minihry ukazuje, kdo ještě hraje, kdo vypadl a kdo je hlavní aktér. Bere jen to, co obrazovka už veřejně ukazuje ve scéně minihry, takže nic neprozradí.
+
+### Jak to vypadá
+
+- **Vypadl z minihry:** portrét zešedne a ztmavne, přes iniciály se objeví rudé X a pod jménem malé „vypadl/a“.
+- **Nehraje (divák):** portrét se jen ztlumí, bez X.
+- **Hlavní aktér:** portrét září v barvě minihry (Rozšíření 14) a pod jménem je jeho úloha.
+
+### Podle miniher
+
+| Minihra | Vypadl | Nehraje | Hlavní aktér |
+| --- | --- | --- | --- |
+| Horký brambor | vypadlí v kolech | – | držitel bomby („drží bombu“) |
+| Rozdělit, nebo ukrást | – | všichni kromě dvou duelantů | oba duelanti („duel“) |
+| Zneškodni bombu | – | – | pyrotechnik („pyrotechnik“) |
+| Trezor | – | – | zámečník, až je známý („zámečník“) |
+| Tajná aukce, Insider kvíz, Rytmus, Fyzická mise | – | – | – (hrají všichni, řada se nemění) |
+
+Mimo krok hraní (los, pravidla, výsledek, stopa) se řada vrací do normálu. Při výsledku Horkého bramboru zůstávají vypadlí označení, ať je vidět, jak hra dopadla.
+
+### Hotovo, když
+
+1. Při Horkém bramboru je na obrazovce z dálky vidět, kdo vypadl a kdo drží bombu.
+2. Ostatní minihry ukazují diváky a aktéry podle tabulky.
+3. Telefony se nemění, testy a robot `npm run e2e` procházejí.

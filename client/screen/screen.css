@@ -1013,3 +1013,81 @@
     opacity: 0;
   }
 }
+
+/* Rozšíření 15: hráči v minihře ve spodní řadě */
+.screen-portrait.mark-idle {
+  opacity: 0.4;
+}
+
+.screen-portrait.mark-out .screen-avatar {
+  position: relative;
+}
+
+.screen-portrait.mark-out .screen-avatar::before,
+.screen-portrait.mark-out .screen-avatar::after {
+  content: '';
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  top: 50%;
+  height: 0.22em;
+  margin-top: -0.11em;
+  border-radius: 0.1em;
+  background: #d23b2f;
+  transform: rotate(45deg);
+  animation: mark-strike 0.4s ease-out both;
+}
+
+.screen-portrait.mark-out .screen-avatar::after {
+  transform: rotate(-45deg);
+}
+
+/* Bez šedého filtru, aby rudé X zůstalo rudé; šedne jen avatar a jméno. */
+.screen-portrait.mark-out .screen-avatar {
+  color: #5a524a;
+  border-color: var(--line);
+  background: #15120f;
+}
+
+.screen-portrait.mark-out .screen-name {
+  color: #6b6358;
+  text-decoration: line-through;
+}
+
+.screen-portrait.mark-out .screen-note {
+  color: #e06c5f;
+}
+
+@keyframes mark-strike {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.screen-portrait.mark-lead .screen-avatar {
+  border-color: var(--mg, var(--gold));
+  color: var(--text);
+  box-shadow: 0 0 0.9em var(--mg, var(--gold));
+  animation: mark-pulse 1.6s ease-in-out infinite;
+}
+
+.screen-portrait.mark-lead .screen-note {
+  color: var(--mg, var(--gold));
+}
+
+@keyframes mark-pulse {
+  50% {
+    box-shadow: 0 0 0.3em var(--mg, var(--gold));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-portrait.mark-lead .screen-avatar,
+  .screen-portrait.mark-out .screen-avatar::before,
+  .screen-portrait.mark-out .screen-avatar::after {
+    animation: none;
+  }
+}

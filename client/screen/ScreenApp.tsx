@@ -91,6 +91,7 @@ function useElapsed(key: string): number {
 
 function ScreenGame({ view }: { view: ScreenView }) {
   const name = (id: string | null | undefined) => nameOf(view.players, id);
+  const marks = minigameMarks(view);
   return (
     <div className={`screen-layout phase-${view.phase.toLowerCase()}${view.minigame?.step === 'CLUE' ? ' step-clue' : ''}${view.phase === 'MINIGAME' && view.minigame?.id ? ` mg-accent mg-${view.minigame.id.toLowerCase()}` : ''}`}>
       {/* Jiskry a kouř v noci a ve finále (Rozšíření 14). */}
@@ -113,7 +114,7 @@ function ScreenGame({ view }: { view: ScreenView }) {
             {view.players
               .filter((p) => p.status === 'ALIVE')
               .map((p) => (
-                <Portrait key={p.id} label={p.name} />
+                <Portrait key={p.id} label={p.name} {...marks[p.id]} />
               ))}
           </div>
           {view.ghostBoard.length > 0 && (
@@ -132,9 +133,50 @@ function ScreenGame({ view }: { view: ScreenView }) {
   );
 }
 
-function Portrait({ label, dim, tone, note, ember }: { label: string; dim?: boolean; tone?: 'loyal' | 'traitor'; note?: string; ember?: boolean }) {
+type PortraitMark = 'out' | 'idle' | 'lead';
+
+/**
+ * Hráči v minihře (Rozšíření 15): kdo vypadl, kdo jen přihlíží a kdo je hlavní aktér.
+ * Bere jen údaje, které scéna minihry na obrazovce už veřejně ukazuje.
+ */
+function minigameMarks(view: ScreenView): Record<string, { mark: PortraitMark; note?: string }> {
+  const mg = view.phase === 'MINIGAME' ? view.minigame : null;
+  const g = mg?.game as Record<string, unknown> | null | undefined;
+  if (!mg || !g) return {};
+  const marks: Record<string, { mark: PortraitMark; note?: string }> = {};
+  const play = mg.step === 'PLAY';
+  const ids = (x: unknown): string[] => (Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string') : []);
+  if (mg.id === 'HOT_POTATO' && (play || mg.step === 'RESULT')) {
+    for (const id of ids(g.eliminated)) marks[id] = { mark: 'out', note: 'vypadl/a' };
+    if (play && typeof g.holderId === 'string') marks[g.holderId] = { mark: 'lead', note: 'drží bombu' };
+  }
+  if (!play) return marks;
+  if (mg.id === 'SPLIT_STEAL') {
+    const duel = ids(g.duelists);
+    for (const p of view.players) marks[p.id] = duel.includes(p.id) ? { mark: 'lead', note: 'duel' } : { mark: 'idle' };
+  }
+  if (mg.id === 'BOMB' && typeof g.pyroId === 'string') marks[g.pyroId] = { mark: 'lead', note: 'pyrotechnik' };
+  if (mg.id === 'VAULT' && typeof g.locksmithId === 'string') marks[g.locksmithId] = { mark: 'lead', note: 'zámečník' };
+  return marks;
+}
+
+function Portrait({
+  label,
+  dim,
+  tone,
+  note,
+  ember,
+  mark,
+}: {
+  label: string;
+  dim?: boolean;
+  tone?: 'loyal' | 'traitor';
+  note?: string;
+  ember?: boolean;
+  mark?: PortraitMark;
+}) {
   return (
-    <div className={['screen-portrait', dim ? 'dim' : '', tone ?? '', ember ? 'ember' : ''].join(' ')}>
+    <div className={['screen-portrait', dim ? 'dim' : '', tone ?? '', ember ? 'ember' : '', mark ? `mark-${mark}` : ''].join(' ')}>
       <span className="screen-avatar">{initials(label)}</span>
       <span className="screen-name">{label}</span>
       {note && <span className="screen-note">{note}</span>}
