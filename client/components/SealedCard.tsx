@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SealCrack } from './SealCrack';
 
 interface Props {
   /** Text pod pečetí; obě role mají stejný počet řádků. */
@@ -45,11 +46,14 @@ export function SealedCard({ lines, label = 'Podrž prst pro tajnou zprávu', on
       onContextMenu={(e) => e.preventDefault()}
     >
       {revealed ? (
-        lines.map((line, i) => (
-          <span key={i} className={i === 0 ? 'secret-line first' : 'secret-line'}>
-            {line}
-          </span>
-        ))
+        <>
+          <SealCrack />
+          {lines.map((line, i) => (
+            <span key={i} className={i === 0 ? 'secret-line first' : 'secret-line'}>
+              {line}
+            </span>
+          ))}
+        </>
       ) : (
         <>
           <span className="seal" aria-hidden>

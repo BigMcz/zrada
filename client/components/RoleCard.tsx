@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Role } from '../../shared/types';
+import { SealCrack } from './SealCrack';
 
 interface Props {
   role: Role;
@@ -51,6 +52,7 @@ export function RoleCard({ role, allies, shieldLine }: Props) {
     >
       {revealed ? (
         <>
+          <SealCrack />
           <span className="role-title">{title}</span>
           <span className="role-line">{line}</span>
           {shieldLine && <span className="role-line shield-line">{shieldLine}</span>}

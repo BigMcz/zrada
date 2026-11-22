@@ -370,3 +370,48 @@ body::after {
 .phase-morning .screen-portrait.dim {
   animation: fade-to-gray 3s ease-in 1s both;
 }
+
+/* Praskající pečeť: dvě poloviny pečeti odletí, text karty se objeví. */
+.role-card {
+  position: relative;
+}
+
+.seal-crack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 92px;
+  height: 92px;
+  margin: -46px 0 0 -46px;
+  pointer-events: none;
+}
+
+.seal-crack .seal.half {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  animation: seal-fly 0.5s ease-in forwards;
+}
+
+.seal-crack .seal.left {
+  clip-path: polygon(0 0, 54% 0, 44% 35%, 56% 60%, 46% 100%, 0 100%);
+  --fly-x: -70px;
+  --fly-r: -35deg;
+}
+
+.seal-crack .seal.right {
+  clip-path: polygon(54% 0, 100% 0, 100% 100%, 46% 100%, 56% 60%, 44% 35%);
+  --fly-x: 70px;
+  --fly-r: 35deg;
+}
+
+@keyframes seal-fly {
+  to {
+    transform: translate(var(--fly-x), 40px) rotate(var(--fly-r));
+    opacity: 0;
+  }
+}
+
+.role-card.revealed > :not(.seal-crack) {
+  animation: phase-in 0.35s ease-out 0.15s both;
+}

@@ -851,3 +851,107 @@
   --candle-scale: 3.2;
   margin-bottom: 0.6em;
 }
+
+/* Rozšíření 14: 3D karta role vyhnaného */
+.screen-role-card {
+  position: relative;
+  width: 7em;
+  height: 3em;
+  margin-top: 0.4em;
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+
+.screen-role-card .face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--gold-dim);
+  border-radius: 0.3em;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-size: 1.3em;
+  backface-visibility: hidden;
+  transition: transform 1s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.screen-role-card .face.back {
+  color: var(--gold-dim);
+}
+
+.screen-role-card .face.front {
+  transform: rotateY(180deg);
+}
+
+.screen-role-card.flipped .face.back {
+  transform: rotateY(-180deg);
+}
+
+.screen-role-card.flipped .face.front {
+  transform: rotateY(0deg);
+}
+
+.screen-role-card.traitor.flipped .face.front {
+  border-color: var(--blood);
+  color: var(--traitor-text);
+}
+
+.screen-role-card.loyal.flipped .face.front {
+  border-color: var(--loyal);
+  color: var(--loyal-text);
+}
+
+.screen-role-card .role-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18em;
+  height: 18em;
+  margin: -9em 0 0 -9em;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 1.2s 0.4s, transform 1.6s 0.4s ease-out;
+  pointer-events: none;
+}
+
+.screen-role-card.traitor .role-glow {
+  background: radial-gradient(circle, rgba(163, 39, 31, 0.55) 0%, rgba(163, 39, 31, 0) 65%);
+}
+
+.screen-role-card.loyal .role-glow {
+  background: radial-gradient(circle, rgba(94, 140, 106, 0.5) 0%, rgba(94, 140, 106, 0) 65%);
+}
+
+.screen-role-card.flipped .role-glow {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Rozhoření portrétu v lobby: oranžová záře uhlíku zvolna pohasne do zlata. */
+@keyframes ember {
+  0% {
+    border-color: #ff7a2a;
+    color: #ffb070;
+    box-shadow: 0 0 0 rgba(255, 120, 40, 0);
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    border-color: #ff8c3a;
+    box-shadow: 0 0 1.2em rgba(255, 120, 40, 0.9);
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+    box-shadow: 0 0 0.3em rgba(212, 169, 60, 0.25);
+    transform: none;
+  }
+}
+
+.screen-portrait.ember .screen-avatar {
+  animation: ember 2.4s ease-out both;
+}

@@ -128,9 +128,9 @@ function ScreenGame({ view }: { view: ScreenView }) {
   );
 }
 
-function Portrait({ label, dim, tone, note }: { label: string; dim?: boolean; tone?: 'loyal' | 'traitor'; note?: string }) {
+function Portrait({ label, dim, tone, note, ember }: { label: string; dim?: boolean; tone?: 'loyal' | 'traitor'; note?: string; ember?: boolean }) {
   return (
-    <div className={['screen-portrait', dim ? 'dim' : '', tone ?? ''].join(' ')}>
+    <div className={['screen-portrait', dim ? 'dim' : '', tone ?? '', ember ? 'ember' : ''].join(' ')}>
       <span className="screen-avatar">{initials(label)}</span>
       <span className="screen-name">{label}</span>
       {note && <span className="screen-note">{note}</span>}
@@ -219,7 +219,8 @@ function Lobby({ view }: { view: ScreenView }) {
         <h1 className="screen-logo">Z R A D A</h1>
         <div className="screen-portraits wrap">
           {view.players.map((p) => (
-            <Portrait key={p.id} label={p.name} />
+            // Nově připojený hráč se rozhoří jako uhlík (animace jen při objevení).
+            <Portrait key={p.id} label={p.name} ember />
           ))}
         </div>
         <p className="muted">
@@ -278,13 +279,14 @@ function VoteReveal({ view, name }: { view: ScreenView; name: (id: string | null
           <div className="screen-banished">
             <p className="muted">Kulatý stůl vyhnal</p>
             <h1>{banished.name}</h1>
-            {t > 5500 && banished.revealedRole ? (
-              <p className={`screen-role ${banished.revealedRole === 'TRAITOR' ? 'traitor' : 'loyal'}`}>
-                {ROLE_LABEL[banished.revealedRole]}
-              </p>
-            ) : (
-              <p className="screen-role pending">…</p>
-            )}
+            {/* 3D karta role: po 3 s napětí se otočí, za ní se rozlije záře v barvě role (Rozšíření 14). */}
+            <div
+              className={['screen-role-card', t > 5500 ? 'flipped' : '', banished.revealedRole === 'TRAITOR' ? 'traitor' : 'loyal'].join(' ')}
+            >
+              <span className="role-glow" />
+              <span className="face back">?</span>
+              <span className="face front">{t > 5500 && banished.revealedRole ? ROLE_LABEL[banished.revealedRole] : ''}</span>
+            </div>
           </div>
         ) : (
           <Title>Nikdo nebyl vyhnán</Title>
