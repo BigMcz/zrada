@@ -366,8 +366,38 @@ function phaseStep(view: ModeratorView): PhaseStep {
         intent: { type: 'closeVote' },
         next: 'Všem se ukáže, kdo byl vyhnán a jakou měl roli.',
       };
+    case 'FINAL_VOTE': {
+      const ends = Object.values(view.finalVotes).filter((c) => c === 'END').length;
+      const cast = Object.keys(view.finalVotes).length;
+      return {
+        title: 'Finálové hlasování',
+        detail: (
+          <>
+            Hlasovalo <b>{cast}</b> z {alive.length}, ukončit chce <b>{ends}</b>. Hru ukončí jen jednomyslné „Ukončit hru“.
+          </>
+        ),
+        button: 'Uzavřít finálové hlasování',
+        intent: { type: 'closeFinalVote' },
+        next: 'Jednomyslně „Ukončit“: konec hry a odhalení rolí. Jinak kulatý stůl a nové finále.',
+      };
+    }
     case 'VOTE_RESULT': {
       const banished = view.players.find((p) => p.id === round?.banishedId);
+      if (view.inFinale) {
+        return {
+          title: 'Výsledek hlasování (finále)',
+          detail: banished ? (
+            <>
+              Vyhnán/a: <b>{banished.name}</b> ({banished.role && ROLE_LABEL[banished.role]})
+            </>
+          ) : (
+            'Nikdo nebyl vyhnán.'
+          ),
+          button: 'Další finálové hlasování',
+          intent: { type: 'startFinal' },
+          next: 'Ve finále se nespí: hráči znovu hlasují, jestli hru ukončit.',
+        };
+      }
       return {
         title: 'Výsledek hlasování',
         detail: banished ? (
@@ -475,6 +505,11 @@ function Control({ view }: { view: ModeratorView }) {
                     ? 'Dnes se nedá hrát žádná minihra.'
                     : `Po stisknutí: ${step.next}`}
               </p>
+              {view.finalAvailable && (
+                <button type="button" className="console-primary big secondary-look" disabled={busy} onClick={() => run({ type: 'startFinal' })}>
+                  Spustit finále
+                </button>
+              )}
               {view.phase === 'VOTE' && (
                 <button type="button" className="link" disabled={busy} onClick={() => run({ type: 'resetVotes' })}>
                   Vynulovat hlasy a hlasovat znovu

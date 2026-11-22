@@ -172,10 +172,10 @@ describe('žebříček hráčů a body pro moderátora', () => {
 
     expect(s.phase).toBe('ENDED');
     const board = viewForPlayer(s, 'p4')!.playerBoard!;
-    expect(board.slice(0, 2)).toEqual([
-      { id: 'p3', points: 2 },
-      { id: 'p2', points: 1 },
-    ]);
+    const each = s.potShare!.each;
+    expect(s.potShare!.winners).toEqual(['p3', 'p4', 'p5']);
+    expect(board.find((r) => r.id === 'p3')).toEqual({ id: 'p3', points: 2 + each });
+    expect(board.find((r) => r.id === 'p2')).toEqual({ id: 'p2', points: 1 });
     expect(board).toHaveLength(6);
   });
 

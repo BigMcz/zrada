@@ -1,4 +1,6 @@
 import type {
+  FinalChoice,
+  PotShare,
   MinigameId,
   MinigameStep,
   Phase,
@@ -108,6 +110,12 @@ export interface GameState {
   pot: number;
   /** Pauza od moderátora: od kdy (čas serveru), nebo null (Rozšíření 10). */
   paused: { since: number } | null;
+  /** Hra je ve finále: místo noci následuje další finálové hlasování (Rozšíření 11). */
+  finale: boolean;
+  /** Volby v aktuálním finálovém hlasování. */
+  finalVotes: Record<string, FinalChoice>;
+  /** Rozdělení pokladu na konci hry. */
+  potShare: PotShare | null;
   winner?: Winner;
 }
 
@@ -133,5 +141,8 @@ export function createGame(): GameState {
     shieldHolderId: null,
     pot: STARTING_POT,
     paused: null,
+    finale: false,
+    finalVotes: {},
+    potShare: null,
   };
 }

@@ -116,7 +116,7 @@ async function connect(url: string): Promise<ClientSocket> {
 // ---------------------------------------------------------------------------
 
 /** Klíče, které by v pohledu hráče nikdy neměly být (skryté údaje miniher a štítu). */
-const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"', '"solution"', '"column"'];
+const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"', '"solution"', '"column"', '"finalVotes"'];
 
 /** Tajné klíče pro velkou obrazovku (sloupce hlasů tu mají legitimně pole votes). */
 const SCREEN_FORBIDDEN = [...FORBIDDEN_KEYS.filter((k) => k !== '"votes"'), '"role"', '"nightPicks"', '"secretCard"', '"handoff"', '"myVote"', '"allies"', '"pressure"', '"hint"', '"myHints"', '"device"', '"pages"', '"displayOffsetMs"', '"wires"', '"bets"', '"taps"', '"outcome"'];
@@ -369,6 +369,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     let rhythmDrop = 'ne';
     let bombReassign = 'ne';
     let pauseCheck = 'ne';
+    let finaleNote = 'ne';
     async function maybeReconnect() {
       if (!cfg.reconnect || reconnected !== 'ne') return;
       const bot = rand(alive());
@@ -423,8 +424,30 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
         }
         case 'MORNING': {
           await ghostsTip();
+          // Při 4 a méně živých moderátor často spustí finále (Rozšíření 11).
+          if (v.finalAvailable && chance(0.7)) {
+            await modAct({ type: 'startFinal' });
+            finaleNote = `finále od ${v.round + 1}. kola`;
+            break;
+          }
           const draw = cfg.minigames && v.minigameAvailable && chance(0.7);
           await modAct(draw ? { type: 'drawMinigame' } : { type: 'startVote' });
+          break;
+        }
+        case 'FINAL_VOTE': {
+          // Zrádci chtějí hru ukončit, Věrní napůl; občas někdo nehlasuje.
+          for (const b of alive()) {
+            if (!chance(0.9)) continue;
+            const choice = b.pv!.me.role === 'TRAITOR' || chance(0.5) ? 'END' : 'CONTINUE';
+            await act(b, { type: 'finalVote', choice });
+          }
+          await sleep(100);
+          for (const b of alive()) {
+            const mine = b.pv?.myFinalChoice;
+            const truth = m().finalVotes[b.id] ?? null;
+            if (mine !== truth) report.violation(`${b.name}: volba ve finále ${mine}, správně ${truth}`);
+          }
+          await modAct({ type: 'closeFinalVote' });
           break;
         }
         case 'VOTE': {
@@ -452,7 +475,8 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
         }
         case 'VOTE_RESULT':
           await ghostsTip();
-          await modAct({ type: 'startNight' });
+          // Ve finále se nespí: po kulatém stole další finálové hlasování.
+          await modAct(v.inFinale ? { type: 'startFinal' } : { type: 'startNight' });
           break;
         case 'NIGHT': {
           await ghostsTip();
@@ -986,13 +1010,21 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     const end = m();
     checkAgainstModerator(end, bots, report);
     if (screenViews === 0) report.violation('obrazovka nedostala žádný pohled');
+    // Poklad: dělí se mezi živé vítěze rovným dílem, když byl ve hře (Rozšíření 11).
+    if (end.potShare) {
+      const winners = end.players.filter((p) => p.status === 'ALIVE' && p.role === end.winner).map((p) => p.id);
+      if (end.potShare.winners.join() !== winners.join()) report.violation('poklad nedostali živí vítězové');
+      if (end.potShare.each !== Math.floor(end.pot / Math.max(1, winners.length))) report.violation('špatný podíl z pokladu');
+    }
     const finalScreen = lastScreen as View | null;
     if (finalScreen?.kind !== 'screen' || finalScreen.phase !== 'ENDED' || finalScreen.winner !== end.winner) {
       report.violation('obrazovka nevidí konec hry');
     } else if (finalScreen.players.some((p) => !p.revealedRole)) report.violation('obrazovka na konci nevidí všechny role');
     const aliveTraitors = end.players.filter((p) => p.status === 'ALIVE' && p.role === 'TRAITOR').length;
     const aliveLoyal = end.players.filter((p) => p.status === 'ALIVE' && p.role === 'LOYAL').length;
-    const expected = aliveTraitors === 0 ? 'LOYAL' : aliveTraitors >= aliveLoyal ? 'TRAITOR' : '?';
+    // Ve finále hru ukončí jednomyslné hlasování: zbyl-li Zrádce, vyhrávají Zrádci, i když jich je méně.
+    const expected =
+      aliveTraitors === 0 ? 'LOYAL' : aliveTraitors >= aliveLoyal || end.inFinale ? 'TRAITOR' : '?';
     if (end.winner !== expected) report.violation(`vítěz ${end.winner}, podle živých rolí má být ${expected}`);
     for (const b of bots) {
       const v = b.pv!;
@@ -1025,7 +1057,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop, bombReassign, pauseCheck].filter((x, i) => i === 0 || x !== 'ne').join('; '),
+      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop, bombReassign, pauseCheck, finaleNote].filter((x, i) => i === 0 || x !== 'ne').join('; '),
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,

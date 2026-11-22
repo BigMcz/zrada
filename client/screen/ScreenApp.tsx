@@ -152,11 +152,22 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
       return <Title sub="Podržte prst na telefonu a podívejte se, kdo jste.">Role byly rozdány</Title>;
     case 'VOTE':
       return (
-        <Title sub={`Hlasovalo ${view.votesCast ?? 0} z ${view.voters ?? 0}`}>
-          Kulatý stůl
+        <Title sub={`${view.inFinale ? 'Hra pokračuje. ' : ''}Hlasovalo ${view.votesCast ?? 0} z ${view.voters ?? 0}`}>
+          {view.inFinale ? 'Finále: kulatý stůl' : 'Kulatý stůl'}
           <span className="screen-dots">
             {Array.from({ length: view.voters ?? 0 }, (_, i) => (
               <span key={i} className={i < (view.votesCast ?? 0) ? 'on' : ''} />
+            ))}
+          </span>
+        </Title>
+      );
+    case 'FINAL_VOTE':
+      return (
+        <Title sub={`Hlasovalo ${view.finalVotesCast ?? 0} z ${view.finalVoters ?? 0}. Hru ukončí jen jednomyslné rozhodnutí.`}>
+          Finále: ukončit hru?
+          <span className="screen-dots">
+            {Array.from({ length: view.finalVoters ?? 0 }, (_, i) => (
+              <span key={i} className={i < (view.finalVotesCast ?? 0) ? 'on' : ''} />
             ))}
           </span>
         </Title>
@@ -279,7 +290,15 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
         ))}
       </div>
       {done && view.winner && (
-        <Title sub={`Poklad ${view.pot.toLocaleString('cs')}`}>{view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}</Title>
+        <Title
+          sub={
+            view.potShare
+              ? `Poklad ${view.pot.toLocaleString('cs')}: každý vítěz získává ${view.potShare.each.toLocaleString('cs')} (${view.potShare.winners.map((id) => name(id)).join(', ')})`
+              : `Poklad ${view.pot.toLocaleString('cs')}`
+          }
+        >
+          {view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}
+        </Title>
       )}
     </div>
   );

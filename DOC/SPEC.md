@@ -1070,6 +1070,7 @@ Konec hry jako v televizi: hráči sami rozhodují, jestli hru ukončí. Poklad 
   - zbyli jen Věrní: vyhráli a **dělí se o poklad** rovným dílem (zaokrouhleno dolů na celé body),
   - zbyl Zrádce: vyhrávají Zrádci a **celý poklad** si rozdělí živí Zrádci.
 - Podíl z pokladu se připíše jako osobní body (důvod „poklad“). Při automatickém konci bez finále se poklad rozdělí stejně.
+- Poklad se dělí, jen když byl ve hře: hrála se aspoň jedna minihra, nebo proběhlo finále. Bez toho ho hráči nikde neviděli.
 
 ### Rekapitulace a ceny
 

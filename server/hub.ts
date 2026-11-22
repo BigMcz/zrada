@@ -31,7 +31,7 @@ export interface HubOptions {
   onChange?: (state: GameState) => void;
 }
 
-const PLAYER_INTENTS = new Set(['ackRole', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick']);
+const PLAYER_INTENTS = new Set(['ackRole', 'finalVote', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick']);
 const MODERATOR_INTENTS = new Set([
   'kick',
   'startGame',
@@ -47,6 +47,8 @@ const MODERATOR_INTENTS = new Set([
   'resume',
   'resetVotes',
   'removePlayer',
+  'startFinal',
+  'closeFinalVote',
   'drawMinigame',
   'rerollMinigame',
   'chooseMinigame',
@@ -103,7 +105,11 @@ export function parseIntent(raw: unknown): Intent | null {
     case 'pause':
     case 'resume':
     case 'resetVotes':
+    case 'startFinal':
+    case 'closeFinalVote':
       return { type: r.type };
+    case 'finalVote':
+      return r.choice === 'END' || r.choice === 'CONTINUE' ? { type: 'finalVote', choice: r.choice } : null;
     case 'minigameInput':
     case 'minigameModerator':
       return 'payload' in r && isSmallJson(r.payload) ? { type: r.type, payload: r.payload } : null;

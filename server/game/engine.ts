@@ -1,6 +1,8 @@
-import { GHOST_TIP_PHASES, MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Intent } from '../../shared/types.js';
+import { FINAL_MAX_ALIVE, GHOST_TIP_PHASES, MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Intent, type Winner } from '../../shared/types.js';
 import type { Rng } from './random.js';
 import {
+  alive,
+  aliveWithRole,
   assignRoles,
   currentRound,
   awardGhostTips,
@@ -80,14 +82,29 @@ function aliveOther(state: GameState, self: Player, targetId: string): Player {
   return target;
 }
 
+/**
+ * Konec hry: vítěz, vyhodnocení tipů duchů z tohoto kola a rozdělení pokladu mezi živé vítěze
+ * rovným dílem (zaokrouhleno dolů). Podíl se připíše jako osobní body (Rozšíření 11).
+ * Poklad se dělí, jen když byl ve hře (hrála se minihra nebo finále); jinak ho hráči ani neviděli.
+ */
+function endGame(state: GameState, winner: Winner): void {
+  state.winner = winner;
+  state.phase = 'ENDED';
+  state.paused = null;
+  awardGhostTips(state);
+  if (state.minigamesPlayed.length === 0 && !state.finale) return;
+  const winners = aliveWithRole(state, winner).map((p) => p.id);
+  if (winners.length === 0) return;
+  const each = Math.floor(state.pot / winners.length);
+  state.potShare = { winners, each };
+  for (const id of winners) state.points.push({ playerId: id, amount: each, reason: 'POT', round: state.round, visible: 'NOW' });
+}
+
 /** Po každém vyřazení: buď konec hry, nebo pokračovat do `next`. */
 function finishOr(state: GameState, next: GameState['phase']): void {
   const winner = checkWinner(state);
   if (winner) {
-    state.winner = winner;
-    state.phase = 'ENDED';
-    // Hra skončila uprostřed kola: tipy duchů z tohoto kola se vyhodnotí hned.
-    awardGhostTips(state);
+    endGame(state, winner);
   } else {
     state.phase = next;
   }
@@ -127,6 +144,41 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
         status: 'ALIVE',
         sawRole: false,
       });
+      return;
+    }
+
+    case 'startFinal': {
+      // Ráno při 4 a méně živých, nebo ve finále po kulatém stole.
+      requireModerator(actor);
+      const fromMorning = state.phase === 'MORNING' && !state.finale && alive(state).length <= FINAL_MAX_ALIVE;
+      const again = state.phase === 'VOTE_RESULT' && state.finale;
+      if (!fromMorning && !again) fail(WRONG_PHASE);
+      startNextDay(state);
+      state.finale = true;
+      state.finalVotes = {};
+      state.phase = 'FINAL_VOTE';
+      return;
+    }
+
+    case 'finalVote': {
+      requirePhase(state, 'FINAL_VOTE');
+      const voter = requireAlivePlayer(state, actor);
+      if (action.choice !== 'END' && action.choice !== 'CONTINUE') fail(INVALID_TARGET);
+      state.finalVotes[voter.id] = action.choice;
+      return;
+    }
+
+    case 'closeFinalVote': {
+      // Hru ukončí jen jednomyslné „Ukončit“; kdo nehlasoval, chce pokračovat.
+      requireModerator(actor);
+      requirePhase(state, 'FINAL_VOTE');
+      const everyoneEnds = alive(state).every((p) => state.finalVotes[p.id] === 'END');
+      if (everyoneEnds) {
+        endGame(state, aliveWithRole(state, 'TRAITOR').length > 0 ? 'TRAITOR' : 'LOYAL');
+      } else {
+        state.votes = {};
+        state.phase = 'VOTE';
+      }
       return;
     }
 
@@ -253,6 +305,8 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
     case 'startNight': {
       requireModerator(actor);
       requirePhase(state, 'VOTE_RESULT');
+      // Ve finále se už nespí: po kulatém stole přijde další finálové hlasování.
+      if (state.finale) fail(WRONG_PHASE);
       state.nightPicks = {};
       state.nightTips = {};
       state.phase = 'NIGHT';
@@ -328,6 +382,9 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
       state.pot = STARTING_POT;
       delete state.winner;
       state.paused = null;
+      state.finale = false;
+      state.finalVotes = {};
+      state.potShare = null;
       return;
     }
   }

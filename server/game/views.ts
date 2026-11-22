@@ -1,4 +1,5 @@
 import {
+  FINAL_MAX_ALIVE,
   GHOST_TIP_PHASES,
   recommendedTraitors,
   type GhostRank,
@@ -112,6 +113,9 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
     history: publicHistory(state),
     myVote: state.phase === 'VOTE' ? (state.votes[me.id] ?? null) : null,
     paused: state.paused !== null,
+    inFinale: state.finale,
+    myFinalChoice: state.phase === 'FINAL_VOTE' ? (state.finalVotes[me.id] ?? null) : null,
+    potShare: state.phase === 'ENDED' ? state.potShare : null,
     // Skryté body (tipy duchů) až na konci hry, jinak by duch poznal Zrádce.
     myPoints: pointsOf(state, me.id, state.phase === 'ENDED'),
   };
@@ -175,6 +179,10 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     physicalMission: state.settings.physicalMission,
     screenMuted: state.settings.screenMuted,
     paused: state.paused !== null,
+    inFinale: state.finale,
+    finalAvailable: state.phase === 'MORNING' && !state.finale && state.players.filter((p) => p.status === 'ALIVE').length <= FINAL_MAX_ALIVE,
+    finalVotes: { ...state.finalVotes },
+    potShare: state.potShare,
     minigameAvailable:
       state.settings.minigamesEnabled &&
       (state.phase === 'ROLES' || state.phase === 'MORNING') &&
@@ -230,5 +238,9 @@ export function viewForScreen(state: GameState, joinUrl: string | null): ScreenV
     winner: state.winner ?? null,
     muted: state.settings.screenMuted,
     paused: state.paused !== null,
+    inFinale: state.finale,
+    finalVotesCast: state.phase === 'FINAL_VOTE' ? alivePlayers.filter((p) => p.id in state.finalVotes).length : null,
+    finalVoters: state.phase === 'FINAL_VOTE' ? alivePlayers.length : null,
+    potShare: state.phase === 'ENDED' ? state.potShare : null,
   };
 }

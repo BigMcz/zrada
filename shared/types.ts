@@ -8,6 +8,7 @@ export type Phase =
   | 'VOTE_RESULT' // výsledek hlasování
   | 'NIGHT' // Zrádci vybírají oběť, Věrní tipují
   | 'MORNING' // oznámení oběti
+  | 'FINAL_VOTE' // finálové hlasování: ukončit hru, nebo vyhnat dalšího (Rozšíření 11)
   | 'ENDED'; // konec hry
 
 export type Role = 'LOYAL' | 'TRAITOR';
@@ -22,10 +23,22 @@ export type PointReason =
   | 'GHOST_TIP' // duch tipl Zrádce (vidět až na konci)
   | 'MINIGAME_WIN' // vítěz minihry, +2
   | 'MINIGAME' // další body hráčů z minihry (např. správná sázka v duelu)
-  | 'GHOST_MINIGAME'; // úloha ducha v minihře
+  | 'GHOST_MINIGAME' // úloha ducha v minihře
+  | 'POT'; // podíl z pokladu pro vítěze na konci hry (Rozšíření 11)
 
 /** Fáze, ve kterých duch může tipovat Zrádce. */
 export const GHOST_TIP_PHASES: readonly Phase[] = ['VOTE', 'VOTE_RESULT', 'NIGHT'];
+
+/** Finále: Ukončit hru (věřím, že zbyli jen Věrní), nebo Vyhnat dalšího. */
+export type FinalChoice = 'END' | 'CONTINUE';
+/** Finále jde spustit, když zbývá nejvýš tolik živých. */
+export const FINAL_MAX_ALIVE = 4;
+
+/** Rozdělení pokladu na konci hry: kdo a kolik dostal. */
+export interface PotShare {
+  winners: string[];
+  each: number;
+}
 
 export const MIN_PLAYERS = 4;
 export const MAX_PLAYERS = 10;
@@ -183,6 +196,12 @@ export interface PlayerView {
   };
   /** Moderátor hru pozastavil (Rozšíření 10). */
   paused: boolean;
+  /** Hra je ve finále (Rozšíření 11). */
+  inFinale: boolean;
+  /** Moje volba ve finálovém hlasování. */
+  myFinalChoice: FinalChoice | null;
+  /** Rozdělení pokladu (jen na konci hry). */
+  potShare: PotShare | null;
   /** Moje osobní body, které už smím vidět (body za tipy duchů až na konci hry). */
   myPoints: number;
   /** Jen pro vyřazené hráče (duchy). */
@@ -250,6 +269,12 @@ export interface ModeratorView {
   screenMuted: boolean;
   /** Hra je pozastavená. */
   paused: boolean;
+  inFinale: boolean;
+  /** Ráno při 4 a méně živých: jde spustit finále. */
+  finalAvailable: boolean;
+  /** Volby ve finálovém hlasování (moderátor vidí vše). */
+  finalVotes: Record<string, FinalChoice>;
+  potShare: PotShare | null;
   /** Minihry, které jde dnes losovat; prázdné = jen Přeskočit. */
   minigameAvailable: boolean;
   /** Jen ve fázi MINIGAME. */
@@ -303,6 +328,11 @@ export interface ScreenView {
   muted: boolean;
   /** Hra je pozastavená. */
   paused: boolean;
+  inFinale: boolean;
+  /** Finálové hlasování: kolik živých už hlasovalo a kolik jich je. */
+  finalVotesCast: number | null;
+  finalVoters: number | null;
+  potShare: PotShare | null;
 }
 
 /** Pohled zařízení, které ještě není ve hře. */
@@ -343,6 +373,9 @@ export type Intent =
   | { type: 'resume' }
   | { type: 'resetVotes' }
   | { type: 'removePlayer'; playerId: string }
+  | { type: 'startFinal' }
+  | { type: 'closeFinalVote' }
+  | { type: 'finalVote'; choice: FinalChoice }
   | { type: 'drawMinigame' }
   | { type: 'rerollMinigame' }
   | { type: 'chooseMinigame'; id: MinigameId }

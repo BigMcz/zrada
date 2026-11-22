@@ -58,7 +58,9 @@ export function useTaskVibration(view: View | null): void {
   const key = taskKey(view);
   useEffect(() => {
     // První pohled po načtení stránky nevibruje (návrat do hry není nový úkol).
-    if (last.current !== undefined && key && key !== last.current) navigator.vibrate?.(200);
+    // Prohlížeč vibraci pustí až po prvním ťuknutí na stránku (jinak jen zapíše chybu do konzole).
+    const activated = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive ?? true;
+    if (last.current !== undefined && key && key !== last.current && activated) navigator.vibrate?.(200);
     last.current = key;
   }, [key]);
 }

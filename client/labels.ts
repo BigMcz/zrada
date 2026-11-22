@@ -8,6 +8,7 @@ export const PHASE_LABEL: Record<Phase, string> = {
   VOTE_RESULT: 'Kulatý stůl',
   NIGHT: 'Noc',
   MORNING: 'Ráno',
+  FINAL_VOTE: 'Finále',
   ENDED: 'Konec hry',
 };
 

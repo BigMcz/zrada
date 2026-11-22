@@ -164,6 +164,7 @@ function PlayerGame({ view }: { view: PlayerView }) {
   else if (view.ghost) screen = <Ghost key={view.round} view={view} tag={`Duch · ${tag}`} corner={corner} />;
   else if (view.phase === 'ROLES') screen = <Roles view={view} tag={tag} corner={corner} />;
   // key podle kola: nový kulatý stůl / noc začíná bez předvybraného hráče
+  else if (view.phase === 'FINAL_VOTE') screen = <FinalVote key={view.round} view={view} tag={tag} corner={corner} />;
   else if (view.phase === 'VOTE') screen = <Vote key={view.round} view={view} tag={tag} corner={corner} />;
   else if (view.phase === 'VOTE_RESULT') screen = <VoteResult view={view} tag={tag} corner={corner} />;
   else if (view.phase === 'NIGHT') screen = <Night key={view.round} view={view} tag={tag} corner={corner} />;
@@ -271,12 +272,40 @@ function Vote({ view, tag, corner }: ScreenProps) {
         </PrimaryButton>
       }
     >
+      {view.inFinale && <p className="center muted">Finále: hra pokračuje, mezi vámi je podle vás pořád Zrádce.</p>}
       <h2 className="question">Koho vyženeš?</h2>
       <PlayerGrid players={aliveOthers(view)} selectedId={selected} onSelect={setSelected} />
       <p className="hint">
         {view.myVote
           ? `Hlas odevzdán: ${nameOf(view.players, view.myVote)}. Dokud moderátor hlasování neuzavře, můžeš ho změnit.`
           : 'Vyber jednoho hráče a potvrď.'}
+      </p>
+      {error && <p className="error">{error}</p>}
+    </Screen>
+  );
+}
+
+/** Finálové hlasování: dvě velké karty, stejné pro Věrné i Zrádce (Rozšíření 11). */
+function FinalVote({ view, tag, corner }: ScreenProps) {
+  const { error, run } = useSend();
+  const choice = view.myFinalChoice;
+  const card = (value: 'END' | 'CONTINUE', title: string, text: string) => (
+    <button
+      type="button"
+      className={choice === value ? 'final-card selected' : 'final-card'}
+      onClick={() => run({ type: 'finalVote', choice: value })}
+    >
+      <span className="final-title">{title}</span>
+      <span className="final-text">{text}</span>
+    </button>
+  );
+  return (
+    <Screen tag={tag} corner={corner}>
+      <h2 className="question">Ukončit hru?</h2>
+      {card('END', 'Ukončit hru', 'Věřím, že tu zbyli jen Věrní.')}
+      {card('CONTINUE', 'Vyhnat dalšího', 'Mezi námi je pořád Zrádce.')}
+      <p className="hint">
+        {choice ? 'Hlas odevzdán. Dokud moderátor hlasování neuzavře, můžeš ho změnit.' : 'Hru ukončí jen jednomyslné „Ukončit hru“.'}
       </p>
       {error && <p className="error">{error}</p>}
     </Screen>
@@ -374,6 +403,7 @@ function currentEvent(view: PlayerView): string {
   if (view.phase === 'MINIGAME') return 'Hraje se minihra.';
   if (view.phase === 'VOTE') return 'Hráči hlasují, koho vyženou.';
   if (view.phase === 'NIGHT') return 'Je noc.';
+  if (view.phase === 'FINAL_VOTE') return 'Finále: živí hráči rozhodují, jestli hru ukončit.';
   return '';
 }
 
@@ -444,7 +474,12 @@ function Ended({ view, tag }: ScreenProps) {
     <Screen tag={tag}>
       <p className="center">Vyhráli</p>
       <p className={`headline center ${roleClass(view.winner)}`}>{view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}</p>
-      {view.playerBoard && <p className="center">Vítězové si dělí poklad: {view.pot.toLocaleString('cs')} bodů</p>}
+      {view.potShare && (
+        <p className="center">
+          Poklad {view.pot.toLocaleString('cs')} bodů: každý vítěz získává <b>{view.potShare.each.toLocaleString('cs')}</b> (
+          {view.potShare.winners.map((id) => nameOf(view.players, id)).join(', ')})
+        </p>
+      )}
       <PlayerList view={view} />
       {view.playerBoard && <PlayerBoard board={view.playerBoard} nameOf={(id) => nameOf(view.players, id)} />}
       {view.ghostBoard && <GhostBoard ghosts={view.ghostBoard} nameOf={(id) => nameOf(view.players, id)} />}
