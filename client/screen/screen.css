@@ -968,6 +968,8 @@
 
 .screen-layout {
   position: relative;
+  /* Vlastní vrstva: jiskry a obsah hry zůstanou pod překryvy (Zahájit, Pauza). */
+  isolation: isolate;
 }
 
 .screen-layout > :not(.screen-embers) {
