@@ -1091,3 +1091,9 @@
     animation: none;
   }
 }
+
+/* Záře aktéra se nesmí useknout o overflow řady: místo navíc nahoře a po stranách, rozložení se nehne. */
+.screen-bottom .screen-portraits {
+  padding: 1em 0.9em 0;
+  margin: -1em -0.9em 0;
+}
