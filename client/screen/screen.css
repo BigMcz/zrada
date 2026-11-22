@@ -1568,3 +1568,54 @@
     animation: none;
   }
 }
+
+/* Trezor: obrázek zavřeného / otevřeného trezoru */
+.sg-vault-art.vault-art {
+  width: 11em;
+  height: 7.3em;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.sg-vault-art.vault-art.shake {
+  animation: sg-vault-shake 0.5s ease-in-out;
+}
+
+.sg-vault-art.vault-art.open {
+  width: 15em;
+  height: 10em;
+  filter: drop-shadow(0 0 1.2em rgba(255, 190, 80, 0.55));
+  animation: sg-vault-open 0.9s ease-out;
+}
+
+.sg-vault-art.vault-art.failed {
+  filter: grayscale(0.6) brightness(0.55);
+}
+
+@keyframes sg-vault-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-0.3em) rotate(-1deg); }
+  40% { transform: translateX(0.3em) rotate(1deg); }
+  60% { transform: translateX(-0.2em); }
+  80% { transform: translateX(0.2em); }
+}
+
+@keyframes sg-vault-open {
+  from { transform: scale(0.8); opacity: 0.3; filter: brightness(2.2); }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-vault-art.vault-art.shake,
+  .sg-vault-art.vault-art.open {
+    animation: none;
+  }
+}
+
+.sg-vault-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5em;
+}

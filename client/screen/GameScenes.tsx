@@ -9,6 +9,7 @@ import type { SplitStealScreenView } from '../../server/minigames/splitSteal/ind
 import type { VaultScreenView } from '../../server/minigames/vault/index';
 import { BombArt, useBoomFlash } from '../minigames/hotPotato/BombArt';
 import { Beat } from '../minigames/rhythm/Rhythm';
+import { isOpened, VaultArt } from '../minigames/vault/VaultArt';
 
 type Name = (id: string | null | undefined) => string;
 
@@ -146,14 +147,21 @@ function QuizScene({ g, name }: { g: QuizScreenView; name: Name }) {
 }
 
 function VaultScene({ g, name }: { g: VaultScreenView; name: Name }) {
+  const look = g.stage !== 'DONE' ? 'closed' : isOpened(g) ? 'open' : 'failed';
   if (g.stage === 'VOTE')
     return (
-      <Lead>
-        Volba zámečníka: hlasovalo {g.votedCount} z {g.playerCount}
-      </Lead>
+      <div className="sg-vault">
+        <VaultArt look="closed" className="sg-vault-art" />
+        <Lead>
+          Volba zámečníka: hlasovalo {g.votedCount} z {g.playerCount}
+        </Lead>
+      </div>
     );
+  // Trezor vlevo, pokusy vpravo: pod sebou by se s výsledkem minihry nevešly na obrazovku.
   return (
-    <div className="sg-vault">
+    <div className="sg-vault-row">
+      <VaultArt look={look} shake={g.attempts.length} className="sg-vault-art" />
+      <div className="sg-vault">
       <p className="sg-small">
         Zámečník <b>{name(g.locksmithId)}</b> · zbývá pokusů {g.attemptsLeft}
       </p>
@@ -179,6 +187,7 @@ function VaultScene({ g, name }: { g: VaultScreenView; name: Name }) {
         </div>
       )}
       {g.revealedCode && <p className="sg-lead">Kód trezoru: {g.revealedCode.join(' ')}</p>}
+      </div>
     </div>
   );
 }

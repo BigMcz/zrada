@@ -7,6 +7,7 @@ import type {
   VaultTip,
 } from '../../../server/minigames/vault/index';
 import { NameGrid } from '../NameGrid';
+import { isOpened, VaultArt } from './VaultArt';
 import type { MinigameModeratorProps, MinigamePlayerProps } from '../registry';
 
 const TIP_LABELS: Record<VaultTip, string> = { 1: '1. pokus', 2: '2. pokus', 3: '3. pokus', 4: 'Neotevře se' };
@@ -95,10 +96,10 @@ function Keypad({ digits, attemptsUsed, send }: { digits: number; attemptsUsed: 
 }
 
 function Outcome({ game }: { game: { attempts: VaultAttempt[]; digits: number; revealedCode: number[] | null } }) {
-  const last = game.attempts[game.attempts.length - 1];
-  const opened = last !== undefined && last.hits === game.digits;
+  const opened = isOpened(game);
   return (
     <>
+      <VaultArt look={opened ? 'open' : 'failed'} />
       <p className="headline center">{opened ? `Trezor otevřen na ${game.attempts.length}. pokus!` : 'Trezor zůstal zavřený.'}</p>
       {game.revealedCode && (
         <>

@@ -1520,3 +1520,33 @@
 .overlay.tutorial {
   background: rgba(8, 6, 5, 0.96);
 }
+
+/* Trezor: obrázek ve výsledku minihry */
+.vault-art {
+  display: block;
+  width: min(100%, 300px);
+  aspect-ratio: 3 / 2;
+  margin: 0 auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.vault-art.open {
+  animation: vault-open 0.7s ease-out;
+}
+
+.vault-art.failed {
+  filter: grayscale(0.6) brightness(0.55);
+}
+
+@keyframes vault-open {
+  from { transform: scale(0.85); opacity: 0.4; filter: brightness(2); }
+  to { transform: scale(1); opacity: 1; filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vault-art.open {
+    animation: none;
+  }
+}
