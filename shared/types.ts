@@ -40,6 +40,21 @@ export interface PotShare {
   each: number;
 }
 
+/** Cena v rekapitulaci na konci hry (Rozšíření 11). */
+export interface RecapAward {
+  key: 'DETECTIVE' | 'DECEIVER' | 'SUSPECT';
+  title: string;
+  note: string;
+  ids: string[];
+  count: number;
+}
+
+/** Rekapitulace večera: časová osa kol a ceny (jen na konci hry). */
+export interface Recap {
+  rounds: { round: number; banishedId: string | null; murderedId: string | null; minigame: { name: string; shieldWinnerId: string | null } | null }[];
+  awards: RecapAward[];
+}
+
 export const MIN_PLAYERS = 4;
 export const MAX_PLAYERS = 10;
 export const MAX_NAME_LENGTH = 20;
@@ -202,6 +217,8 @@ export interface PlayerView {
   myFinalChoice: FinalChoice | null;
   /** Rozdělení pokladu (jen na konci hry). */
   potShare: PotShare | null;
+  /** Rekapitulace (jen na konci hry). */
+  recap: Recap | null;
   /** Moje osobní body, které už smím vidět (body za tipy duchů až na konci hry). */
   myPoints: number;
   /** Jen pro vyřazené hráče (duchy). */
@@ -275,6 +292,7 @@ export interface ModeratorView {
   /** Volby ve finálovém hlasování (moderátor vidí vše). */
   finalVotes: Record<string, FinalChoice>;
   potShare: PotShare | null;
+  recap: Recap | null;
   /** Minihry, které jde dnes losovat; prázdné = jen Přeskočit. */
   minigameAvailable: boolean;
   /** Jen ve fázi MINIGAME. */
@@ -333,6 +351,7 @@ export interface ScreenView {
   finalVotesCast: number | null;
   finalVoters: number | null;
   potShare: PotShare | null;
+  recap: Recap | null;
 }
 
 /** Pohled zařízení, které ještě není ve hře. */

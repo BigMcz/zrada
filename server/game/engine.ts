@@ -293,6 +293,7 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
     case 'closeVote': {
       requireModerator(actor);
       requirePhase(state, 'VOTE');
+      for (const [voterId, targetId] of Object.entries(state.votes)) state.voteLog.push({ round: state.round, voterId, targetId });
       const banishedId = tallyVotes(state, rng);
       currentRound(state).banishedId = banishedId;
       if (banishedId) {
@@ -385,6 +386,7 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
       state.finale = false;
       state.finalVotes = {};
       state.potShare = null;
+      state.voteLog = [];
       return;
     }
   }

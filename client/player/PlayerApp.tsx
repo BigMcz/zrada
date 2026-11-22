@@ -5,6 +5,7 @@ import { GhostBoard, PlayerBoard } from '../components/GhostBoard';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
 import { ClueView } from '../components/ClueView';
+import { Recap } from '../components/Recap';
 import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
 import { MinigameScreen } from '../minigames/MinigameScreen';
 import { initials, nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
@@ -481,6 +482,7 @@ function Ended({ view, tag }: ScreenProps) {
         </p>
       )}
       <PlayerList view={view} />
+      {view.recap && <Recap recap={view.recap} players={view.players} />}
       {view.playerBoard && <PlayerBoard board={view.playerBoard} nameOf={(id) => nameOf(view.players, id)} />}
       {view.ghostBoard && <GhostBoard ghosts={view.ghostBoard} nameOf={(id) => nameOf(view.players, id)} />}
     </Screen>

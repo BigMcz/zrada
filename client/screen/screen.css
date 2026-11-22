@@ -812,3 +812,30 @@
   font-size: 2.6em;
   color: var(--gold);
 }
+
+/* Rozšíření 11: rekapitulace na velké obrazovce */
+.screen-recap {
+  display: grid;
+  gap: 0.6em;
+  width: 90%;
+}
+
+.screen-recap h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.4em;
+  color: var(--gold);
+  text-align: center;
+}
+
+.recap.big {
+  grid-template-columns: 1fr 1.4fr;
+  align-items: start;
+  font-size: 0.7em;
+  gap: 1em;
+}
+
+.recap.big .recap-award-note,
+.recap.big .recap-rounds li {
+  font-size: 1em;
+}

@@ -11,6 +11,7 @@ import {
   type PublicRoundResult,
   type ScreenView,
 } from '../../shared/types.js';
+import { recapOf } from './recap.js';
 import { isTippingGhost, pointsOf } from './rules.js';
 import { drawCandidates } from '../minigames/framework.js';
 import { moderatorMinigameView, playerMinigameView, screenMinigameView } from '../minigames/views.js';
@@ -116,6 +117,7 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
     inFinale: state.finale,
     myFinalChoice: state.phase === 'FINAL_VOTE' ? (state.finalVotes[me.id] ?? null) : null,
     potShare: state.phase === 'ENDED' ? state.potShare : null,
+    recap: state.phase === 'ENDED' ? recapOf(state) : null,
     // Skryté body (tipy duchů) až na konci hry, jinak by duch poznal Zrádce.
     myPoints: pointsOf(state, me.id, state.phase === 'ENDED'),
   };
@@ -183,6 +185,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     finalAvailable: state.phase === 'MORNING' && !state.finale && state.players.filter((p) => p.status === 'ALIVE').length <= FINAL_MAX_ALIVE,
     finalVotes: { ...state.finalVotes },
     potShare: state.potShare,
+    recap: state.phase === 'ENDED' ? recapOf(state) : null,
     minigameAvailable:
       state.settings.minigamesEnabled &&
       (state.phase === 'ROLES' || state.phase === 'MORNING') &&
@@ -242,5 +245,6 @@ export function viewForScreen(state: GameState, joinUrl: string | null): ScreenV
     finalVotesCast: state.phase === 'FINAL_VOTE' ? alivePlayers.filter((p) => p.id in state.finalVotes).length : null,
     finalVoters: state.phase === 'FINAL_VOTE' ? alivePlayers.length : null,
     potShare: state.phase === 'ENDED' ? state.potShare : null,
+    recap: state.phase === 'ENDED' ? recapOf(state) : null,
   };
 }

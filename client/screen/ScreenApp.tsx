@@ -2,6 +2,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ScreenMinigameView, ScreenView } from '../../shared/types';
 import { ClueView } from '../components/ClueView';
+import { Recap } from '../components/Recap';
 import { GameScene } from './GameScenes';
 import { Countdown } from '../components/Countdown';
 import { initials, nameOf, phaseTag, ROLE_LABEL } from '../labels';
@@ -275,6 +276,15 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
     if (!done) play('flip');
     else if (shown === view.players.length) play(view.winner === 'TRAITOR' ? 'gong' : 'bell');
   }, [shown]);
+  // Po 6 s od vyhlášení vítěze rekapitulace večera: časová osa kol a ceny.
+  if (view.recap && t > view.players.length * 1500 + 6000) {
+    return (
+      <div className="screen-recap">
+        <h1>{view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}: rekapitulace večera</h1>
+        <Recap recap={view.recap} players={view.players} className="big" />
+      </div>
+    );
+  }
   return (
     <div className="screen-finale">
       {view.banishedId && t < 1500 && <p className="muted">Kulatý stůl vyhnal: {name(view.banishedId)}</p>}

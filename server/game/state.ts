@@ -116,6 +116,8 @@ export interface GameState {
   finalVotes: Record<string, FinalChoice>;
   /** Rozdělení pokladu na konci hry. */
   potShare: PotShare | null;
+  /** Hlasy ze všech uzavřených kulatých stolů; ven jdou jen ceny v rekapitulaci (Rozšíření 11). */
+  voteLog: { round: number; voterId: string; targetId: string }[];
   winner?: Winner;
 }
 
@@ -144,5 +146,6 @@ export function createGame(): GameState {
     finale: false,
     finalVotes: {},
     potShare: null,
+    voteLog: [],
   };
 }
