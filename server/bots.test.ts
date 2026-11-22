@@ -1,6 +1,6 @@
 // Rozšíření 13, krok B1: boti v základní hře.
 import { describe, expect, it } from 'vitest';
-import { botAction, nextBotName } from './bots.js';
+import { botAction, BOT_NAMES, nextBotName } from './bots.js';
 import { apply, type Action } from './game/engine.js';
 import { seededRng } from './game/random.js';
 import type { GameState } from './game/state.js';
@@ -24,12 +24,22 @@ function runBots(s: GameState, guard = 50): GameState {
 }
 
 describe('Boti – rozhodování', () => {
-  it('jména Bot 1, Bot 2, … bez kolize', () => {
-    let s = lobby(['Petra', 'Bot 1']);
-    expect(nextBotName(s)).toBe('Bot 2');
-    s = must(s, { kind: 'guest' }, { type: 'join', name: 'Bot 2', playerId: 'b2', token: 't', bot: true });
-    expect(nextBotName(s)).toBe('Bot 3');
-    expect(s.players.find((p) => p.id === 'b2')!.bot).toBe(true);
+  it('náhodná jména ze seznamu bez kolize, po vyčerpání „Bot N“', () => {
+    let s = lobby(['leo']);
+    const names = new Set<string>();
+    for (let i = 0; i < BOT_NAMES.length - 1; i++) {
+      const name = nextBotName(s, seededRng(i + 1));
+      expect(BOT_NAMES).toContain(name);
+      expect(name).not.toBe('Leo');
+      names.add(name);
+      s = must(s, { kind: 'guest' }, { type: 'join', name, playerId: `b${i}`, token: 't', bot: true });
+    }
+    expect(names.size).toBe(BOT_NAMES.length - 1);
+    expect(s.players.find((p) => p.id === 'b0')!.bot).toBe(true);
+    expect(nextBotName(s, seededRng(1))).toBe('Bot 1');
+    // Náhodné pořadí: různé seedy dají různá první jména.
+    const first = new Set(Array.from({ length: 20 }, (_, i) => nextBotName(lobby(['Petra']), seededRng(i + 1))));
+    expect(first.size).toBeGreaterThan(3);
   });
 
   it('člověk nemá tahy bota; bot potvrdí roli, hlasuje, v noci vybírá', () => {

@@ -12,6 +12,7 @@ import type {
 } from '../shared/types.js';
 import { seededRng } from './game/random.js';
 import type { GameState } from './game/state.js';
+import { BOT_NAMES } from './bots.js';
 import { attachGame, type HubOptions } from './hub.js';
 
 const KEY = 'tajny-klic';
@@ -279,7 +280,9 @@ describe('server přes skutečné sockety', () => {
     const petra = await player('Petra');
     for (let i = 0; i < 4; i++) expect(await mod.socket.emitWithAck('intent', { type: 'addBot' })).toEqual({ ok: true });
     const lobbyView = await mod.waitFor((v): v is ModeratorView => isModerator(v) && v.players.length === 5);
-    expect(lobbyView.players.filter((p) => p.bot).map((p) => p.name)).toEqual(['Bot 1', 'Bot 2', 'Bot 3', 'Bot 4']);
+    const botNames = lobbyView.players.filter((p) => p.bot).map((p) => p.name);
+    expect(new Set(botNames).size).toBe(4);
+    for (const n of botNames) expect(BOT_NAMES).toContain(n);
     expect(lobbyView.players.filter((p) => p.bot).every((p) => p.connected)).toBe(true);
     // Hráč boty přidávat nemůže.
     expect(await petra.socket.emitWithAck('intent', { type: 'addBot' })).toMatchObject({ ok: false });

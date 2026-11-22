@@ -12,9 +12,17 @@ export const BOT_DELAY_MS: [number, number] = [1_000, 3_000];
 
 export const BOT_NAME_PREFIX = 'Bot';
 
-/** Nejnižší volné jméno „Bot N“. */
-export function nextBotName(state: GameState): string {
+/** Jména botů; bot dostane náhodné volné. Je jich tolik, kolik je nejvíc hráčů. */
+export const BOT_NAMES = [
+  'Leo', 'Rupert', 'Rumi', 'Bolt', 'Jerry', 'Vayena', 'Mickey', 'Rubble', 'Cheis',
+  'Marschal', 'Bob', 'Bobek', 'Fík', 'Labrador', 'Sky', 'Edward', 'Pepek', 'Oliva',
+];
+
+/** Náhodné volné jméno ze seznamu; když jsou všechna obsazená (hráč si jedno vzal), nejnižší volné „Bot N“. */
+export function nextBotName(state: GameState, rng: Rng): string {
   const taken = new Set(state.players.map((p) => p.name.toLocaleLowerCase('cs')));
+  const free = BOT_NAMES.filter((n) => !taken.has(n.toLocaleLowerCase('cs')));
+  if (free.length > 0) return pick(rng, free);
   for (let n = 1; ; n++) {
     const name = `${BOT_NAME_PREFIX} ${n}`;
     if (!taken.has(name.toLocaleLowerCase('cs'))) return name;

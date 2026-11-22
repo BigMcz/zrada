@@ -1127,7 +1127,7 @@ Konec hry jako v televizi: hráči sami rozhodují, jestli hru ukončí. Poklad 
 
 ### Boti
 
-- V lobby tlačítko **Přidat bota** („Bot 1“, „Bot 2“, … až do maxima hráčů) a u bota tlačítko Odebrat.
+- V lobby tlačítko **Přidat bota** (bot dostane náhodné volné jméno ze seznamu Leo, Rupert, Rumi, Bolt, Jerry, Vayena, Mickey, Rubble, Cheis, Marschal, Bob, Bobek, Fík, Labrador, Sky, Edward, Pepek, Oliva; až do maxima hráčů) a u bota tlačítko Odebrat.
 - Boti hrají **na serveru sami** s krátkou náhodnou prodlevou (1–3 s): potvrdí roli a tajnou kartu, hlasují náhodně, Zrádce-bot vybírá oběť, duch-bot tipuje.
 - V minihrách hrají jednoduchou strategií: každý modul dostane funkci pro tah bota (inspirovanou robotem z e2e). Bot může být i zámečník nebo pyrotechnik.
 - Boti se v konzoli i na obrazovce poznají podle jména; jinak jsou to běžní hráči.

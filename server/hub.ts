@@ -266,7 +266,7 @@ export function attachGame(io: GameServer, options: HubOptions) {
 
   /** Přidání bota v lobby: id, token a jméno „Bot N“ vygeneruje server. */
   function addBot(): Result {
-    const result = apply(state, { kind: 'guest' }, { type: 'join', name: nextBotName(state), playerId: newPlayerId(), token: randomBytes(18).toString('base64url'), bot: true }, rng);
+    const result = apply(state, { kind: 'guest' }, { type: 'join', name: nextBotName(state, rng), playerId: newPlayerId(), token: randomBytes(18).toString('base64url'), bot: true }, rng);
     if (!result.ok) return result;
     commit(result.state);
     broadcast();
