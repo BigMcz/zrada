@@ -249,6 +249,8 @@ export interface ModeratorPlayer {
   status: PlayerStatus;
   sawRole: boolean;
   connected: boolean;
+  /** Bot (Rozšíření 13). */
+  bot?: boolean;
   /**
    * Zda hráč v aktuální fázi udělal, co má: v rolích viděl roli, u stolu hlasoval.
    * V noci chybí – moderátor vidí jen, zda už vybrali Zrádci.
@@ -385,6 +387,7 @@ export type Intent =
   | { type: 'handoffPick'; targetId: string | null }
   // moderátor
   | { type: 'kick'; playerId: string }
+  | { type: 'addBot' }
   | { type: 'startGame'; traitorCount: number }
   | { type: 'startVote' }
   | { type: 'closeVote' }

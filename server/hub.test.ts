@@ -272,4 +272,21 @@ describe('server přes skutečné sockety', () => {
     // Hráč si nový telefon vyrobit nemůže.
     expect(await phone.socket.emitWithAck('newPhone', petra.playerId)).toEqual({ ok: false, error: 'Na tohle nemáš oprávnění.' });
   });
+
+  it('boti: moderátor je přidá v lobby a oni sami potvrdí roli a hlasují', async () => {
+    const { moderator, player } = await startServer({ botDelay: [0, 30] });
+    const mod = await moderator();
+    const petra = await player('Petra');
+    for (let i = 0; i < 4; i++) expect(await mod.socket.emitWithAck('intent', { type: 'addBot' })).toEqual({ ok: true });
+    const lobbyView = await mod.waitFor((v): v is ModeratorView => isModerator(v) && v.players.length === 5);
+    expect(lobbyView.players.filter((p) => p.bot).map((p) => p.name)).toEqual(['Bot 1', 'Bot 2', 'Bot 3', 'Bot 4']);
+    expect(lobbyView.players.filter((p) => p.bot).every((p) => p.connected)).toBe(true);
+    // Hráč boty přidávat nemůže.
+    expect(await petra.socket.emitWithAck('intent', { type: 'addBot' })).toMatchObject({ ok: false });
+
+    expect(await mod.socket.emitWithAck('intent', { type: 'startGame', traitorCount: 1 })).toEqual({ ok: true });
+    await mod.waitFor((v): v is ModeratorView => isModerator(v) && v.players.filter((p) => p.bot).every((p) => p.sawRole));
+    expect(await mod.socket.emitWithAck('intent', { type: 'startVote' })).toEqual({ ok: true });
+    await mod.waitFor((v): v is ModeratorView => isModerator(v) && v.players.filter((p) => p.bot && p.status === 'ALIVE').every((p) => p.done));
+  });
 });

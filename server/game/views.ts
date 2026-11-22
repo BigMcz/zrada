@@ -156,6 +156,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
       sawRole: p.sawRole,
       connected: connectedIds.has(p.id),
     };
+    if (p.bot) out.bot = true;
     if (p.role) out.role = p.role;
     if (state.phase === 'ROLES') out.done = p.sawRole;
     if (state.phase === 'VOTE' && p.status === 'ALIVE') out.done = p.id in state.votes;

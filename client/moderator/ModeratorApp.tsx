@@ -1,6 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, type ReactNode } from 'react';
-import { MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } from '../../shared/types';
+import { MAX_PLAYERS, MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } from '../../shared/types';
 import { GhostBoard, PlayerBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { requestNewPhone, send, useConnection } from '../socket';
@@ -111,7 +111,10 @@ function Lobby({ view }: { view: ModeratorView }) {
               {view.players.map((p) => (
                 <li key={p.id}>
                   <ConnectionDot connected={p.connected} />
-                  <span className="grow">{p.name}</span>
+                  <span className="grow">
+                    {p.bot && <span title="bot">🤖 </span>}
+                    {p.name}
+                  </span>
                   <button type="button" className="link" onClick={() => run({ type: 'kick', playerId: p.id })}>
                     Odebrat
                   </button>
@@ -119,6 +122,9 @@ function Lobby({ view }: { view: ModeratorView }) {
               ))}
             </ul>
           )}
+          <button type="button" className="toggle" disabled={busy || n >= MAX_PLAYERS} onClick={() => run({ type: 'addBot' })}>
+            🤖 Přidat bota
+          </button>
 
           <h2>Minihry</h2>
           <label className="lobby-toggle">

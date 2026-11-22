@@ -46,7 +46,7 @@ export function shiftTimes<T>(value: T, ms: number): T {
  */
 export type Action =
   | Intent
-  | { type: 'join'; name: string; playerId: string; token: string }
+  | { type: 'join'; name: string; playerId: string; token: string; bot?: boolean }
   /** Posun časovačů miniher; posílá jen server. */
   | { type: 'tick'; now: number; connected?: string[] }
   /** Nový telefon hráče: token vygeneruje server (Rozšíření 10). */
@@ -143,6 +143,7 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
         name,
         status: 'ALIVE',
         sawRole: false,
+        ...(action.bot ? { bot: true } : {}),
       });
       return;
     }

@@ -66,6 +66,10 @@ export interface MinigameModule<S = any> {
   viewForPlayer(state: S, playerId: string): unknown;
   viewForGhost?(state: S, ghostId: string): unknown;
   viewForModerator(state: S): unknown;
+  /** Tah bota (živého hráče) v kroku Hra, nebo null (Rozšíření 13). */
+  bot?(state: S, botId: string, rng: Rng, now: number): unknown;
+  /** Tah bota-ducha, nebo null. */
+  ghostBot?(state: S, ghostId: string, rng: Rng, now: number): unknown;
   /** Scéna pro velkou obrazovku: jen veřejné informace (Rozšíření 9). */
   viewForScreen?(state: S): unknown;
 }

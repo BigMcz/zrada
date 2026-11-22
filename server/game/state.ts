@@ -26,6 +26,8 @@ export interface Player {
   role?: Role;
   status: PlayerStatus;
   sawRole: boolean;
+  /** Bot: tahy za něj volí server (Rozšíření 13). */
+  bot?: boolean;
 }
 
 export interface RoundResult {

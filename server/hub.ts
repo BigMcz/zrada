@@ -9,6 +9,7 @@ import {
   type ServerToClientEvents,
   type View,
 } from '../shared/types.js';
+import { botAction, BOT_DELAY_MS, nextBotName } from './bots.js';
 import { apply, type Action, type Actor } from './game/engine.js';
 import { cryptoRng, type Rng } from './game/random.js';
 import { createGame, type GameState } from './game/state.js';
@@ -25,6 +26,8 @@ export interface HubOptions {
   /** Adresa pro hráče, kterou moderátor ukáže jako QR kód. */
   joinUrl: string;
   rng?: Rng;
+  /** Prodleva botů před tahem (ms); testy ji zkracují. */
+  botDelay?: [number, number];
   /** Stav načtený po restartu serveru (Rozšíření 10); jinak nová hra. */
   initialState?: GameState;
   /** Volá se po každé změně stavu (ukládání do souboru). */
@@ -34,6 +37,7 @@ export interface HubOptions {
 const PLAYER_INTENTS = new Set(['ackRole', 'finalVote', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick']);
 const MODERATOR_INTENTS = new Set([
   'kick',
+  'addBot',
   'startGame',
   'startVote',
   'closeVote',
@@ -103,6 +107,7 @@ export function parseIntent(raw: unknown): Intent | null {
       return isId(r.playerId) ? { type: 'kick', playerId: r.playerId } : null;
     case 'removePlayer':
       return isId(r.playerId) ? { type: 'removePlayer', playerId: r.playerId } : null;
+    case 'addBot':
     case 'pause':
     case 'resume':
     case 'resetVotes':
@@ -154,8 +159,12 @@ export function attachGame(io: GameServer, options: HubOptions) {
   };
   const sessions = new Map<string, Session>();
 
+  // Boti jsou „připojení“ pořád: minihry na ně čekají stejně jako na lidi.
   const connectedPlayerIds = () =>
-    new Set([...sessions.values()].flatMap((s) => (s.as === 'player' ? [s.playerId] : [])));
+    new Set([
+      ...[...sessions.values()].flatMap((s) => (s.as === 'player' ? [s.playerId] : [])),
+      ...state.players.filter((p) => p.bot).map((p) => p.id),
+    ]);
 
   const guestView = (): GuestView => ({
     kind: 'guest',
@@ -205,6 +214,37 @@ export function attachGame(io: GameServer, options: HubOptions) {
     }
   }, TICK_MS);
   timer.unref();
+
+  // Boti (Rozšíření 13): každý bot má naplánovaný čas dalšího tahu; tah se spočítá až v tu chvíli.
+  const botDelay = options.botDelay ?? BOT_DELAY_MS;
+  const botDue = new Map<string, number>();
+  const botTimer = setInterval(() => {
+    const now = Date.now();
+    for (const bot of state.players.filter((p) => p.bot)) {
+      const action = botAction(state, bot.id, rng, now);
+      if (!action) {
+        botDue.delete(bot.id);
+        continue;
+      }
+      const due = botDue.get(bot.id);
+      if (due === undefined) {
+        botDue.set(bot.id, now + botDelay[0] + rng.int(Math.max(1, botDelay[1] - botDelay[0])));
+      } else if (now >= due) {
+        botDue.delete(bot.id);
+        run({ kind: 'player', playerId: bot.id }, action);
+      }
+    }
+  }, 100);
+  botTimer.unref();
+
+  /** Přidání bota v lobby: id, token a jméno „Bot N“ vygeneruje server. */
+  function addBot(): Result {
+    const result = apply(state, { kind: 'guest' }, { type: 'join', name: nextBotName(state), playerId: newPlayerId(), token: randomBytes(18).toString('base64url'), bot: true }, rng);
+    if (!result.ok) return result;
+    commit(result.state);
+    broadcast();
+    return { ok: true };
+  }
 
   function newPlayerId(): string {
     let id: string;
@@ -286,7 +326,7 @@ export function attachGame(io: GameServer, options: HubOptions) {
         respond(reply, { ok: false, error: 'Na tohle nemáš oprávnění.' });
         return;
       }
-      respond(reply, run(actor, intent));
+      respond(reply, intent.type === 'addBot' ? addBot() : run(actor, intent));
     });
 
     socket.on('time', (reply) => respond(reply, Date.now()));
@@ -322,6 +362,9 @@ export function attachGame(io: GameServer, options: HubOptions) {
   return {
     /** Jen pro testy a ladění. */
     getState: () => state,
-    stop: () => clearInterval(timer),
+    stop: () => {
+      clearInterval(timer);
+      clearInterval(botTimer);
+    },
   };
 }
