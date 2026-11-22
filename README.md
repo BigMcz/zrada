@@ -42,7 +42,14 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 - **Hráč odešel:** **Vyřadit** u hráče (počítá se jako mrtvý, role zůstane tajná).
 - **Málo lidí:** v lobby **🤖 Přidat bota** – boti hrají na serveru sami, včetně miniher.
 
-**Konec hry:** při 4 a méně živých nabídne konzole ráno **Spustit finále** – hráči jednomyslně ukončí hru, nebo vyženou dalšího. Poklad si na konci rozdělí vítězové a obrazovka ukáže rekapitulaci večera s cenami.
+**Konec hry:** při 4 a méně živých nabídne konzole ráno **Spustit finále** – hráči jednomyslně ukončí hru, nebo vyženou dalšího. Poklad si na konci rozdělí vítězové a obrazovka ukáže rekapitulaci večera s cenami a závěrečné titulky.
+
+**Zážitek (Rozšíření 16):**
+
+- **Téma hry:** v lobby konzole vybereš Hrad (Zrada), Vesmírnou loď (Sabotáž), Kancelář (Krtek) nebo Pirátskou loď (Vzpouru). Mění názvy rolí a fází, texty, erb a barvy; pravidla a minihry zůstávají.
+- **Znaky hráčů:** každý si v čekárně vybere symbol místo iniciál.
+- **Reakce:** ráno a u kulatého stolu posílají hráči anonymní 😱 🤔 🙄 😂 👀 na obrazovku; vypínač je v horní liště konzole.
+- **Síň slávy:** výsledky napříč večery v `data/zrada-sin-slavy.json` (podle jména hráče, bez botů), žebříčky v čekárně obrazovky; vynulovat jde v lobby konzole.
 
 ## Pravidla v kostce
 
