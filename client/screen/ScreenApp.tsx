@@ -158,7 +158,7 @@ function minigameMarks(view: ScreenView): Record<string, { mark: PortraitMark; n
   const ids = (x: unknown): string[] => (Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string') : []);
   if (mg.id === 'HOT_POTATO' && (play || mg.step === 'RESULT')) {
     for (const id of ids(g.eliminated)) marks[id] = { mark: 'out', note: 'vypadl/a' };
-    if (play && typeof g.holderId === 'string') marks[g.holderId] = { mark: 'lead', note: 'drží bombu' };
+    if (play) for (const id of ids(g.holderIds)) marks[id] = { mark: 'lead', note: 'drží bombu' };
   }
   if (!play) return marks;
   if (mg.id === 'SPLIT_STEAL') {

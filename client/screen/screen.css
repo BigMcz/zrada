@@ -1496,3 +1496,8 @@
 .recap.big.long .recap-rounds li {
   padding-bottom: 0.25em;
 }
+
+/* Horký brambor: výbuch první ze dvou bomb (Rozšíření 17) */
+.sg-small.boom {
+  color: var(--traitor-text);
+}

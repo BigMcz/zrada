@@ -82,7 +82,7 @@ function DuelScene({ g, name }: { g: SplitStealScreenView; name: Name }) {
 }
 
 function PotatoScene({ g, name }: { g: HotPotatoScreenView; name: Name }) {
-  const last = g.eliminated[g.eliminated.length - 1];
+  const out = g.lastOut.map((id) => name(id)).join(' a ');
   return (
     <div className="sg-potato">
       {g.stage === 'READY' && <Lead>Bomba se za chvíli objeví u jednoho z vás.</Lead>}
@@ -91,10 +91,11 @@ function PotatoScene({ g, name }: { g: HotPotatoScreenView; name: Name }) {
           <span className="sg-bomb" aria-hidden="true">
             💣
           </span>
-          <p className="sg-big-name">{name(g.holderId)}</p>
+          <p className="sg-big-name">{g.holderIds.map((id) => name(id)).join(' · ')}</p>
+          {g.lastOut.length > 0 && <p className="sg-small boom">Bum! Vypadává {out}</p>}
         </>
       )}
-      {g.stage === 'PAUSE' && <p className="sg-big-name boom">Bum! Vypadává {name(last)}</p>}
+      {g.stage === 'PAUSE' && <p className="sg-big-name boom">Bum! Vypadává {out}</p>}
       {g.stage === 'DONE' && <p className="sg-big-name">Přežil/a {name(g.remaining[0])}</p>}
       {g.eliminated.length > 0 && <p className="sg-small">Vypadli: {g.eliminated.map((id, i) => `${i + 1}. ${name(id)}`).join(', ')}</p>}
     </div>

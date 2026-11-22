@@ -64,7 +64,7 @@ describe('Velká obrazovka – scény miniher bez tajných údajů', () => {
     let s = started(hotPotato) as HotPotatoState;
     s = hotPotato.applyModerator!(s, { action: 'endStage' }, T0, rng())!;
     const v = checkScreen(hotPotato, s);
-    expect(v.holderId).toBe(s.holderId);
+    expect(v.holderIds).toEqual(s.bombs.map((b) => b.holderId));
   });
 
   it('kvíz: správná odpověď až po otázce, bez svíčky', () => {

@@ -186,7 +186,7 @@ function checkGhostPotato(bot: Bot, report: Report) {
   }
 }
 
-const HOT_POTATO_KEYS = 'amHolder,amOut,canPassTo,eliminated,holderId,players,pressure,remaining,round,stage';
+const HOT_POTATO_KEYS = 'amHolder,amOut,canPassTo,eliminated,holderIds,lastOut,players,pressure,remaining,round,stage';
 const QUIZ_KEYS = 'answeredCount,correct,hint,index,myAnswer,question,stage,standings,total';
 const BOMB_KEYS = 'device,errors,isPyro,maxErrors,pages,paused,pyroId,stage,symbolsSolved,wiresSolved';
 
@@ -366,6 +366,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
 
     let reconnected = 'ne';
     let potatoJump = 'ne';
+    let potatoTwoBombs = false;
     let vaultReassign = 'ne';
     let rhythmDrop = 'ne';
     let bombReassign = 'ne';
@@ -951,10 +952,10 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       potatoPlayed = true;
       const game = m().minigame!.game as {
         stage: string;
-        holderId: string | null;
+        holderIds: string[];
         players: string[];
         round: number;
-        explodeAt: number | null;
+        bombs: { holderId: string; explodeAt: number }[];
       };
       if (game.stage === 'READY') {
         for (const g of tippingGhosts()) {
@@ -964,23 +965,29 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
         await modAct({ type: 'minigameModerator', payload: { action: 'endStage' } });
         return;
       }
-      if (game.stage !== 'BOMB' || !game.holderId) {
+      if (game.stage !== 'BOMB' || game.holderIds.length === 0) {
         await sleep(150);
         return;
       }
-      const holder = bots.find((b) => b.id === game.holderId)!;
+      // Ve velké skupině jsou bomby dvě (Rozšíření 17).
+      if (new Set(game.holderIds).size !== game.holderIds.length) report.violation('dvě bomby u stejného hráče');
+      const expected = game.players.length >= 11 && m().minigame!.game && (m().minigame!.game as { remaining: string[] }).remaining.length > 4 ? 2 : 1;
+      if (game.holderIds.length > expected) report.violation(`${game.holderIds.length} bomby, čekáno nejvýš ${expected}`);
+      if (game.holderIds.length === 2) potatoTwoBombs = true;
+      const bombNow = rand(game.bombs);
+      const holder = bots.find((b) => b.id === bombNow.holderId)!;
 
       // Jednou za hru (s návratem hráče): držitel se odpojí, bomba musí po 3 s přeskočit.
-      if (cfg.reconnect && potatoJump === 'ne' && game.explodeAt && game.explodeAt - Date.now() > 5_000) {
+      if (cfg.reconnect && potatoJump === 'ne' && bombNow.explodeAt - Date.now() > 5_000) {
         holder.socket.disconnect();
         const round = game.round;
         await sleep(3_800);
-        const now = m().minigame?.game as { holderId: string | null; round: number; stage: string } | null;
-        if (now && now.stage === 'BOMB' && now.round === round && now.holderId === holder.id) {
+        const now = m().minigame?.game as { holderIds: string[]; round: number; stage: string } | null;
+        if (now && now.stage === 'BOMB' && now.round === round && now.holderIds.includes(holder.id)) {
           report.violation(`bomba u odpojeného ${holder.name} po 3 s nepřeskočila`);
         }
         await rejoin(holder);
-        potatoJump = `${holder.name} se odpojil/a s bombou, bomba přeskočila na ${nameOf(now?.holderId ?? '')}`;
+        potatoJump = `${holder.name} se odpojil/a s bombou, bomba přeskočila (držitelé: ${(now?.holderIds ?? []).map(nameOf).join(', ')})`;
         return;
       }
 
@@ -1001,7 +1008,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
         payload: { targetId: rand(still.canPassTo) },
       });
       // Bomba mohla mezitím bouchnout – to není chyba.
-      if (!res.ok && (m().minigame?.game as { holderId?: string } | null)?.holderId === holder.id) {
+      if (!res.ok && (m().minigame?.game as { holderIds?: string[] } | null)?.holderIds?.includes(holder.id)) {
         report.failedActions.push(`${holder.name} poslání bomby: ${res.error}`);
       }
     }
@@ -1058,7 +1065,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop, bombReassign, pauseCheck, finaleNote].filter((x, i) => i === 0 || x !== 'ne').join('; '),
+      reconnected: [reconnected, potatoJump, potatoTwoBombs ? 'Horký brambor se dvěma bombami' : 'ne', vaultReassign, rhythmDrop, bombReassign, pauseCheck, finaleNote].filter((x, i) => i === 0 || x !== 'ne').join('; '),
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,

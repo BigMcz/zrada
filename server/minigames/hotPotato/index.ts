@@ -1,4 +1,5 @@
 // Horký brambor (DOC/SPEC.md, Rozšíření 3; podrobně DOC/minihry-analyza.md, kap. 5).
+// Rozšíření 17: ve velké skupině (11+ hráčů) kolují v kole dvě bomby, dokud zbývá víc než 4 hráči.
 import type { Clue } from '../../../shared/types.js';
 import { pick, type Rng } from '../../game/random.js';
 import type { MinigameModule } from '../types.js';
@@ -14,8 +15,23 @@ export const LAST_MOMENT_MS = 3_000;
 /** Červené pole ručičky: zbývá méně než 5 s. */
 export const RED_ZONE_MS = 5_000;
 export const RED_ZONE_FROM = 0.8;
+/** Dvě bomby: minihru začíná aspoň tolik hráčů… */
+export const TWO_BOMBS_FROM_PLAYERS = 11;
+/** …a v minihře zbývá víc než tolik hráčů. */
+export const TWO_BOMBS_ABOVE_REMAINING = 4;
 
 export type PotatoStage = 'READY' | 'BOMB' | 'PAUSE' | 'DONE';
+
+export interface Bomb {
+  holderId: string;
+  /** Od koho bomba přišla (té osobě ji nejde vrátit). */
+  fromId: string | null;
+  heldSince: number;
+  explodeAt: number;
+  fuseMs: number;
+  /** Od kdy je držitel odpojený, nebo null. */
+  disconnectedSince: number | null;
+}
 
 export interface HotPotatoState {
   /** Všichni živí hráči na startu (pořadí pro mřížku). */
@@ -29,14 +45,10 @@ export interface HotPotatoState {
   remaining: string[];
   /** Pořadí vyřazení. */
   eliminated: string[];
-  holderId: string | null;
-  /** Od koho bomba přišla (té osobě ji nejde vrátit). */
-  fromId: string | null;
-  heldSince: number;
-  explodeAt: number;
-  fuseMs: number;
-  /** Od kdy je držitel odpojený, nebo null. */
-  disconnectedSince: number | null;
+  /** Kdo vypadl v posledním kole (ve dvou bombách až dva). */
+  lastOut: string[];
+  /** Bomby, které právě tikají (0 mimo BOMB, jinak 1 nebo 2). */
+  bombs: Bomb[];
   /** Ručička tlaku 0–1 pro každého hráče: Zrádci skutečná, Věrní náhodná. */
   pressure: Record<string, number>;
   /** Doby držení bomby (ms) pro stopu. */
@@ -53,7 +65,8 @@ export interface HotPotatoPlayerView {
   players: string[];
   remaining: string[];
   eliminated: string[];
-  holderId: string | null;
+  lastOut: string[];
+  holderIds: string[];
   amHolder: boolean;
   amOut: boolean;
   /** Komu jde bombu poslat (jen držiteli, jinak prázdné). */
@@ -67,7 +80,8 @@ export interface HotPotatoGhostView {
   players: string[];
   remaining: string[];
   eliminated: string[];
-  holderId: string | null;
+  lastOut: string[];
+  holderIds: string[];
   canTip: boolean;
   myTip: { survivorId: string | null; firstId: string | null };
 }
@@ -78,16 +92,31 @@ export interface HotPotatoModeratorView {
   players: string[];
   remaining: string[];
   eliminated: string[];
-  holderId: string | null;
-  /** Skutečný čas výbuchu (jen moderátor). */
-  explodeAt: number | null;
-  fuseMs: number;
+  lastOut: string[];
+  holderIds: string[];
+  /** Skutečný čas výbuchu a délka rozbušky každé bomby (jen moderátor). */
+  bombs: { holderId: string; explodeAt: number; fuseMs: number }[];
   ghostTips: Record<string, { survivorId: string | null; firstId: string | null }>;
+}
+
+/** Velká obrazovka: kdo drží bombu a pořadí vyřazení; ručička tlaku ne. */
+export interface HotPotatoScreenView {
+  stage: PotatoStage;
+  round: number;
+  remaining: string[];
+  eliminated: string[];
+  lastOut: string[];
+  holderIds: string[];
 }
 
 /** Rozbuška: 1. kolo 10–25 s, každé další kratší, nejméně 6–12 s. */
 export function fuseRange(round: number): [number, number] {
   return [Math.max(6_000, 10_000 - 1_000 * round), Math.max(12_000, 25_000 - 3_000 * round)];
+}
+
+/** Kolik bomb v příštím kole: dvě jen ve velké skupině, dokud zbývá víc než 4 hráči. */
+export function bombCount(s: Pick<HotPotatoState, 'players' | 'remaining'>): number {
+  return s.players.length >= TWO_BOMBS_FROM_PLAYERS && s.remaining.length > TWO_BOMBS_ABOVE_REMAINING ? 2 : 1;
 }
 
 /** Skutečný tlak: 0 na začátku, 0,8 při 5 s do výbuchu, 1 při výbuchu. */
@@ -108,39 +137,41 @@ function fakePressure(prev: number, rng: Rng): number {
   return round2(next);
 }
 
-function startBomb(s: HotPotatoState, now: number, rng: Rng, connected?: ReadonlySet<string>): HotPotatoState {
-  const online = connected ? s.remaining.filter((id) => connected.has(id)) : s.remaining;
-  const holder = pick(rng, online.length > 0 ? online : s.remaining);
-  const [lo, hi] = fuseRange(s.round);
-  const fuseMs = lo + rng.int(hi - lo + 1);
-  return {
-    ...s,
-    stage: 'BOMB',
-    endsAt: null,
-    holderId: holder,
-    fromId: null,
-    heldSince: now,
-    fuseMs,
-    explodeAt: now + fuseMs,
-    disconnectedSince: null,
-  };
+export const holdersOf = (s: HotPotatoState): string[] => s.bombs.map((b) => b.holderId);
+
+function startBombs(s: HotPotatoState, now: number, rng: Rng, connected?: ReadonlySet<string>): HotPotatoState {
+  const count = bombCount(s);
+  const bombs: Bomb[] = [];
+  for (let i = 0; i < count; i++) {
+    const free = s.remaining.filter((id) => !bombs.some((b) => b.holderId === id));
+    const online = connected ? free.filter((id) => connected.has(id)) : free;
+    const holder = pick(rng, online.length > 0 ? online : free);
+    const [lo, hi] = fuseRange(s.round);
+    const fuseMs = lo + rng.int(hi - lo + 1);
+    bombs.push({ holderId: holder, fromId: null, heldSince: now, fuseMs, explodeAt: now + fuseMs, disconnectedSince: null });
+  }
+  return { ...s, stage: 'BOMB', endsAt: null, bombs, lastOut: [] };
 }
 
-function withHold(s: HotPotatoState, id: string, ms: number): Record<string, number[]> {
-  return { ...s.holds, [id]: [...(s.holds[id] ?? []), Math.max(0, ms)] };
+function withHold(holds: Record<string, number[]>, id: string, ms: number): Record<string, number[]> {
+  return { ...holds, [id]: [...(holds[id] ?? []), Math.max(0, ms)] };
 }
 
-/** Komu smí držitel bombu poslat. */
-export function passTargets(s: HotPotatoState): string[] {
-  if (s.stage !== 'BOMB' || !s.holderId) return [];
-  return s.remaining.filter((id) => id !== s.holderId && (s.remaining.length === 2 || id !== s.fromId));
+/** Komu smí držitel bombu poslat: ne sobě, ne držiteli druhé bomby a ne zpět (kromě souboje dvou). */
+export function passTargets(s: HotPotatoState, holderId: string): string[] {
+  const bomb = s.stage === 'BOMB' ? s.bombs.find((b) => b.holderId === holderId) : undefined;
+  if (!bomb) return [];
+  const holders = holdersOf(s);
+  return s.remaining.filter((id) => !holders.includes(id) && (s.remaining.length === 2 || id !== bomb.fromId));
 }
 
 function updatePressure(s: HotPotatoState, now: number, rng: Rng): Record<string, number> {
+  // Zrádcům ukazuje ručička bombu, která bouchne dřív.
+  const next = s.bombs.reduce<Bomb | null>((a, b) => (a && a.explodeAt <= b.explodeAt ? a : b), null);
   const out: Record<string, number> = {};
   for (const id of s.players) {
-    if (s.stage !== 'BOMB') out[id] = 0;
-    else if (s.traitors.includes(id)) out[id] = realPressure(s.explodeAt - now, s.fuseMs);
+    if (s.stage !== 'BOMB' || !next) out[id] = 0;
+    else if (s.traitors.includes(id)) out[id] = realPressure(next.explodeAt - now, next.fuseMs);
     else out[id] = fakePressure(s.pressure[id] ?? 0, rng);
   }
   return out;
@@ -159,13 +190,19 @@ function ghostScores(s: HotPotatoState): Record<string, number> {
   );
 }
 
-/** Velká obrazovka: kdo drží bombu a pořadí vyřazení; ručička tlaku ne. */
-export interface HotPotatoScreenView {
-  stage: PotatoStage;
-  round: number;
-  remaining: string[];
-  eliminated: string[];
-  holderId: string | null;
+/** Výbuchy bomb, kterým došla rozbuška (dřívější první); po posledním konec kola. */
+function explode(s: HotPotatoState, now: number): HotPotatoState {
+  const due = s.bombs.filter((b) => now >= b.explodeAt).sort((a, b) => a.explodeAt - b.explodeAt);
+  if (due.length === 0) return s;
+  let holds = s.holds;
+  for (const b of due) holds = withHold(holds, b.holderId, b.explodeAt - b.heldSince);
+  const out = due.map((b) => b.holderId);
+  const remaining = s.remaining.filter((id) => !out.includes(id));
+  const bombs = s.bombs.filter((b) => !due.includes(b));
+  const next: HotPotatoState = { ...s, holds, remaining, eliminated: [...s.eliminated, ...out], lastOut: [...s.lastOut, ...out], bombs };
+  if (bombs.length > 0 && remaining.length > 1) return next;
+  const done = remaining.length <= 1;
+  return { ...next, bombs: [], round: s.round + 1, stage: done ? 'DONE' : 'PAUSE', endsAt: done ? null : now + PAUSE_MS };
 }
 
 export const hotPotato: MinigameModule<HotPotatoState> = {
@@ -176,7 +213,7 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
     rules: [
       'Na telefonu jednoho z vás tiká bomba. Ťukni na jméno a pošli ji dál, jen ne zpátky tomu, od koho přišla.',
       'Kdy bouchne, nikdo neví. U koho bouchne, ten vypadá z minihry (ne ze hry).',
-      'Po každém výbuchu má další bomba kratší rozbušku.',
+      'Po každém výbuchu má další bomba kratší rozbušku. Ve velké skupině kolují dvě bomby najednou.',
       'Poslední přeživší získá štít. Poklad se nemění.',
     ],
     traitorRule: 'Zrádcům ukazuje ručička tlaku skutečný čas do výbuchu. Ostatním jen náhodně kmitá.',
@@ -194,12 +231,8 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
       round: 0,
       remaining: alive,
       eliminated: [],
-      holderId: null,
-      fromId: null,
-      heldSince: 0,
-      explodeAt: 0,
-      fuseMs: 0,
-      disconnectedSince: null,
+      lastOut: [],
+      bombs: [],
       pressure: Object.fromEntries(alive.map((id) => [id, 0])),
       holds: {},
       lastMoment: {},
@@ -218,22 +251,18 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
   },
 
   apply(state, playerId, input, now) {
-    if (state.stage !== 'BOMB' || playerId !== state.holderId) return null;
+    const i = state.stage === 'BOMB' ? state.bombs.findIndex((b) => b.holderId === playerId) : -1;
+    if (i < 0) return null;
     const target = (input as { targetId?: unknown } | null)?.targetId;
-    if (typeof target !== 'string' || !passTargets(state).includes(target)) return null;
+    if (typeof target !== 'string' || !passTargets(state, playerId).includes(target)) return null;
+    const bomb = state.bombs[i];
     const lastMoment =
-      state.explodeAt - now <= LAST_MOMENT_MS
+      bomb.explodeAt - now <= LAST_MOMENT_MS
         ? { ...state.lastMoment, [playerId]: (state.lastMoment[playerId] ?? 0) + 1 }
         : state.lastMoment;
-    return {
-      ...state,
-      holds: withHold(state, playerId, now - state.heldSince),
-      lastMoment,
-      holderId: target,
-      fromId: playerId,
-      heldSince: now,
-      disconnectedSince: null,
-    };
+    const bombs = [...state.bombs];
+    bombs[i] = { ...bomb, holderId: target, fromId: playerId, heldSince: now, disconnectedSince: null };
+    return { ...state, holds: withHold(state.holds, playerId, now - bomb.heldSince), lastMoment, bombs };
   },
 
   applyGhost(state, ghostId, input) {
@@ -258,48 +287,38 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
 
   applyModerator(state, input, now, rng) {
     const action = (input as { action?: unknown } | null)?.action;
-    if (action === 'endStage' && state.stage === 'READY') return startBomb(state, now, rng);
+    if (action === 'endStage' && state.stage === 'READY') return startBombs(state, now, rng);
     return null;
   },
 
   tick(state, now, rng, connected) {
     let s = state;
     if ((s.stage === 'READY' || s.stage === 'PAUSE') && s.endsAt !== null && now >= s.endsAt) {
-      s = startBomb(s, now, rng, connected);
-    } else if (s.stage === 'BOMB' && s.holderId) {
-      if (now >= s.explodeAt) {
-        const out = s.holderId;
-        const remaining = s.remaining.filter((id) => id !== out);
-        s = {
-          ...s,
-          holds: withHold(s, out, s.explodeAt - s.heldSince),
-          remaining,
-          eliminated: [...s.eliminated, out],
-          holderId: null,
-          fromId: null,
-          disconnectedSince: null,
-          round: s.round + 1,
-          stage: remaining.length <= 1 ? 'DONE' : 'PAUSE',
-          endsAt: remaining.length <= 1 ? null : now + PAUSE_MS,
-        };
-      } else if (connected && !connected.has(s.holderId)) {
-        // Odpojený držitel: po 3 s bomba přeskočí k náhodnému připojenému hráči, rozbuška běží dál.
-        if (s.disconnectedSince === null) s = { ...s, disconnectedSince: now };
-        else if (now - s.disconnectedSince >= DISCONNECT_JUMP_MS) {
-          const online = s.remaining.filter((id) => id !== s.holderId && connected.has(id));
-          if (online.length > 0) {
-            s = {
-              ...s,
-              holds: withHold(s, s.holderId!, now - s.heldSince),
-              fromId: s.holderId,
-              holderId: pick(rng, online),
-              heldSince: now,
-              disconnectedSince: null,
-            };
+      s = startBombs(s, now, rng, connected);
+    } else if (s.stage === 'BOMB') {
+      s = explode(s, now);
+      if (s.stage === 'BOMB' && connected) {
+        // Odpojený držitel: po 3 s bomba přeskočí k náhodnému připojenému hráči bez bomby, rozbuška běží dál.
+        const bombs = s.bombs.map((b) => ({ ...b }));
+        let holds = s.holds;
+        for (const b of bombs) {
+          if (connected.has(b.holderId)) {
+            b.disconnectedSince = null;
+          } else if (b.disconnectedSince === null) {
+            b.disconnectedSince = now;
+          } else if (now - b.disconnectedSince >= DISCONNECT_JUMP_MS) {
+            const busy = bombs.map((x) => x.holderId);
+            const online = s.remaining.filter((id) => !busy.includes(id) && connected.has(id));
+            if (online.length > 0) {
+              holds = withHold(holds, b.holderId, now - b.heldSince);
+              b.fromId = b.holderId;
+              b.holderId = pick(rng, online);
+              b.heldSince = now;
+              b.disconnectedSince = null;
+            }
           }
         }
-      } else if (s.disconnectedSince !== null) {
-        s = { ...s, disconnectedSince: null };
+        s = { ...s, bombs, holds };
       }
     }
     return { ...s, pressure: updatePressure(s, now, rng) };
@@ -352,17 +371,18 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
   endsAt: (state) => (state.stage === 'BOMB' ? null : state.endsAt),
 
   viewForPlayer(state, playerId): HotPotatoPlayerView {
-    const amHolder = state.stage === 'BOMB' && state.holderId === playerId;
+    const amHolder = state.stage === 'BOMB' && holdersOf(state).includes(playerId);
     return {
       stage: state.stage,
       round: state.round,
       players: [...state.players],
       remaining: [...state.remaining],
       eliminated: [...state.eliminated],
-      holderId: state.holderId,
+      lastOut: [...state.lastOut],
+      holderIds: holdersOf(state),
       amHolder,
       amOut: state.eliminated.includes(playerId),
-      canPassTo: amHolder ? passTargets(state) : [],
+      canPassTo: amHolder ? passTargets(state, playerId) : [],
       pressure: state.pressure[playerId] ?? 0,
     };
   },
@@ -374,7 +394,8 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
       players: [...state.players],
       remaining: [...state.remaining],
       eliminated: [...state.eliminated],
-      holderId: state.holderId,
+      lastOut: [...state.lastOut],
+      holderIds: holdersOf(state),
       canTip: state.stage === 'READY',
       myTip: { ...(state.ghostTips[ghostId] ?? { survivorId: null, firstId: null }) },
     };
@@ -386,14 +407,14 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
       round: state.round,
       remaining: [...state.remaining],
       eliminated: [...state.eliminated],
-      holderId: state.holderId,
+      lastOut: [...state.lastOut],
+      holderIds: holdersOf(state),
     };
   },
 
   // Držitel-bot bombu po chvíli (prodleva bota) pošle náhodnému hráči; duch-bot tipne.
   bot(state, botId, rng) {
-    if (state.stage !== 'BOMB' || state.holderId !== botId) return null;
-    const targets = passTargets(state);
+    const targets = passTargets(state, botId);
     return targets.length > 0 ? { targetId: targets[rng.int(targets.length)] } : null;
   },
   ghostBot(state, ghostId, rng) {
@@ -409,9 +430,9 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
       players: [...state.players],
       remaining: [...state.remaining],
       eliminated: [...state.eliminated],
-      holderId: state.holderId,
-      explodeAt: state.stage === 'BOMB' ? state.explodeAt : null,
-      fuseMs: state.fuseMs,
+      lastOut: [...state.lastOut],
+      holderIds: holdersOf(state),
+      bombs: state.bombs.map((b) => ({ holderId: b.holderId, explodeAt: b.explodeAt, fuseMs: b.fuseMs })),
       ghostTips: structuredClone(state.ghostTips),
     };
   },

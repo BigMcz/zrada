@@ -41,16 +41,25 @@ function Eliminated({ game, nameOf }: { game: { eliminated: string[] }; nameOf: 
   );
 }
 
-/** Hlavní řádek stavu, společný pro hráče i ducha. */
+const names = (ids: string[], nameOf: (id: string) => string) => ids.map(nameOf).join(' a ');
+
+/** Hlavní řádek stavu, společný pro hráče i ducha. Ve velké skupině můžou být bomby dvě (Rozšíření 17). */
 function StatusLine({ game, nameOf, amHolder }: { game: HotPotatoPlayerView | HotPotatoGhostView; nameOf: (id: string) => string; amHolder?: boolean }) {
-  const last = game.eliminated[game.eliminated.length - 1];
   if (game.stage === 'READY') return <p className="lead center">Bomba se za chvíli objeví u jednoho z vás.</p>;
-  if (game.stage === 'PAUSE') return <p className="headline center potato-boom">Bum! Vypadává {nameOf(last)}.</p>;
+  if (game.stage === 'PAUSE') return <p className="headline center potato-boom">Bum! Vypadává {names(game.lastOut, nameOf)}.</p>;
   if (game.stage === 'DONE') {
     return <p className="headline center">Poslední přeživší: {game.remaining[0] ? nameOf(game.remaining[0]) : 'nikdo'}</p>;
   }
-  if (amHolder) return <p className="headline center potato-hot">Pošli ji dál!</p>;
-  return <p className="lead center">Bombu má: <b>{game.holderId ? nameOf(game.holderId) : '—'}</b></p>;
+  const boom = game.lastOut.length > 0 && <p className="center potato-boom">Bum! Vypadává {names(game.lastOut, nameOf)}.</p>;
+  if (amHolder) return <>{boom}<p className="headline center potato-hot">Pošli ji dál!</p></>;
+  return (
+    <>
+      {boom}
+      <p className="lead center">
+        {game.holderIds.length > 1 ? 'Bomby mají' : 'Bombu má'}: <b>{game.holderIds.length > 0 ? names(game.holderIds, nameOf) : '—'}</b>
+      </p>
+    </>
+  );
 }
 
 /**
@@ -70,7 +79,7 @@ export function HotPotatoPlayer({ game, nameOf, send }: MinigamePlayerProps<HotP
           ids={game.remaining}
           nameOf={nameOf}
           enabled={game.amHolder ? game.canPassTo : []}
-          marked={game.holderId ? [game.holderId] : []}
+          marked={game.holderIds}
           onPick={(id) => send({ targetId: id })}
         />
       )}
@@ -108,7 +117,7 @@ export function HotPotatoGhost({ game, nameOf, send }: MinigamePlayerProps<HotPo
     <>
       <div className="bomb" aria-hidden="true">💣</div>
       <StatusLine game={game} nameOf={nameOf} />
-      <NameGrid ids={game.remaining} nameOf={nameOf} marked={game.holderId ? [game.holderId] : []} />
+      <NameGrid ids={game.remaining} nameOf={nameOf} marked={game.holderIds} />
       <Eliminated game={game} nameOf={nameOf} />
       <p className="center muted">
         Tvůj tip: přežije {tip.survivorId ? nameOf(tip.survivorId) : '—'}, první bouchne u {tip.firstId ? nameOf(tip.firstId) : '—'}
@@ -119,17 +128,23 @@ export function HotPotatoGhost({ game, nameOf, send }: MinigamePlayerProps<HotPo
 
 /** Konzole: kdo drží bombu, skutečný čas do výbuchu, vyřazení a tipy duchů. */
 export function HotPotatoModerator({ game, nameOf, send, busy }: MinigameModeratorProps<HotPotatoModeratorView>) {
-  const stageLabel = { READY: 'Příprava (duchové tipují)', BOMB: `Bomba č. ${game.round + 1}`, PAUSE: 'Pauza po výbuchu', DONE: 'Konec' }[game.stage];
+  const stageLabel = {
+    READY: 'Příprava (duchové tipují)',
+    BOMB: `${game.round + 1}. kolo${game.bombs.length > 1 ? ', dvě bomby' : ''}`,
+    PAUSE: 'Pauza po výbuchu',
+    DONE: 'Konec',
+  }[game.stage];
   const tips = Object.entries(game.ghostTips);
   return (
     <>
       <p className="phase-detail">{stageLabel}</p>
-      {game.stage === 'BOMB' && (
-        <p className="potato-console">
-          Bombu drží <b>{game.holderId ? nameOf(game.holderId) : '—'}</b>, výbuch za <Countdown endsAt={game.explodeAt} />
-          <span className="muted"> (rozbuška {Math.round(game.fuseMs / 1000)} s)</span>
-        </p>
-      )}
+      {game.stage === 'BOMB' &&
+        game.bombs.map((b) => (
+          <p key={b.holderId} className="potato-console">
+            Bombu drží <b>{nameOf(b.holderId)}</b>, výbuch za <Countdown endsAt={b.explodeAt} />
+            <span className="muted"> (rozbuška {Math.round(b.fuseMs / 1000)} s)</span>
+          </p>
+        ))}
       <ul className="console-players compact">
         {game.players.map((id) => {
           const out = game.eliminated.indexOf(id);
@@ -137,7 +152,7 @@ export function HotPotatoModerator({ game, nameOf, send, busy }: MinigameModerat
             <li key={id}>
               <span className="grow name">{nameOf(id)}</span>
               <span className="state">
-                {out >= 0 ? `vyřazen/a jako ${out + 1}.` : id === game.holderId ? '💣 drží bombu' : 've hře'}
+                {out >= 0 ? `vyřazen/a jako ${out + 1}.` : game.holderIds.includes(id) ? '💣 drží bombu' : 've hře'}
               </span>
             </li>
           );
