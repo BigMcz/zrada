@@ -4,6 +4,7 @@ import { MAX_NAME_LENGTH } from '../../shared/types';
 import { GhostBoard, PlayerBoard } from '../components/GhostBoard';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
+import { Candle } from '../components/Candle';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
@@ -23,7 +24,7 @@ export function PlayerApp() {
       {!connected && <div className="connection-bar">Obnovuji spojení…</div>}
       {view?.kind === 'player' && view.paused && (
         <div className="pause-overlay" role="status">
-          <span aria-hidden="true">🕯️</span>
+          <Candle size="big" />
           <p>Pauza</p>
           <small>Moderátor hru na chvíli zastavil.</small>
         </div>
@@ -220,7 +221,7 @@ function Waiting({ view, tag }: ScreenProps) {
       <p className="center">Čekáme na začátek hry</p>
       <p className="muted center">Připojených hráčů: {view.players.length}</p>
       {view.publicVotes && <p className="center">Hlasování je veřejné: velká obrazovka ukáže, kdo pro koho hlasoval.</p>}
-      <div className="candle" aria-hidden />
+      <Candle />
     </Screen>
   );
 }
@@ -233,7 +234,7 @@ function Roles({ view, tag, corner }: ScreenProps) {
       <Screen tag={tag} corner={corner}>
         <p className="lead center">Čekáme, až si roli prohlédnou ostatní.</p>
         <p className="muted center">Svou roli si můžeš kdykoli znovu zobrazit pečetí vpravo nahoře.</p>
-        <div className="candle" aria-hidden />
+        <Candle />
       </Screen>
     );
   }

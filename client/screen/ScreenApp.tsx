@@ -1,6 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ScreenMinigameView, ScreenView } from '../../shared/types';
+import { Candle } from '../components/Candle';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { GameScene } from './GameScenes';
@@ -21,7 +22,7 @@ export function ScreenApp() {
       {screen ? <ScreenGame view={screen} /> : <p className="screen-center muted">Připojuji velkou obrazovku…</p>}
       {screen?.paused && (
         <div className="screen-pause" role="status">
-          <span aria-hidden="true">🕯️</span>
+          <Candle size="big" />
           <h1>Pauza</h1>
         </div>
       )}
@@ -178,9 +179,7 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
     case 'NIGHT':
       return (
         <div className="screen-night">
-          <span className="screen-candle" aria-hidden="true">
-            🕯️
-          </span>
+          <Candle size="big" />
           <h1>Noc</h1>
         </div>
       );

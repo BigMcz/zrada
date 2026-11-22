@@ -160,3 +160,147 @@ body {
 .ghost-board.player-board li.first .points {
   color: var(--gold);
 }
+
+/* ===== Rozšíření 14: vzhled ===== */
+
+/* Živá svíčka: vosk, knot, plamen a záře (komponenta Candle). */
+.candle-art {
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 64px;
+  margin: 8px auto 0;
+  --candle-scale: 1;
+  transform: scale(var(--candle-scale));
+  transform-origin: bottom center;
+}
+
+.candle-art.small {
+  --candle-scale: 0.6;
+}
+
+.candle-art.big {
+  --candle-scale: 2.4;
+}
+
+.candle-wax {
+  position: absolute;
+  left: 3px;
+  bottom: 0;
+  width: 16px;
+  height: 34px;
+  border-radius: 3px 3px 2px 2px;
+  background: linear-gradient(90deg, #cdbb94 0%, #f1e6c8 45%, #b9a57c 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
+}
+
+.candle-wick {
+  position: absolute;
+  left: 10px;
+  bottom: 33px;
+  width: 2px;
+  height: 7px;
+  border-radius: 1px;
+  background: #2a2119;
+}
+
+.candle-flame {
+  position: absolute;
+  left: 4px;
+  bottom: 38px;
+  width: 14px;
+  height: 24px;
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  background: radial-gradient(ellipse at 50% 75%, #fff8dc 0%, #ffd36b 35%, #f0902a 70%, rgba(240, 120, 30, 0) 100%);
+  transform-origin: 50% 90%;
+  animation: candle-flicker 2.6s ease-in-out infinite;
+  filter: blur(0.3px);
+}
+
+.candle-glow {
+  position: absolute;
+  left: -27px;
+  bottom: 18px;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 190, 90, 0.35) 0%, rgba(255, 170, 60, 0.12) 45%, rgba(255, 160, 50, 0) 70%);
+  animation: candle-glow 2.6s ease-in-out infinite;
+}
+
+@keyframes candle-flicker {
+  0%,
+  100% {
+    transform: scale(1, 1) rotate(-1deg);
+  }
+  20% {
+    transform: scale(0.96, 1.06) rotate(1.5deg);
+  }
+  45% {
+    transform: scale(1.03, 0.94) rotate(-2deg);
+  }
+  70% {
+    transform: scale(0.98, 1.04) rotate(1deg);
+  }
+}
+
+@keyframes candle-glow {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  45% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.7;
+  }
+}
+
+/* Zrnitost (SVG šum) a vinětace přes celou stránku; nic nezakrývají pro dotyk. */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+body::before {
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.9 0 0 0 0 0.75 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+body::after {
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* Plynulé přechody: nový obsah fáze se prolne. */
+@keyframes phase-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.screen-body,
+.screen-stage > * {
+  animation: phase-in 0.45s ease-out;
+}
+
+/* Omezit pohyb: animace se vypnou. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

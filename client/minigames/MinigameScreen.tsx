@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { PlayerMinigameView, PlayerView, PublicPlayer } from '../../shared/types';
+import { Candle } from '../components/Candle';
 import { ClueView } from '../components/ClueView';
 import { Countdown } from '../components/Countdown';
 import { PlayerGrid } from '../components/PlayerGrid';
@@ -119,7 +120,7 @@ export function MinigameScreen({ view, tag, corner, status }: Props) {
         <Screen {...common}>
           <p className="lead center">{mg.result ? 'Minihra skončila.' : 'Minihra se dnes nehraje.'}</p>
           <p className="muted center">Za chvíli začne kulatý stůl.</p>
-          <div className="candle" aria-hidden />
+          <Candle />
         </Screen>
       );
   }
