@@ -9,6 +9,7 @@ import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { CoinBurst, Embers, Reactions } from './Effects';
+import { Credits, Intro, INTRO_MS } from './Cinematics';
 import { GameScene } from './GameScenes';
 import { Countdown } from '../components/Countdown';
 import { nameOf, phaseTag, ROLE_LABEL } from '../labels';
@@ -205,7 +206,7 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
     case 'LOBBY':
       return <Lobby view={view} />;
     case 'ROLES':
-      return <Title sub="Podržte prst na telefonu a podívejte se, kdo jste.">Role byly rozdány</Title>;
+      return <RolesScene round={view.round} />;
     case 'VOTE':
       return (
         <Title sub={`${view.inFinale ? 'Hra pokračuje. ' : ''}Hlasovalo ${view.votesCast ?? 0} z ${view.voters ?? 0}`}>
@@ -251,6 +252,13 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
     case 'ENDED':
       return <EndScene view={view} name={name} />;
   }
+}
+
+/** Po startu hry nejdřív filmový úvod (Rozšíření 16), pak výzva k prohlédnutí rolí. Telefony na úvod nečekají. */
+function RolesScene({ round }: { round: number }) {
+  const t = useElapsed(`roles-${round}`);
+  if (t < INTRO_MS) return <Intro elapsed={t} />;
+  return <Title sub="Podržte prst na telefonu a podívejte se, kdo jste.">Role byly rozdány</Title>;
 }
 
 /** Skončila-li hra hlasováním, nejdřív odhalení hlasování (karty, sloupce, vyhnaný, role), pak konec hry. */
@@ -359,8 +367,11 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
     if (!done) play('flip');
     else if (shown === view.players.length) play(view.winner === 'TRAITOR' ? 'gong' : 'bell');
   }, [shown]);
-  // Po 6 s od vyhlášení vítěze rekapitulace večera: časová osa kol a ceny.
-  if (view.recap && t > view.players.length * 1500 + 6000) {
+  // Po 6 s od vyhlášení vítěze rekapitulace večera: časová osa kol a ceny. Po dalších 20 s titulky (Rozšíření 16).
+  const recapAt = view.players.length * 1500 + 6000;
+  const creditsAt = recapAt + 20000;
+  if (view.recap && t > creditsAt) return <Credits view={view} elapsed={t - creditsAt} />;
+  if (view.recap && t > recapAt) {
     return (
       <div className="screen-recap">
         <h1>{view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}: rekapitulace večera</h1>
