@@ -169,9 +169,9 @@ function checkPlayerView(bot: Bot, all: Bot[], report: Report) {
   checkRhythm(bot, report);
   checkBomb(bot, report);
   if (v.minigame?.id === 'HOT_POTATO' && v.me.status === 'ALIVE' && game) {
-    // Horký brambor: Věrný i Zrádce mají stejná pole, ručička je číslo 0–1 a mimo bombu stojí na nule.
+    // Předej bombu: Věrný i Zrádce mají stejná pole, ručička je číslo 0–1 a mimo bombu stojí na nule.
     const keys = Object.keys(game).sort().join(',');
-    if (keys !== HOT_POTATO_KEYS) report.violation(`${bot.name}: pohled Horkého bramboru má jiná pole: ${keys}`);
+    if (keys !== HOT_POTATO_KEYS) report.violation(`${bot.name}: pohled minihry Předej bombu má jiná pole: ${keys}`);
     const p = (game as { pressure?: unknown }).pressure;
     if (typeof p !== 'number' || p < 0 || p > 1) report.violation(`${bot.name}: ručička tlaku mimo rozsah: ${String(p)}`);
     if (game.stage !== 'BOMB' && p !== 0) report.violation(`${bot.name}: ručička tlaku mimo bombu není 0`);
@@ -1065,7 +1065,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected: [reconnected, potatoJump, potatoTwoBombs ? 'Horký brambor se dvěma bombami' : 'ne', vaultReassign, rhythmDrop, bombReassign, pauseCheck, finaleNote].filter((x, i) => i === 0 || x !== 'ne').join('; '),
+      reconnected: [reconnected, potatoJump, potatoTwoBombs ? 'Předej bombu se dvěma bombami' : 'ne', vaultReassign, rhythmDrop, bombReassign, pauseCheck, finaleNote].filter((x, i) => i === 0 || x !== 'ne').join('; '),
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,

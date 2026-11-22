@@ -5,6 +5,7 @@ import type {
 } from '../../../server/minigames/hotPotato/index';
 import { Countdown } from '../../components/Countdown';
 import { NameGrid } from '../NameGrid';
+import { BombArt, useBoomFlash } from './BombArt';
 import type { MinigameModeratorProps, MinigamePlayerProps } from '../registry';
 
 /** Červené pole ručičky (stejné číslo jako na serveru). */
@@ -68,9 +69,11 @@ function StatusLine({ game, nameOf, amHolder }: { game: HotPotatoPlayerView | Ho
  */
 export function HotPotatoPlayer({ game, nameOf, send }: MinigamePlayerProps<HotPotatoPlayerView>) {
   const bomb = game.stage === 'BOMB';
+  const flash = useBoomFlash(game.eliminated.length);
+  const look = game.stage === 'PAUSE' || flash ? 'boom' : game.amHolder ? 'hot' : 'idle';
   return (
     <>
-      <div className={game.amHolder ? 'bomb hot' : 'bomb'} aria-hidden="true">💣</div>
+      <BombArt look={look} id={game.eliminated.length} />
       <PressureGauge pressure={game.pressure} />
       <StatusLine game={game} nameOf={nameOf} amHolder={game.amHolder} />
       {game.amOut && game.stage !== 'DONE' && <p className="center muted">Bouchlo to u tebe. Sleduj, jak to dopadne.</p>}
@@ -86,6 +89,11 @@ export function HotPotatoPlayer({ game, nameOf, send }: MinigamePlayerProps<HotP
       <Eliminated game={game} nameOf={nameOf} />
     </>
   );
+}
+
+function GhostBomb({ game }: { game: HotPotatoGhostView }) {
+  const flash = useBoomFlash(game.eliminated.length);
+  return <BombArt look={game.stage === 'PAUSE' || flash ? 'boom' : 'idle'} id={game.eliminated.length} />;
 }
 
 /** Duch: před první bombou dva tipy, pak sleduje, kdo bombu drží. Ručičku tlaku nemá. */
@@ -115,7 +123,7 @@ export function HotPotatoGhost({ game, nameOf, send }: MinigamePlayerProps<HotPo
   }
   return (
     <>
-      <div className="bomb" aria-hidden="true">💣</div>
+      <GhostBomb game={game} />
       <StatusLine game={game} nameOf={nameOf} />
       <NameGrid ids={game.remaining} nameOf={nameOf} marked={game.holderIds} />
       <Eliminated game={game} nameOf={nameOf} />

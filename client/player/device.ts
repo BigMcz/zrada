@@ -52,7 +52,7 @@ export function buzz(pattern: number | number[]): void {
 export const CONFIRM_BUZZ = 35;
 
 /**
- * Haptika veřejného dění v minihrách (Rozšíření 14): výbuch Horkého bramboru a chyba u bomby.
+ * Haptika veřejného dění v minihrách (Rozšíření 14): výbuch v minihře Předej bombu a chyba u bomby.
  * Obojí vidí všichni, takže vibrace nic neprozradí.
  */
 export function useEventHaptics(view: View | null): void {

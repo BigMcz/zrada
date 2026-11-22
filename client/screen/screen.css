@@ -624,7 +624,7 @@
   color: var(--loyal-text);
 }
 
-/* Horký brambor */
+/* Předej bombu */
 .sg-potato,
 .sg-quiz,
 .sg-vault,
@@ -1497,7 +1497,74 @@
   padding-bottom: 0.25em;
 }
 
-/* Horký brambor: výbuch první ze dvou bomb (Rozšíření 17) */
+/* Předej bombu: výbuch první ze dvou bomb (Rozšíření 17) */
 .sg-small.boom {
   color: var(--traitor-text);
+}
+
+/* Předej bombu: obrázek bomby a výbuchu */
+.sg-bombs {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 3em;
+}
+
+.sg-bomb-holder {
+  display: grid;
+  justify-items: center;
+}
+
+.sg-bomb-art.bomb-art {
+  width: 7em;
+  height: 7em;
+  object-fit: contain;
+}
+
+.sg-bomb-art.bomb-art.idle {
+  filter: grayscale(0.7) brightness(0.6);
+}
+
+.sg-bomb-art.bomb-art.hot {
+  filter: drop-shadow(0 0 0.8em rgba(255, 140, 40, 0.75));
+  animation: shake 0.4s ease-in-out infinite;
+}
+
+.sg-bomb-art.bomb-art.boom {
+  width: 13em;
+  height: 8.7em;
+  animation: sg-boom 0.5s ease-out;
+}
+
+.sg-boom-flash.bomb-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 13em;
+  height: 8.7em;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  animation: sg-boom-flash 1.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes sg-boom {
+  from { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  to { transform: scale(1); }
+}
+
+@keyframes sg-boom-flash {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-bomb-art.bomb-art.hot,
+  .sg-bomb-art.bomb-art.boom,
+  .sg-boom-flash.bomb-art {
+    animation: none;
+  }
 }

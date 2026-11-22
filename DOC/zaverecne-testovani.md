@@ -45,13 +45,13 @@ Ke každé: pravidla a tajná karta, hra na telefonech, scéna na obrazovce, vý
 
 - [ ] **Tajná aukce** – nabídky, odhalování karet od nejnižší
 - [ ] **Rozdělit, nebo ukrást** – duelisté, sázky, karty se otočí současně
-- [ ] **Horký brambor** – posílání bomby ťuknutím, ručička tlaku, výbuch; obrazovka bez ručičky
+- [ ] **Předej bombu** – posílání bomby ťuknutím, ručička tlaku, výbuch; obrazovka bez ručičky
 - [ ] **Insider kvíz** – svíčka u Zrádce na správné odpovědi, u Věrného náhodně; otázky čitelné
 - [ ] **Trezor** – volba zámečníka, nápovědy, klávesnice, „N z 4“
 - [ ] **Rytmus** – ťukání do prstence na **různých telefonech**: sedí přesnost s pocitem? kalibrace v konzoli v desítkách ms? rušička před 2. kolem
 - [ ] **Zneškodni bombu** – pyrotechnik vidí bombu, ostatní stránky manuálu; čitelnost drátů a symbolů na malém displeji; chyba zrychlí odpočet
 - [ ] **Fyzická mise** – zadání, zápis výsledku, stopa
-- [ ] Boti v minihrách hrají sami (kvíz, trezor, bomba, brambor)
+- [ ] Boti v minihrách hrají sami (kvíz, trezor, bomba, Předej bombu)
 
 ## 5. Velká obrazovka a zvuk
 

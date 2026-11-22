@@ -676,20 +676,45 @@
   color: var(--loyal-text);
 }
 
-/* --- Horký brambor --- */
+/* --- Předej bombu --- */
 
-.bomb {
+.bomb-art {
+  display: block;
+  width: 110px;
+  height: 110px;
   margin: 0 auto;
-  font-size: 56px;
-  line-height: 1;
-  text-align: center;
-  filter: grayscale(1) opacity(0.5);
+  object-fit: contain;
+  filter: grayscale(0.7) brightness(0.6);
+  transition: width 0.25s, height 0.25s, filter 0.25s;
+  user-select: none;
+  pointer-events: none;
 }
 
-.bomb.hot {
-  font-size: 96px;
-  filter: none;
+.bomb-art.hot {
+  width: 170px;
+  height: 170px;
+  filter: drop-shadow(0 0 18px rgba(255, 140, 40, 0.75));
   animation: bomb-shake 0.5s ease-in-out infinite;
+}
+
+.bomb-art.boom {
+  width: 230px;
+  height: 153px;
+  filter: none;
+  animation: bomb-boom 0.5s ease-out;
+}
+
+@keyframes bomb-boom {
+  from { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  to { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bomb-art.hot,
+  .bomb-art.boom {
+    animation: none;
+  }
 }
 
 @keyframes bomb-shake {

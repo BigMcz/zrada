@@ -60,7 +60,7 @@ describe('Velká obrazovka – scény miniher bez tajných údajů', () => {
     }
   });
 
-  it('Horký brambor: držitel ano, ručička tlaku ne', () => {
+  it('Předej bombu: držitel ano, ručička tlaku ne', () => {
     let s = started(hotPotato) as HotPotatoState;
     s = hotPotato.applyModerator!(s, { action: 'endStage' }, T0, rng())!;
     const v = checkScreen(hotPotato, s);

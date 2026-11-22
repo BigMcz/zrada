@@ -78,7 +78,7 @@ function useSounds(view: ScreenView | null) {
     if (g && pg) {
       const revealed = (x: Record<string, unknown>) => (Array.isArray(x.revealed) ? x.revealed.length : x.revealed ? 1 : 0);
       if (revealed(g) > revealed(pg)) play('flip');
-      if (g.stage === 'PAUSE' && pg.stage === 'BOMB') play('drum'); // Horký brambor bouchl
+      if (g.stage === 'PAUSE' && pg.stage === 'BOMB') play('drum'); // Předej bombu: bouchlo to
       if (typeof g.errors === 'number' && g.errors > (pg.errors as number)) play('drum'); // chyba u bomby
       if (Array.isArray(g.attempts) && g.attempts.length > (pg.attempts as unknown[]).length) play('flip'); // pokus u trezoru
     }

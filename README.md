@@ -65,7 +65,7 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 
 - **Tajná aukce** – tajné nabídky 0–10 žetonů, nejvyšší nabídka vyhrává štít, všechny nabídky se platí z pokladu.
 - **Rozdělit, nebo ukrást** – dva duelisté tajně volí Rozdělit / Ukrást, ostatní sázejí na výsledek.
-- **Horký brambor** – bomba se posílá z telefonu na telefon, u koho bouchne, vypadá; poslední přeživší získá štít. Zrádcům ukazuje ručička tlaku skutečný čas do výbuchu.
+- **Předej bombu** – bomba se posílá z telefonu na telefon, u koho bouchne, vypadá; poslední přeživší získá štít. Zrádcům ukazuje ručička tlaku skutečný čas do výbuchu.
 - **Insider kvíz** – 7 otázek po 15 s, svíčka (nápověda) ukazuje Zrádcům správnou odpověď, Věrným náhodnou; nejlepší hráč získá štít. Otázky jsou v `server/minigames/quiz/questions/`.
 - **Trezor** – skupina skládá kód z nápověd na telefonech a zvolený zámečník má 3 pokusy; Zrádci mají jednu nápovědu falešnou. Otevře-li zámečník trezor, získá štít.
 - **Rytmus** – všichni ťukají do rytmu kruhu na telefonu, štít získá nejpřesnější hráč, poklad roste podle synchronizace skupiny. Zrádci mají rušičku, která jednomu hráči v kole 2 posune rytmus.
@@ -128,7 +128,7 @@ server/
     registry.ts        seznam miniher; modules.ts je registruje při startu
     auction/           Tajná aukce
     splitSteal/        Rozdělit, nebo ukrást
-    hotPotato/         Horký brambor
+    hotPotato/         Předej bombu
     quiz/              Insider kvíz (sady otázek v questions/*.json se načtou samy; vlastní sada = nový soubor)
     vault/             Trezor (generátor kódu a nápověd v hints.ts)
     rhythm/            Rytmus (hodnocení ťuknutí v scoring.ts)

@@ -362,7 +362,7 @@ Platí vše dosavadní a navíc:
 | M5 | Duchové v minihrách, vítěz mezi duchy, žebříček hráčů a poklad na konci hry | Duch tipuje v obou minihrách, na konci jsou žebříčky |
 | M6 | Úpravy README a zkouška naživo | Celá hra s minihrami na telefonech |
 
-## Rozšíření 3: Horký brambor
+## Rozšíření 3: Horký brambor (od Rozšíření 17 „Předej bombu“)
 
 Třetí minihra do osudí. Podrobně v [analýze miniher](minihry-analyza.md), kapitola 5. Rámec miniher (los, tajná karta, stopa, předání štítu, poklad, body) zůstává beze změny.
 
@@ -1335,6 +1335,7 @@ Hra pustí až 18 hráčů místo 10. Minimum zůstává 4, pravidla kol beze zm
   - Duchové tipují stejně (posledního přeživšího a prvního vyřazeného; když bouchnou dvě najednou, platí ta dřívější).
 - **Ostatní minihry** zůstávají, jen jejich testy poběží až s 18 hráči (Trezor: nápovědy dál jednoznačné).
 - Dokumentace (README, SPEC, architektura) uvádí 4–18 hráčů.
+- **Předej bombu:** Horký brambor se přejmenuje a dostane kreslenou bombu a výbuch (img/bomb.png, img/bomb_explode.png, zmenšené do client/public) na telefonu i obrazovce. Při výbuchu se obrázek výbuchu ukáže všem.
 
 ### Pozor na délku
 

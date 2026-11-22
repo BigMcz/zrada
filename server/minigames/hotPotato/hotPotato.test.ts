@@ -60,7 +60,7 @@ function pass(s: HotPotatoState, from: string, to: string, now = T0 + READY_MS):
 
 const explode = (s: HotPotatoState) => hotPotato.tick(s, bomb(s).explodeAt, rng());
 
-describe('Horký brambor – pravidla', () => {
+describe('Předej bombu – pravidla', () => {
   it('nejdřív příprava, pak bomba u náhodného hráče s rozbuškou 10–25 s', () => {
     for (let seed = 1; seed <= 30; seed++) {
       let s = hotPotato.start(hotPotato.init(ctx(), rng(seed), T0), T0, rng(seed));
@@ -176,7 +176,7 @@ describe('Horký brambor – pravidla', () => {
   });
 });
 
-describe('Horký brambor – dvě bomby ve velké skupině (Rozšíření 17)', () => {
+describe('Předej bombu – dvě bomby ve velké skupině (Rozšíření 17)', () => {
   const bigStart = (seed = 3) => {
     const s = hotPotato.start(hotPotato.init(ctx(BIG.length, BIG), rng(seed), T0), T0, rng(seed));
     return hotPotato.tick(s, T0 + READY_MS, rng(seed));
@@ -264,7 +264,7 @@ describe('Horký brambor – dvě bomby ve velké skupině (Rozšíření 17)', 
   });
 });
 
-describe('Horký brambor – ručička tlaku a utajení', () => {
+describe('Předej bombu – ručička tlaku a utajení', () => {
   it('skutečný tlak roste k 1 a červené pole začíná 5 s před výbuchem', () => {
     expect(realPressure(20_000, 20_000)).toBe(0);
     expect(realPressure(5_000, 20_000)).toBe(RED_ZONE_FROM);
@@ -328,7 +328,7 @@ describe('Horký brambor – ručička tlaku a utajení', () => {
   });
 });
 
-describe('Horký brambor – duchové', () => {
+describe('Předej bombu – duchové', () => {
   it('tipují jen před první bombou, platné jsou jen jména hráčů', () => {
     let s = hotPotato.start(hotPotato.init(ctx(), rng(), T0), T0, rng());
     s = hotPotato.applyGhost!(s, 'g1', { survivorId: 'a' }, T0)!;
@@ -355,7 +355,7 @@ describe('Horký brambor – duchové', () => {
   });
 });
 
-describe('Horký brambor ve hře', () => {
+describe('Předej bombu ve hře', () => {
   beforeEach(() => registerMinigame(hotPotato));
   afterEach(() => unregisterMinigame(HOT_POTATO_ID));
 

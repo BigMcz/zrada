@@ -7,6 +7,7 @@ import type { QuizScreenView } from '../../server/minigames/quiz/index';
 import type { RhythmScreenView } from '../../server/minigames/rhythm/index';
 import type { SplitStealScreenView } from '../../server/minigames/splitSteal/index';
 import type { VaultScreenView } from '../../server/minigames/vault/index';
+import { BombArt, useBoomFlash } from '../minigames/hotPotato/BombArt';
 import { Beat } from '../minigames/rhythm/Rhythm';
 
 type Name = (id: string | null | undefined) => string;
@@ -83,19 +84,35 @@ function DuelScene({ g, name }: { g: SplitStealScreenView; name: Name }) {
 
 function PotatoScene({ g, name }: { g: HotPotatoScreenView; name: Name }) {
   const out = g.lastOut.map((id) => name(id)).join(' a ');
+  const flash = useBoomFlash(g.eliminated.length);
   return (
     <div className="sg-potato">
-      {g.stage === 'READY' && <Lead>Bomba se za chvíli objeví u jednoho z vás.</Lead>}
+      {g.stage === 'READY' && (
+        <>
+          <BombArt look="idle" className="sg-bomb-art" />
+          <Lead>Bomba se za chvíli objeví u jednoho z vás.</Lead>
+        </>
+      )}
       {g.stage === 'BOMB' && (
         <>
-          <span className="sg-bomb" aria-hidden="true">
-            💣
-          </span>
-          <p className="sg-big-name">{g.holderIds.map((id) => name(id)).join(' · ')}</p>
+          <div className="sg-bombs">
+            {g.holderIds.map((id) => (
+              <div key={id} className="sg-bomb-holder">
+                <BombArt look="hot" className="sg-bomb-art" />
+                <p className="sg-big-name">{name(id)}</p>
+              </div>
+            ))}
+            {flash && <BombArt look="boom" id={g.eliminated.length} className="sg-boom-flash" />}
+          </div>
           {g.lastOut.length > 0 && <p className="sg-small boom">Bum! Vypadává {out}</p>}
         </>
       )}
-      {g.stage === 'PAUSE' && <p className="sg-big-name boom">Bum! Vypadává {out}</p>}
+      {g.stage === 'PAUSE' && (
+        <>
+          <BombArt look="boom" id={g.eliminated.length} className="sg-bomb-art" />
+          <p className="sg-big-name boom">Bum! Vypadává {out}</p>
+        </>
+      )}
       {g.stage === 'DONE' && <p className="sg-big-name">Přežil/a {name(g.remaining[0])}</p>}
       {g.eliminated.length > 0 && <p className="sg-small">Vypadli: {g.eliminated.map((id, i) => `${i + 1}. ${name(id)}`).join(', ')}</p>}
     </div>

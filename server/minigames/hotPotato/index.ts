@@ -1,4 +1,4 @@
-// Horký brambor (DOC/SPEC.md, Rozšíření 3; podrobně DOC/minihry-analyza.md, kap. 5).
+// Předej bombu, dřív Horký brambor (DOC/SPEC.md, Rozšíření 3 a 17; podrobně DOC/minihry-analyza.md, kap. 5).
 // Rozšíření 17: ve velké skupině (11+ hráčů) kolují v kole dvě bomby, dokud zbývá víc než 4 hráči.
 import type { Clue } from '../../../shared/types.js';
 import { pick, type Rng } from '../../game/random.js';
@@ -208,7 +208,7 @@ function explode(s: HotPotatoState, now: number): HotPotatoState {
 export const hotPotato: MinigameModule<HotPotatoState> = {
   id: HOT_POTATO_ID,
   meta: {
-    name: 'Horký brambor',
+    name: 'Předej bombu',
     minPlayers: 3,
     rules: [
       'Na telefonu jednoho z vás tiká bomba. Ťukni na jméno a pošli ji dál, jen ne zpátky tomu, od koho přišla.',
