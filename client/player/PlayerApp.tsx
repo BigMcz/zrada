@@ -13,6 +13,7 @@ import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { PrimaryButton, Screen, ScreenFooter, ScreenStatus } from '../components/Screen';
 import { ReactionBar } from './ReactionBar';
+import { Tutorial, tutorialSeen } from './Tutorial';
 import { MinigameScreen } from '../minigames/MinigameScreen';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { join, send, useConnection } from '../socket';
@@ -239,8 +240,11 @@ interface ScreenProps {
 
 function Waiting({ view, tag }: ScreenProps) {
   const myCrest = view.players.find((p) => p.id === view.me.id)?.crest;
+  // Návod se na novém telefonu ukáže sám, jinak přes tlačítko (Rozšíření 16).
+  const [tutorial, setTutorial] = useState(() => !tutorialSeen());
   return (
     <Screen tag={tag}>
+      {tutorial && <Tutorial onClose={() => setTutorial(false)} />}
       <div className="avatar big">
         <AvatarFace name={view.me.name} crest={myCrest} />
       </div>
@@ -248,6 +252,9 @@ function Waiting({ view, tag }: ScreenProps) {
       <p className="center">Čekáme na začátek hry</p>
       <CrestPicker view={view} mine={myCrest} />
       <p className="muted center">Připojených hráčů: {view.players.length}</p>
+      <button type="button" className="link-button tutorial-open" onClick={() => setTutorial(true)}>
+        Jak se hraje
+      </button>
       {view.publicVotes && <p className="center">Hlasování je veřejné: velká obrazovka ukáže, kdo pro koho hlasoval.</p>}
       <Candle />
     </Screen>

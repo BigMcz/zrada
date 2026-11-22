@@ -1427,3 +1427,71 @@
 .reaction-bar.cooling button {
   opacity: 0.35;
 }
+
+/* Rozšíření 16: návod při prvním vstupu */
+.tutorial-open {
+  margin: 0 auto;
+}
+
+.tutorial-card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px 22px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 18px;
+  background: var(--surface);
+  text-align: center;
+  animation: tutorial-in 0.35s ease-out both;
+}
+
+.tutorial-card h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: 24px;
+}
+
+.tutorial-card p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tutorial-icon {
+  font-size: 44px;
+}
+
+.tutorial-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tutorial-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background 0.2s;
+}
+
+.tutorial-dots span.on {
+  background: var(--gold);
+}
+
+@keyframes tutorial-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-card {
+    animation: none;
+  }
+}
+
+.overlay.tutorial {
+  background: rgba(8, 6, 5, 0.96);
+}
