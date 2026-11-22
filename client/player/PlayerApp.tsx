@@ -9,13 +9,22 @@ import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
 import { MinigameScreen } from '../minigames/MinigameScreen';
 import { initials, nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { join, send, useConnection } from '../socket';
+import { useTaskVibration, useWakeHint, useWakeLock } from './device';
 
 export function PlayerApp() {
   const { connected, view } = useConnection();
+  const wakeSupported = useWakeLock();
+  const [showWakeHint, hideWakeHint] = useWakeHint(wakeSupported);
+  useTaskVibration(view);
 
   return (
     <div className={view?.kind === 'player' && view.ghost && view.phase !== 'ENDED' ? 'phone ghost-mode' : 'phone'}>
       {!connected && <div className="connection-bar">Obnovuji spojení…</div>}
+      {showWakeHint && view?.kind === 'player' && (
+        <button type="button" className="wake-hint" onClick={hideWakeHint}>
+          Nezhasínej displej, ať ti nic neuteče. ✕
+        </button>
+      )}
       <div className="rotate-hint">Otoč telefon na výšku</div>
       {!view ? (
         <Screen tag="Zrada">
