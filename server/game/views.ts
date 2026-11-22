@@ -111,6 +111,7 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
     players: state.players.map((p) => publicPlayer(state, p)),
     history: publicHistory(state),
     myVote: state.phase === 'VOTE' ? (state.votes[me.id] ?? null) : null,
+    paused: state.paused !== null,
     // Skryté body (tipy duchů) až na konci hry, jinak by duch poznal Zrádce.
     myPoints: pointsOf(state, me.id, state.phase === 'ENDED'),
   };
@@ -173,6 +174,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     minigamesEnabled: state.settings.minigamesEnabled,
     physicalMission: state.settings.physicalMission,
     screenMuted: state.settings.screenMuted,
+    paused: state.paused !== null,
     minigameAvailable:
       state.settings.minigamesEnabled &&
       (state.phase === 'ROLES' || state.phase === 'MORNING') &&
@@ -227,5 +229,6 @@ export function viewForScreen(state: GameState, joinUrl: string | null): ScreenV
     minigame: screenMinigameView(state),
     winner: state.winner ?? null,
     muted: state.settings.screenMuted,
+    paused: state.paused !== null,
   };
 }

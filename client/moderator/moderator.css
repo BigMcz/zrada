@@ -443,3 +443,47 @@ button.console-screen-link {
   font-size: 13px;
   cursor: pointer;
 }
+
+/* Rozšíření 10: pauza a zásahy moderátora */
+.toggle.active {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.pause-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--warn);
+  border-radius: 10px;
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.player-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 8px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.console-players li:hover .player-actions {
+  opacity: 1;
+}
+
+.phone-link {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.phone-link svg {
+  background: #fff;
+  border-radius: 6px;
+}

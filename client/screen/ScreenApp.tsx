@@ -18,6 +18,12 @@ export function ScreenApp() {
     <div className="screen-root">
       {!connected && <div className="screen-offline">Obnovuji spojení…</div>}
       {screen ? <ScreenGame view={screen} /> : <p className="screen-center muted">Připojuji velkou obrazovku…</p>}
+      {screen?.paused && (
+        <div className="screen-pause" role="status">
+          <span aria-hidden="true">🕯️</span>
+          <h1>Pauza</h1>
+        </div>
+      )}
       {!started && (
         // Prohlížeč pustí zvuk až po kliknutí, proto jedno tlačítko na začátku.
         <button

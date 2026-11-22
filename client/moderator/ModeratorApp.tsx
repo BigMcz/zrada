@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } from '../../shared/types';
 import { GhostBoard, PlayerBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
-import { send, useConnection } from '../socket';
+import { requestNewPhone, send, useConnection } from '../socket';
 import { MinigamePanel } from './MinigamePanel';
 
 export function ModeratorApp() {
@@ -185,7 +185,22 @@ function ConnectionDot({ connected }: { connected: boolean }) {
   );
 }
 
+/** Fáze, ve kterých jde hráče ručně vyřadit (mimo minihru). */
+const REMOVE_PHASES = new Set(['ROLES', 'VOTE', 'VOTE_RESULT', 'NIGHT', 'MORNING']);
+
 function PlayersTable({ view, hideRoles }: { view: ModeratorView; hideRoles: boolean }) {
+  const [phoneLink, setPhoneLink] = useState<{ name: string; url: string } | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const removePlayer = async (p: ModeratorPlayer) => {
+    if (!window.confirm(`Vyřadit hráče ${p.name}? Počítá se jako mrtvý, role zůstane tajná.`)) return;
+    const res = await send({ type: 'removePlayer', playerId: p.id });
+    setActionError(res.ok ? null : res.error);
+  };
+  const newPhone = async (p: ModeratorPlayer) => {
+    const res = await requestNewPhone(p.id);
+    if (res.ok) setPhoneLink({ name: p.name, url: res.url });
+    setActionError(res.ok ? null : res.error);
+  };
   const alive = view.players.filter((p) => p.status === 'ALIVE');
   const out = view.players.filter((p) => p.status !== 'ALIVE');
   const intro = view.phase === 'MINIGAME' && view.minigame?.step === 'INTRO';
@@ -219,6 +234,16 @@ function PlayersTable({ view, hideRoles }: { view: ModeratorView; hideRoles: boo
                 ? '✔ hotovo'
                 : '… čeká'}
       </span>
+      <span className="player-actions">
+        {p.status === 'ALIVE' && REMOVE_PHASES.has(view.phase) && (
+          <button type="button" className="link" title="Hráč odešel ze hry" onClick={() => void removePlayer(p)}>
+            Vyřadit
+          </button>
+        )}
+        <button type="button" className="link" title="Přihlásit hráče na jiném telefonu" onClick={() => void newPhone(p)}>
+          Nový telefon
+        </button>
+      </span>
     </li>
   );
 
@@ -231,6 +256,19 @@ function PlayersTable({ view, hideRoles }: { view: ModeratorView; hideRoles: boo
           <h3>Vyřazení</h3>
           <ul className="console-players">{out.map(row)}</ul>
         </>
+      )}
+      {actionError && <p className="error">{actionError}</p>}
+      {phoneLink && (
+        <div className="phone-link" role="dialog" aria-label={`Nový telefon pro ${phoneLink.name}`}>
+          <p>
+            Nový telefon pro <b>{phoneLink.name}</b>: naskenuj kód nebo otevři odkaz. Starý telefon už neplatí.
+          </p>
+          <QRCodeSVG value={phoneLink.url} size={200} marginSize={2} />
+          <p className="qr-url">{phoneLink.url}</p>
+          <button type="button" className="toggle" onClick={() => setPhoneLink(null)}>
+            Hotovo
+          </button>
+        </div>
       )}
       <GhostsPanel view={view} hideRoles={hideRoles} />
     </section>
@@ -394,6 +432,9 @@ function Control({ view }: { view: ModeratorView }) {
     <>
       <TopBar view={view}>
         {minigamesInPlay && <span className="console-phase">Poklad {view.pot.toLocaleString('cs')}</span>}
+        <button type="button" className={view.paused ? 'toggle active' : 'toggle'} disabled={busy} onClick={() => run({ type: view.paused ? 'resume' : 'pause' })}>
+          {view.paused ? '▶ Pokračovat' : '⏸ Pauza'}
+        </button>
         <button type="button" className="toggle" onClick={() => setHideRoles((h) => !h)}>
           {hideRoles ? 'Ukázat role' : 'Skrýt role'}
         </button>
@@ -401,6 +442,7 @@ function Control({ view }: { view: ModeratorView }) {
       <main className="control">
         <PlayersTable view={view} hideRoles={hideRoles} />
         <section className="phase-panel">
+          {view.paused && <p className="pause-banner">Hra je pozastavená. Odpočty stojí, hráči nemůžou nic zadávat.</p>}
           {minigame || !step ? (
             <MinigamePanel view={view} run={run} busy={busy} />
           ) : (
@@ -433,6 +475,11 @@ function Control({ view }: { view: ModeratorView }) {
                     ? 'Dnes se nedá hrát žádná minihra.'
                     : `Po stisknutí: ${step.next}`}
               </p>
+              {view.phase === 'VOTE' && (
+                <button type="button" className="link" disabled={busy} onClick={() => run({ type: 'resetVotes' })}>
+                  Vynulovat hlasy a hlasovat znovu
+                </button>
+              )}
               {view.minigamesEnabled && (view.phase === 'ROLES' || view.phase === 'MORNING') && (
                 <label className="lobby-toggle">
                   <input

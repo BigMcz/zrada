@@ -106,6 +106,8 @@ export interface GameState {
   shieldHolderId: string | null;
   /** Společný poklad; nikdy neklesne pod 0. */
   pot: number;
+  /** Pauza od moderátora: od kdy (čas serveru), nebo null (Rozšíření 10). */
+  paused: { since: number } | null;
   winner?: Winner;
 }
 
@@ -130,5 +132,6 @@ export function createGame(): GameState {
     minigameMemory: {},
     shieldHolderId: null,
     pot: STARTING_POT,
+    paused: null,
   };
 }

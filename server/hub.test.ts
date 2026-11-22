@@ -254,4 +254,22 @@ describe('server přes skutečné sockety', () => {
     expect(await petra.socket.emitWithAck('intent', { type: 'ackRole' })).toEqual({ ok: true });
     expect(changes).toEqual(['ROLES']);
   });
+
+  it('nový telefon: moderátor dostane odkaz s novým tokenem, starý telefon se stane hostem', async () => {
+    const { connect, moderator, player } = await startServer();
+    const mod = await moderator();
+    const petra = await player('Petra');
+    const res = await mod.socket.emitWithAck('newPhone', petra.playerId);
+    if (!res.ok) throw new Error(res.error);
+    const token = new URL(res.url).searchParams.get('token')!;
+    expect(res.url.startsWith('http://192.168.0.10:3000/?token=')).toBe(true);
+    expect(token).not.toBe(petra.token);
+    await petra.waitFor((v) => v.kind === 'guest');
+    const phone = await connect();
+    expect(await phone.socket.emitWithAck('hello', { token })).toEqual({ as: 'player', playerId: petra.playerId });
+    const old = await connect();
+    expect(await old.socket.emitWithAck('hello', { token: petra.token })).toEqual({ as: 'guest', forgetToken: true });
+    // Hráč si nový telefon vyrobit nemůže.
+    expect(await phone.socket.emitWithAck('newPhone', petra.playerId)).toEqual({ ok: false, error: 'Na tohle nemáš oprávnění.' });
+  });
 });

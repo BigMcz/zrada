@@ -12,7 +12,8 @@ export type Phase =
 
 export type Role = 'LOYAL' | 'TRAITOR';
 
-export type PlayerStatus = 'ALIVE' | 'BANISHED' | 'MURDERED';
+/** LEFT = hráč odešel, moderátor ho vyřadil (Rozšíření 10); role se nezveřejní. */
+export type PlayerStatus = 'ALIVE' | 'BANISHED' | 'MURDERED' | 'LEFT';
 
 export type Winner = Role;
 
@@ -180,6 +181,8 @@ export interface PlayerView {
     blocked: string[];
     hint: NightHint;
   };
+  /** Moderátor hru pozastavil (Rozšíření 10). */
+  paused: boolean;
   /** Moje osobní body, které už smím vidět (body za tipy duchů až na konci hry). */
   myPoints: number;
   /** Jen pro vyřazené hráče (duchy). */
@@ -245,6 +248,8 @@ export interface ModeratorView {
   physicalMission: boolean;
   /** Zvuky velké obrazovky ztlumené. */
   screenMuted: boolean;
+  /** Hra je pozastavená. */
+  paused: boolean;
   /** Minihry, které jde dnes losovat; prázdné = jen Přeskočit. */
   minigameAvailable: boolean;
   /** Jen ve fázi MINIGAME. */
@@ -296,6 +301,8 @@ export interface ScreenView {
   winner: Winner | null;
   /** Moderátor obrazovku ztlumil. */
   muted: boolean;
+  /** Hra je pozastavená. */
+  paused: boolean;
 }
 
 /** Pohled zařízení, které ještě není ve hře. */
@@ -332,6 +339,10 @@ export type Intent =
   | { type: 'setMinigames'; enabled: boolean }
   | { type: 'setPhysicalMission'; enabled: boolean }
   | { type: 'setScreenMuted'; muted: boolean }
+  | { type: 'pause' }
+  | { type: 'resume' }
+  | { type: 'resetVotes' }
+  | { type: 'removePlayer'; playerId: string }
   | { type: 'drawMinigame' }
   | { type: 'rerollMinigame' }
   | { type: 'chooseMinigame'; id: MinigameId }
@@ -372,4 +383,8 @@ export interface ClientToServerEvents {
   intent: (intent: Intent, reply: (res: Result) => void) => void;
   /** Čas serveru pro odpočty miniher (klient si spočítá rozdíl hodin). */
   time: (reply: (serverNow: number) => void) => void;
+  /** Moderátor: nový odkaz pro hráče na jiném telefonu; starý telefon přestane platit (Rozšíření 10). */
+  newPhone: (playerId: string, reply: (res: NewPhoneResult) => void) => void;
 }
+
+export type NewPhoneResult = { ok: true; url: string } | { ok: false; error: string };

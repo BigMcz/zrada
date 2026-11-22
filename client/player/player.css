@@ -1317,3 +1317,31 @@
   font-size: 13px;
   text-align: center;
 }
+
+/* Rozšíření 10: pauza od moderátora přes celý telefon */
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  background: rgba(10, 8, 6, 0.92);
+  text-align: center;
+}
+
+.pause-overlay span {
+  font-size: 56px;
+}
+
+.pause-overlay p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 36px;
+  color: var(--gold);
+}
+
+.pause-overlay small {
+  color: var(--text-muted);
+}

@@ -17,6 +17,7 @@ export const STATUS_LABEL: Record<PlayerStatus, string> = {
   ALIVE: 've hře',
   BANISHED: 'vyhnán/a',
   MURDERED: 'zemřel/a',
+  LEFT: 'odešel/a',
 };
 
 /** „Kulatý stůl · 2. kolo“ */

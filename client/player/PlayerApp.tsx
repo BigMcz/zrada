@@ -20,6 +20,13 @@ export function PlayerApp() {
   return (
     <div className={view?.kind === 'player' && view.ghost && view.phase !== 'ENDED' ? 'phone ghost-mode' : 'phone'}>
       {!connected && <div className="connection-bar">Obnovuji spojení…</div>}
+      {view?.kind === 'player' && view.paused && (
+        <div className="pause-overlay" role="status">
+          <span aria-hidden="true">🕯️</span>
+          <p>Pauza</p>
+          <small>Moderátor hru na chvíli zastavil.</small>
+        </div>
+      )}
       {showWakeHint && view?.kind === 'player' && (
         <button type="button" className="wake-hint" onClick={hideWakeHint}>
           Nezhasínej displej, ať ti nic neuteče. ✕

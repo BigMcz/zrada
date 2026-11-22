@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import type { ClientToServerEvents, Intent, JoinResult, Result, ServerToClientEvents, View } from '../shared/types';
+import type { ClientToServerEvents, Intent, JoinResult, NewPhoneResult, Result, ServerToClientEvents, View } from '../shared/types';
 
 // Stejná adresa a port, ze kterých přišla stránka.
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
@@ -17,21 +17,33 @@ const moderatorKey = params.get('key') ?? '';
 const slot = params.get('hrac');
 const TOKEN_KEY = slot ? `zrada-token-${slot}` : 'zrada-token';
 
+// Odkaz „Nový telefon“ z konzole nese token v adrese (?token=…): uloží se a z adresy zmizí,
+// aby se nedal omylem nasdílet dál (Rozšíření 10).
+let urlToken = params.get('token');
+
 function readToken(): string | undefined {
   try {
-    return localStorage.getItem(TOKEN_KEY) ?? undefined;
+    return localStorage.getItem(TOKEN_KEY) ?? urlToken ?? undefined;
   } catch {
-    return undefined;
+    return urlToken ?? undefined;
   }
 }
 
 function writeToken(token: string | null) {
+  if (!token) urlToken = null;
   try {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
   } catch {
     // Bez úložiště hra funguje, jen se po zavření prohlížeče nevrátí.
   }
+}
+
+if (urlToken) {
+  writeToken(urlToken);
+  params.delete('token');
+  const rest = params.toString();
+  history.replaceState(null, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -120,4 +132,9 @@ export async function join(name: string): Promise<JoinResult> {
 
 export function send(intent: Intent): Promise<Result> {
   return socket.emitWithAck('intent', intent);
+}
+
+/** Moderátor: nový odkaz pro hráče na jiném telefonu (Rozšíření 10). */
+export function requestNewPhone(playerId: string): Promise<NewPhoneResult> {
+  return socket.emitWithAck('newPhone', playerId);
 }

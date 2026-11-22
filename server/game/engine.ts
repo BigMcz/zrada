@@ -22,6 +22,22 @@ export type Actor =
   /** Server sám (časovače miniher). */
   | { kind: 'system' };
 
+/** Akce, které jdou i během pauzy: pokračovat a zásahy, které hru neposouvají. */
+const ALLOWED_WHILE_PAUSED = new Set<Action['type']>(['resume', 'setScreenMuted', 'setPhysicalMission', 'newPhone', 'removePlayer']);
+
+/** Časy v ms od roku 1970 (> rok 2001); jen ty se při pokračování po pauze posunou. */
+const TIMESTAMP_MIN = 1e12;
+
+/** Posune všechny časové údaje (odpočty, doby, ťuknutí) o `ms` – po pauze běží odpočty dál od stejného místa. */
+export function shiftTimes<T>(value: T, ms: number): T {
+  if (typeof value === 'number') return (value >= TIMESTAMP_MIN ? value + ms : value) as T;
+  if (Array.isArray(value)) return value.map((v) => shiftTimes(v, ms)) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, shiftTimes(v, ms)])) as T;
+  }
+  return value;
+}
+
 /**
  * Úmysly klientů a připojení nového hráče. Jádro je ověří a teprve pak změní stav.
  * U `join` vygeneruje id a token server, aby jádro zůstalo bez vedlejších efektů.
@@ -30,7 +46,9 @@ export type Action =
   | Intent
   | { type: 'join'; name: string; playerId: string; token: string }
   /** Posun časovačů miniher; posílá jen server. */
-  | { type: 'tick'; now: number; connected?: string[] };
+  | { type: 'tick'; now: number; connected?: string[] }
+  /** Nový telefon hráče: token vygeneruje server (Rozšíření 10). */
+  | { type: 'newPhone'; playerId: string; token: string };
 
 export type ApplyResult = { ok: true; state: GameState } | { ok: false; error: string };
 
@@ -81,7 +99,8 @@ function finishOr(state: GameState, next: GameState['phase']): void {
 export function apply(prev: GameState, actor: Actor, action: Action, rng: Rng, now: number = Date.now()): ApplyResult {
   const state = structuredClone(prev);
   try {
-    if (!reduceMinigame(state, actor, action, rng, now)) reduce(state, actor, action, rng);
+    if (state.paused && !ALLOWED_WHILE_PAUSED.has(action.type)) fail('Hra je pozastavená.');
+    if (!reduceMinigame(state, actor, action, rng, now)) reduce(state, actor, action, rng, now);
     return { ok: true, state };
   } catch (e) {
     if (e instanceof RuleError) return { ok: false, error: e.message };
@@ -89,7 +108,7 @@ export function apply(prev: GameState, actor: Actor, action: Action, rng: Rng, n
   }
 }
 
-function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void {
+function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: number): void {
   switch (action.type) {
     case 'join': {
       if (actor.kind !== 'guest') fail(NOT_ALLOWED);
@@ -108,6 +127,56 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
         status: 'ALIVE',
         sawRole: false,
       });
+      return;
+    }
+
+    case 'pause': {
+      requireModerator(actor);
+      if (state.phase === 'LOBBY' || state.phase === 'ENDED' || state.paused) fail(WRONG_PHASE);
+      state.paused = { since: now };
+      return;
+    }
+
+    case 'resume': {
+      requireModerator(actor);
+      if (!state.paused) fail(WRONG_PHASE);
+      // Odpočty miniher a předání štítu se posunou o délku pauzy.
+      state.minigame = shiftTimes(state.minigame, Math.max(0, now - state.paused.since));
+      state.paused = null;
+      return;
+    }
+
+    case 'resetVotes': {
+      requireModerator(actor);
+      requirePhase(state, 'VOTE');
+      state.votes = {};
+      return;
+    }
+
+    case 'removePlayer': {
+      // Hráč odešel: počítá se jako mrtvý, role zůstane tajná, stane se duchem.
+      requireModerator(actor);
+      requirePhase(state, 'ROLES', 'VOTE', 'VOTE_RESULT', 'NIGHT', 'MORNING');
+      const player = state.players.find((p) => p.id === action.playerId);
+      if (!player || player.status !== 'ALIVE') fail(INVALID_TARGET);
+      player.status = 'LEFT';
+      if (state.shieldHolderId === player.id) state.shieldHolderId = null;
+      delete state.votes[player.id];
+      for (const [voter, target] of Object.entries(state.votes)) if (target === player.id) delete state.votes[voter];
+      delete state.nightPicks[player.id];
+      delete state.nightTips[player.id];
+      for (const [id, target] of Object.entries(state.nightPicks)) if (target === player.id) delete state.nightPicks[id];
+      finishOr(state, state.phase);
+      // Konec hry vyřazením: pauza už nemá smysl.
+      if (state.phase === 'ENDED') state.paused = null;
+      return;
+    }
+
+    case 'newPhone': {
+      requireModerator(actor);
+      const player = state.players.find((p) => p.id === action.playerId);
+      if (!player) fail(INVALID_TARGET);
+      player.token = action.token;
       return;
     }
 
@@ -258,6 +327,7 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng): void 
       state.shieldHolderId = null;
       state.pot = STARTING_POT;
       delete state.winner;
+      state.paused = null;
       return;
     }
   }

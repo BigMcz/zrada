@@ -43,6 +43,10 @@ const MODERATOR_INTENTS = new Set([
   'setMinigames',
   'setPhysicalMission',
   'setScreenMuted',
+  'pause',
+  'resume',
+  'resetVotes',
+  'removePlayer',
   'drawMinigame',
   'rerollMinigame',
   'chooseMinigame',
@@ -94,6 +98,12 @@ export function parseIntent(raw: unknown): Intent | null {
       return isId(r.targetId) ? { type: r.type, targetId: r.targetId } : null;
     case 'kick':
       return isId(r.playerId) ? { type: 'kick', playerId: r.playerId } : null;
+    case 'removePlayer':
+      return isId(r.playerId) ? { type: 'removePlayer', playerId: r.playerId } : null;
+    case 'pause':
+    case 'resume':
+    case 'resetVotes':
+      return { type: r.type };
     case 'minigameInput':
     case 'minigameModerator':
       return 'payload' in r && isSmallJson(r.payload) ? { type: r.type, payload: r.payload } : null;
@@ -271,6 +281,28 @@ export function attachGame(io: GameServer, options: HubOptions) {
     });
 
     socket.on('time', (reply) => respond(reply, Date.now()));
+
+    // Nový telefon hráče: nový token, starý telefon se stane hostem (Rozšíření 10).
+    socket.on('newPhone', (playerId, reply) => {
+      if (sessions.get(socket.id)?.as !== 'moderator') {
+        respond(reply, { ok: false, error: 'Na tohle nemáš oprávnění.' });
+        return;
+      }
+      if (typeof playerId !== 'string') {
+        respond(reply, { ok: false, error: 'Neplatný požadavek.' });
+        return;
+      }
+      const token = randomBytes(18).toString('base64url');
+      const result = apply(state, { kind: 'moderator' }, { type: 'newPhone', playerId, token }, rng);
+      if (!result.ok) {
+        respond(reply, result);
+        return;
+      }
+      commit(result.state);
+      for (const [id, s] of sessions) if (s.as === 'player' && s.playerId === playerId) sessions.set(id, { as: 'guest' });
+      respond(reply, { ok: true, url: `${options.joinUrl}?token=${encodeURIComponent(token)}` });
+      broadcast();
+    });
 
     socket.on('disconnect', () => {
       sessions.delete(socket.id);

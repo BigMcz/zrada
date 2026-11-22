@@ -368,6 +368,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
     let vaultReassign = 'ne';
     let rhythmDrop = 'ne';
     let bombReassign = 'ne';
+    let pauseCheck = 'ne';
     async function maybeReconnect() {
       if (!cfg.reconnect || reconnected !== 'ne') return;
       const bot = rand(alive());
@@ -435,6 +436,17 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
             await act(b, { type: 'vote', targetId: rand(targets).id });
           }
           await sleep(100);
+          // Občas moderátor hlasy vynuluje a hlasuje se znovu (Rozšíření 10).
+          if (chance(0.15)) {
+            await act(mod, { type: 'resetVotes' });
+            await sleep(150);
+            if (alive().some((b) => b.pv?.myVote)) report.violation('po vynulování hlasů má hráč pořád hlas');
+            for (const b of alive()) {
+              const targets = b.pv!.players.filter((p) => p.status === 'ALIVE' && p.id !== b.id);
+              await act(b, { type: 'vote', targetId: rand(targets).id });
+            }
+            await sleep(100);
+          }
           await modAct({ type: 'closeVote' });
           break;
         }
@@ -488,6 +500,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
           return;
         }
         case 'PLAY':
+          if (cfg.reconnect && pauseCheck === 'ne' && mg.endsAt && mg.endsAt - Date.now() > 4_000) return checkPause();
           if (mg.id === 'HOT_POTATO') return playHotPotato();
           if (mg.id === 'QUIZ') return playQuiz();
           if (mg.id === 'VAULT') return playVault();
@@ -890,6 +903,25 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       if (ghostId && !(res?.ghostWinnerIds ?? []).includes(ghostId)) report.violation(`Fyzická mise: duch ${nameOf(ghostId)} nedostal body`);
     }
 
+    /** Jednou za hru (s návratem hráče): pauza během minihry; odpočet se pak posune o délku pauzy. */
+    async function checkPause() {
+      const before = m().minigame!.endsAt!;
+      const started = Date.now();
+      await act(mod, { type: 'pause' });
+      await sleep(1_500);
+      if (!m().paused) report.violation('konzole po pauze nevidí pozastavenou hru');
+      if (alive().some((b) => !b.pv?.paused)) report.violation('telefon během pauzy nevidí pauzu');
+      if (m().minigame?.endsAt !== before) report.violation('odpočet se během pauzy změnil');
+      await act(mod, { type: 'resume' });
+      await sleep(200);
+      const shift = (m().minigame?.endsAt ?? 0) - before;
+      const paused = Date.now() - started;
+      if (m().minigame?.step === 'PLAY' && Math.abs(shift - paused) > 800) {
+        report.violation(`po pauze se odpočet posunul o ${shift} ms, pauza trvala asi ${paused} ms`);
+      }
+      pauseCheck = `pauza během minihry ${m().minigame?.name} (${(paused / 1000).toFixed(1)} s), odpočet posunut`;
+    }
+
     async function playHotPotato() {
       potatoPlayed = true;
       const game = m().minigame!.game as {
@@ -993,7 +1025,7 @@ async function playGame(cfg: Config, port: number): Promise<GameSummary> {
       pot: end.pot,
       topPlayers: top || '—',
       ghosts: end.ghosts.map((g) => `${nameOf(g.id)} ${g.canTip ? g.points : 'netipuje'}`).join(', ') || '—',
-      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop, bombReassign].filter((x, i) => i === 0 || x !== 'ne').join('; '),
+      reconnected: [reconnected, potatoJump, vaultReassign, rhythmDrop, bombReassign, pauseCheck].filter((x, i) => i === 0 || x !== 'ne').join('; '),
       durationS: Math.round((Date.now() - started) / 1000),
       violations: report.violations,
       failedActions: report.failedActions,
