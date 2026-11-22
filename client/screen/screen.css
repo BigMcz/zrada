@@ -955,3 +955,59 @@
 .screen-portrait.ember .screen-avatar {
   animation: ember 2.4s ease-out both;
 }
+
+/* Rozšíření 14: jiskry a kouř (canvas za obsahem) */
+.screen-embers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen-layout {
+  position: relative;
+}
+
+.screen-layout > :not(.screen-embers) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Rozsypaný poklad: mince vyletí z pokladu vpravo nahoře dolů k vítězům. */
+.coin-burst {
+  position: fixed;
+  top: 1.2em;
+  right: 2.4em;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.coin {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1b8 0%, #ffd36b 35%, #c99a2e 70%, #8c6e26 100%);
+  box-shadow: 0 0 0.4em rgba(255, 200, 80, 0.7);
+  opacity: 0;
+  animation: coin-fly 1.8s cubic-bezier(0.25, 0.6, 0.4, 1) forwards;
+}
+
+@keyframes coin-fly {
+  0% {
+    transform: translate(0, 0) rotate(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) rotate(var(--spin));
+    opacity: 0;
+  }
+}

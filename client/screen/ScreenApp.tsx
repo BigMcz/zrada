@@ -5,6 +5,7 @@ import { Candle } from '../components/Candle';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
+import { CoinBurst, Embers } from './Effects';
 import { GameScene } from './GameScenes';
 import { Countdown } from '../components/Countdown';
 import { initials, nameOf, phaseTag, ROLE_LABEL } from '../labels';
@@ -91,6 +92,8 @@ function ScreenGame({ view }: { view: ScreenView }) {
   const name = (id: string | null | undefined) => nameOf(view.players, id);
   return (
     <div className={`screen-layout phase-${view.phase.toLowerCase()}${view.minigame?.step === 'CLUE' ? ' step-clue' : ''}`}>
+      {/* Jiskry a kouř v noci a ve finále (Rozšíření 14). */}
+      {(view.phase === 'NIGHT' || (view.inFinale && view.phase !== 'ENDED')) && <Embers />}
       <header className="screen-top">
         <span className="screen-phase">{view.phase === 'LOBBY' ? 'Zrada' : phaseTag(view.phase, view.round)}</span>
         {view.phase !== 'LOBBY' && (
@@ -339,6 +342,8 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
           {view.winner === 'TRAITOR' ? 'Vyhráli Zrádci' : 'Vyhráli Věrní'}
         </Title>
       )}
+      {/* Poklad se rozsype k vítězům (Rozšíření 14). */}
+      {done && view.potShare && <CoinBurst />}
     </div>
   );
 }
