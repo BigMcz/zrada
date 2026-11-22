@@ -1,0 +1,367 @@
+{
+  "set": "filmy-serialy",
+  "name": "Filmy a seriály",
+  "lang": "cs",
+  "questions": [
+    {
+      "id": "filmy-001",
+      "text": "Kdo režíroval film Pelíšky?",
+      "options": [
+        "Jan Hřebejk",
+        "Jan Svěrák",
+        "Jiří Menzel",
+        "Miloš Forman"
+      ],
+      "correct": 0,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-002",
+      "text": "Jak se jmenuje čaroděj, který vede Společenstvo prstenu?",
+      "options": [
+        "Saruman",
+        "Gandalf",
+        "Radagast",
+        "Elrond"
+      ],
+      "correct": 1,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-003",
+      "text": "Ve kterém roce měl premiéru film Titanic režiséra Jamese Camerona?",
+      "options": [
+        "1993",
+        "1995",
+        "1997",
+        "2001"
+      ],
+      "correct": 2,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-004",
+      "text": "Který český film získal Oscara za nejlepší cizojazyčný film v roce 1997?",
+      "options": [
+        "Obecná škola",
+        "Kolja",
+        "Tmavomodrý svět",
+        "Musíme si pomáhat"
+      ],
+      "correct": 1,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-005",
+      "text": "Jak se jmenuje fiktivní africká země ve filmu Black Panther?",
+      "options": [
+        "Zamunda",
+        "Genovia",
+        "Wakanda",
+        "Latvérie"
+      ],
+      "correct": 2,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-006",
+      "text": "Kdo ztvárnil Jacka Sparrowa v sérii Piráti z Karibiku?",
+      "options": [
+        "Orlando Bloom",
+        "Johnny Depp",
+        "Brad Pitt",
+        "Keanu Reeves"
+      ],
+      "correct": 1,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-007",
+      "text": "Jak se jmenuje kavárna, kde se scházejí hrdinové seriálu Přátelé?",
+      "options": [
+        "Central Perk",
+        "MacLaren's",
+        "Monk's Café",
+        "The Peach Pit"
+      ],
+      "correct": 0,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-008",
+      "text": "Kdo hrál prince ve filmu Tři oříšky pro Popelku?",
+      "options": [
+        "Pavel Trávníček",
+        "Vladimír Menšík",
+        "Jan Hartl",
+        "Ondřej Vetchý"
+      ],
+      "correct": 0,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-009",
+      "text": "Jak se jmenuje sídlo rodu Starků ve Hře o trůny?",
+      "options": [
+        "Casterlyova skála",
+        "Zimohrad",
+        "Dračí kámen",
+        "Orlí hnízdo"
+      ],
+      "correct": 1,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-010",
+      "text": "Který z hrdinů komiksu Čtyřlístek je pes?",
+      "options": [
+        "Bobík",
+        "Fifinka",
+        "Pinďa",
+        "Myšpulín"
+      ],
+      "correct": 2,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-011",
+      "text": "Kdo hraje Walta Whitea v seriálu Perníkový táta?",
+      "options": [
+        "Aaron Paul",
+        "Bob Odenkirk",
+        "Bryan Cranston",
+        "Giancarlo Esposito"
+      ],
+      "correct": 2,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-012",
+      "text": "Jaké číslo nese agent James Bond?",
+      "options": [
+        "006",
+        "007",
+        "008",
+        "009"
+      ],
+      "correct": 1,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-013",
+      "text": "Ve kterém filmu zazní věta „Houstone, máme problém“?",
+      "options": [
+        "Gravitace",
+        "Apollo 13",
+        "Interstellar",
+        "Marťan"
+      ],
+      "correct": 1,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-014",
+      "text": "Jak se jmenuje vesmírná loď kapitána Kirka ve Star Treku?",
+      "options": [
+        "Millennium Falcon",
+        "Serenity",
+        "Enterprise",
+        "Discovery One"
+      ],
+      "correct": 2,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-015",
+      "text": "Kdo režíroval film Amadeus?",
+      "options": [
+        "Miloš Forman",
+        "Ivan Passer",
+        "Věra Chytilová",
+        "Karel Kachyňa"
+      ],
+      "correct": 0,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-016",
+      "text": "Jak se jmenuje sněhulák v animovaném filmu Ledové království?",
+      "options": [
+        "Sven",
+        "Kristoff",
+        "Olaf",
+        "Hans"
+      ],
+      "correct": 2,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-017",
+      "text": "Ve kterém městě se odehrává seriál Simpsonovi?",
+      "options": [
+        "Shelbyville",
+        "Springfield",
+        "South Park",
+        "Quahog"
+      ],
+      "correct": 1,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-018",
+      "text": "Jak se jmenuje kouzelnická škola v příbězích o Harrym Potterovi?",
+      "options": [
+        "Krásnohůlky",
+        "Kruval",
+        "Bradavice",
+        "Ilvermorny"
+      ],
+      "correct": 2,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-019",
+      "text": "Který film vypráví o hledání ztracené rybky Nema?",
+      "options": [
+        "Hledá se Nemo",
+        "Shrek",
+        "Auta",
+        "Lví král"
+      ],
+      "correct": 0,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-020",
+      "text": "Jak se jmenuje hlavní postava seriálu Dr. House?",
+      "options": [
+        "James Wilson",
+        "Gregory House",
+        "Robert Chase",
+        "Eric Foreman"
+      ],
+      "correct": 1,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-021",
+      "text": "Který český režisér natočil film Vesničko má středisková?",
+      "options": [
+        "Jiří Menzel",
+        "Jan Svěrák",
+        "Juraj Herz",
+        "František Vláčil"
+      ],
+      "correct": 0,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-022",
+      "text": "Jak se jmenuje temný pán v sérii Hvězdné války, dříve známý jako Anakin Skywalker?",
+      "options": [
+        "Darth Maul",
+        "Darth Sidious",
+        "Darth Vader",
+        "Kylo Ren"
+      ],
+      "correct": 2,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-023",
+      "text": "Ve kterém seriálu vystupuje laboratoř Hawkinsu a dimenze Vzhůru nohama?",
+      "options": [
+        "Temný",
+        "Stranger Things",
+        "Twin Peaks",
+        "Lost"
+      ],
+      "correct": 1,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-024",
+      "text": "Kdo hrál hlavní roli ve filmu Forrest Gump?",
+      "options": [
+        "Tom Hanks",
+        "Kevin Costner",
+        "Robin Williams",
+        "Tom Cruise"
+      ],
+      "correct": 0,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-025",
+      "text": "Jak se jmenuje Shrekova manželka?",
+      "options": [
+        "Fiona",
+        "Lenka",
+        "Dorota",
+        "Rapunzel"
+      ],
+      "correct": 0,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-026",
+      "text": "Který seriál se odehrává v papírenské firmě Dunder Mifflin?",
+      "options": [
+        "Parks and Recreation",
+        "The Office",
+        "Silicon Valley",
+        "Suits"
+      ],
+      "correct": 1,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-027",
+      "text": "Jak se jmenuje lev, hlavní postava filmu Lví král?",
+      "options": [
+        "Mufasa",
+        "Scar",
+        "Simba",
+        "Nala"
+      ],
+      "correct": 2,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-028",
+      "text": "Ve kterém filmu si hlavní hrdina vybírá mezi modrou a červenou pilulkou?",
+      "options": [
+        "Matrix",
+        "Počátek",
+        "Total Recall",
+        "Blade Runner"
+      ],
+      "correct": 0,
+      "difficulty": 1
+    },
+    {
+      "id": "filmy-029",
+      "text": "Kdo složil hudbu k filmům Hvězdné války a Čelisti?",
+      "options": [
+        "Hans Zimmer",
+        "John Williams",
+        "Ennio Morricone",
+        "Howard Shore"
+      ],
+      "correct": 1,
+      "difficulty": 2
+    },
+    {
+      "id": "filmy-030",
+      "text": "Jak se jmenuje hlavní hrdina seriálu 30 případů majora Zemana?",
+      "options": [
+        "Jan Zeman",
+        "Pavel Zeman",
+        "Karel Zeman",
+        "Josef Zeman"
+      ],
+      "correct": 0,
+      "difficulty": 3
+    }
+  ]
+}

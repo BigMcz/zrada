@@ -2,7 +2,7 @@
 import type { Clue } from '../../../shared/types.js';
 import { shuffle, type Rng } from '../../game/random.js';
 import type { MinigameModule } from '../types.js';
-import generalSet from './questions/obecne.cs.json' with { type: 'json' };
+import { loadQuestionSets } from './questions/load.js';
 
 export const QUIZ_ID = 'QUIZ';
 export const QUESTION_COUNT = 7;
@@ -32,7 +32,13 @@ export interface QuizSet {
   questions: QuizQuestion[];
 }
 
-export const QUESTION_SETS: QuizSet[] = [generalSet as QuizSet];
+/** Všechny sady ze složky questions/ (Rozšíření 13); výběr sad je v nastavení hry. */
+export const QUESTION_SETS: QuizSet[] = loadQuestionSets(new URL('./questions/', import.meta.url));
+
+/** Otázky z vybraných sad (null = všechny). */
+export function questionBank(selected: string[] | null | undefined): QuizQuestion[] {
+  return QUESTION_SETS.filter((s) => !selected || selected.includes(s.set)).flatMap((s) => s.questions);
+}
 
 export type QuizStage = 'QUESTION' | 'REVEAL' | 'DONE';
 
@@ -234,9 +240,15 @@ export const quiz: MinigameModule<QuizState> = {
     ghostRule: 'Duchové hrají stejný kvíz bez svíčky. Nejlepší duch 3 body, druhý 2, třetí 1.',
   },
 
+  // Kvíz se nelosuje, když ve vybraných sadách není dost nepoužitých otázek.
+  canRun(ctx) {
+    const used = (ctx.memory as { usedIds?: string[] } | undefined)?.usedIds ?? [];
+    return questionBank(ctx.quizSets).filter((q) => !used.includes(q.id)).length >= QUESTION_COUNT;
+  },
+
   init(ctx, rng, now) {
     const used = (ctx.memory as { usedIds?: string[] } | undefined)?.usedIds ?? [];
-    const bank = QUESTION_SETS.flatMap((set) => set.questions);
+    const bank = questionBank(ctx.quizSets);
     return {
       players: ctx.players.filter((p) => p.alive).map((p) => p.id),
       traitors: ctx.players.filter((p) => p.role === 'TRAITOR').map((p) => p.id),

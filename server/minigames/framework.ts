@@ -40,6 +40,7 @@ export function minigameContext(state: GameState): MinigameContext {
     pot: state.pot,
     round: state.round,
     memory: undefined,
+    quizSets: state.settings.quizSets,
   };
 }
 

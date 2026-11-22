@@ -11,6 +11,7 @@ import {
   type PublicRoundResult,
   type ScreenView,
 } from '../../shared/types.js';
+import { QUESTION_SETS } from '../minigames/quiz/index.js';
 import { recapOf } from './recap.js';
 import { isTippingGhost, pointsOf } from './rules.js';
 import { drawCandidates } from '../minigames/framework.js';
@@ -183,6 +184,12 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     physicalMission: state.settings.physicalMission,
     screenMuted: state.settings.screenMuted,
     publicVotes: state.settings.publicVotes,
+    quizSets: QUESTION_SETS.map((s) => ({
+      set: s.set,
+      name: s.name,
+      count: s.questions.length,
+      selected: state.settings.quizSets === null || state.settings.quizSets.includes(s.set),
+    })),
     paused: state.paused !== null,
     inFinale: state.finale,
     finalAvailable: state.phase === 'MORNING' && !state.finale && state.players.filter((p) => p.status === 'ALIVE').length <= FINAL_MAX_ALIVE,

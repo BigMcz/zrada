@@ -34,6 +34,16 @@ Telefony musí být na **stejné Wi-Fi** jako notebook.
 
 **Velká obrazovka (projektor, TV):** otevři `http://localhost:3000/obrazovka` (v konzoli je odkaz **Otevřít velkou obrazovku**), dej ji přes celou obrazovku a jednou klikni na **Zahájit**, aby šel zvuk. Ukazuje jen veřejné informace (QR kód v lobby, hlasování bez jmen hlasujících, odhalení, minihry, konec hry), takže ji klidně promítej. Zvuk ztlumíš v horní liště konzole. Hra jde dohrát i bez ní.
 
+**Když něco selže:**
+
+- **Pád nebo restart serveru:** hra se ukládá do `data/zrada-stav.json` a po novém `npm run dev` pokračuje tam, kde skončila. Odkaz pro moderátora i telefony fungují dál. Úplně novou hru začneš tlačítkem **Nová hra** (nebo smazáním souboru).
+- **Pauza:** tlačítko **⏸ Pauza** v horní liště zastaví odpočty miniher; hráči mezitím nic nezadají.
+- **Vybitý telefon:** u hráče v konzoli **Nový telefon** ukáže QR kód, na jiném telefonu se přihlásí jako on sám.
+- **Hráč odešel:** **Vyřadit** u hráče (počítá se jako mrtvý, role zůstane tajná).
+- **Málo lidí:** v lobby **🤖 Přidat bota** – boti hrají na serveru sami, včetně miniher.
+
+**Konec hry:** při 4 a méně živých nabídne konzole ráno **Spustit finále** – hráči jednomyslně ukončí hru, nebo vyženou dalšího. Poklad si na konci rozdělí vítězové a obrazovka ukáže rekapitulaci večera s cenami.
+
 ## Pravidla v kostce
 
 - Hráči jsou tajně Věrní, nebo Zrádci. Zrádci se znají, Věrní ne.
@@ -78,7 +88,9 @@ Pevný klíč moderátora (např. pro předem připravený odkaz) nastavíš pro
 - [ ] Uspávání notebooku vypnuté, nabíječka připojená
 - [ ] Konzole moderátora se po rozdání rolí **nepromítá** – jsou na ní vidět role
 - [ ] Tlačítko **Skrýt role** v konzoli, když se moderátorovi někdo dívá přes rameno (skryje i štít a body duchů)
-- [ ] Minihry v lobby zapnuté, pokud se mají hrát (vypnuté = hra bez miniher)
+- [ ] Minihry v lobby zapnuté, pokud se mají hrát (vypnuté = hra bez miniher); vybrané sady otázek do kvízu
+- [ ] Veřejné hlasování v lobby jen tehdy, když ho skupina chce (obrazovka pak ukáže, kdo pro koho hlasoval)
+- [ ] Scénář pro moderátora v konzoli: věty k přečtení nahlas (jde skrýt, texty v `client/moderator/script.cs.json`)
 
 ## Vývoj
 
@@ -110,7 +122,7 @@ server/
     auction/           Tajná aukce
     splitSteal/        Rozdělit, nebo ukrást
     hotPotato/         Horký brambor
-    quiz/              Insider kvíz (otázky v questions/*.json)
+    quiz/              Insider kvíz (sady otázek v questions/*.json se načtou samy; vlastní sada = nový soubor)
     vault/             Trezor (generátor kódu a nápověd v hints.ts)
     rhythm/            Rytmus (hodnocení ťuknutí v scoring.ts)
     bomb/              Zneškodni bombu (manuál v manual.cs.json, generátor a řešitel v manual.ts)

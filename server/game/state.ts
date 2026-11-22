@@ -62,6 +62,8 @@ export interface GameSettings {
   screenMuted: boolean;
   /** Veřejné hlasování: obrazovka ukáže, kdo pro koho hlasoval (Rozšíření 12); výchozí vypnuto. */
   publicVotes: boolean;
+  /** Sady otázek do kvízu; null = všechny (Rozšíření 13). */
+  quizSets: string[] | null;
 }
 
 /**
@@ -140,7 +142,7 @@ export function createGame(): GameState {
     ghostTips: {},
     ghostTipLog: [],
     points: [],
-    settings: { minigamesEnabled: true, physicalMission: false, screenMuted: false, publicVotes: false },
+    settings: { minigamesEnabled: true, physicalMission: false, screenMuted: false, publicVotes: false, quizSets: null },
     minigame: null,
     minigamesPlayed: [],
     minigameMemory: {},

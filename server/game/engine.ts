@@ -241,6 +241,15 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
       return;
     }
 
+    case 'setQuizSets': {
+      requireModerator(actor);
+      requirePhase(state, 'LOBBY');
+      const sets = action.sets;
+      if (sets !== null && (!Array.isArray(sets) || sets.length > 50 || !sets.every((x) => typeof x === 'string' && x.length <= 60))) fail(INVALID_TARGET);
+      state.settings.quizSets = sets === null ? null : [...sets];
+      return;
+    }
+
     case 'setScreenMuted': {
       // Ztlumení velké obrazovky jde přepnout kdykoli.
       requireModerator(actor);

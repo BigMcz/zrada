@@ -290,6 +290,8 @@ export interface ModeratorView {
   screenMuted: boolean;
   /** Veřejné hlasování (nastavení v lobby). */
   publicVotes: boolean;
+  /** Sady otázek do kvízu a které jsou vybrané (Rozšíření 13). */
+  quizSets: { set: string; name: string; count: number; selected: boolean }[];
   /** Hra je pozastavená. */
   paused: boolean;
   inFinale: boolean;
@@ -398,6 +400,7 @@ export type Intent =
   | { type: 'setPhysicalMission'; enabled: boolean }
   | { type: 'setScreenMuted'; muted: boolean }
   | { type: 'setPublicVotes'; enabled: boolean }
+  | { type: 'setQuizSets'; sets: string[] | null }
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'resetVotes' }

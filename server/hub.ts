@@ -48,6 +48,7 @@ const MODERATOR_INTENTS = new Set([
   'setPhysicalMission',
   'setScreenMuted',
   'setPublicVotes',
+  'setQuizSets',
   'pause',
   'resume',
   'resetVotes',
@@ -129,6 +130,8 @@ export function parseIntent(raw: unknown): Intent | null {
       return typeof r.enabled === 'boolean' ? { type: 'setPhysicalMission', enabled: r.enabled } : null;
     case 'setScreenMuted':
       return typeof r.muted === 'boolean' ? { type: 'setScreenMuted', muted: r.muted } : null;
+    case 'setQuizSets':
+      return r.sets === null || (Array.isArray(r.sets) && r.sets.every((x) => typeof x === 'string')) ? { type: 'setQuizSets', sets: r.sets as string[] | null } : null;
     case 'setPublicVotes':
       return typeof r.enabled === 'boolean' ? { type: 'setPublicVotes', enabled: r.enabled } : null;
     case 'startGame':

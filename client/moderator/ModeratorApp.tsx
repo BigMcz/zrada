@@ -153,6 +153,24 @@ function Lobby({ view }: { view: ModeratorView }) {
               {view.physicalMission ? 'Fyzická mise v osudí' : 'Fyzická mise mimo osudí'}
             </label>
           )}
+          {view.minigamesEnabled && view.quizSets.length > 0 && (
+            <div className="quiz-sets">
+              <p className="muted">Sady otázek do kvízu:</p>
+              {view.quizSets.map((s) => (
+                <label key={s.set} className="lobby-toggle">
+                  <input
+                    type="checkbox"
+                    checked={s.selected}
+                    onChange={(e) => {
+                      const selected = view.quizSets.filter((x) => (x.set === s.set ? e.target.checked : x.selected)).map((x) => x.set);
+                      run({ type: 'setQuizSets', sets: selected.length === view.quizSets.length ? null : selected });
+                    }}
+                  />
+                  {s.name} ({s.count} otázek)
+                </label>
+              ))}
+            </div>
+          )}
 
           <h2>Počet Zrádců</h2>
           {options.length === 0 ? (

@@ -10,6 +10,8 @@ export interface MinigameContext {
   round: number;
   /** Paměť modulu z dřívějších dnů této hry. */
   memory: unknown;
+  /** Vybrané sady otázek do kvízu; null/chybí = všechny (Rozšíření 13). */
+  quizSets?: string[] | null;
 }
 
 export interface MinigameResult {
