@@ -1154,7 +1154,7 @@
 }
 
 /* Rozšíření 16: úvodní sekvence */
-.screen-intro {
+.screen-opening {
   display: grid;
   place-items: center;
   align-content: center;

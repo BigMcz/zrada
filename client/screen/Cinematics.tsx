@@ -13,7 +13,7 @@ export function Intro({ elapsed }: { elapsed: number }) {
   const lines = introLines();
   const i = Math.min(lines.length - 1, Math.floor(elapsed / INTRO_LINE_MS));
   return (
-    <div className="screen-intro">
+    <div className="screen-opening">
       {i === 0 && <Crest className="big intro-crest" />}
       <p key={i} className={i === 0 ? 'intro-line first' : 'intro-line'}>
         {lines[i]}
