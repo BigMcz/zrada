@@ -18,6 +18,11 @@ import { play, setAmbient, setMuted, startAudio } from './sounds';
 import { theme, winnersWord } from '../themeStore';
 
 /** Velká obrazovka pro projektor (Rozšíření 9): jen sleduje stav hry, nic se na ní neovládá. */
+/** Velká skupina (Rozšíření 17): víc hráčů = menší portréty, ať se řada vejde. */
+function crowd(count: number): string {
+  return count > 14 ? 'crowd' : count > 10 ? 'many' : '';
+}
+
 export function ScreenApp() {
   const { connected, view } = useConnection();
   const [started, setStarted] = useState(false);
@@ -115,7 +120,7 @@ function ScreenGame({ view }: { view: ScreenView }) {
       {/* Během odhalení hlasování portréty skryté: jinak by vyhnaný zmizel dřív, než ho obrazovka ohlásí. */}
       {view.phase !== 'LOBBY' && view.phase !== 'ENDED' && view.phase !== 'NIGHT' && view.phase !== 'VOTE_RESULT' && (
         <footer className="screen-bottom">
-          <div className="screen-portraits">
+          <div className={`screen-portraits ${crowd(view.players.filter((p) => p.status === 'ALIVE').length)}`}>
             {view.players
               .filter((p) => p.status === 'ALIVE')
               .map((p) => (
@@ -301,7 +306,7 @@ function Lobby({ view }: { view: ScreenView }) {
       <div className="screen-joined">
         <Crest className="big" />
         <h1 className="screen-logo">{theme().title.toLocaleUpperCase('cs').split('').join(' ')}</h1>
-        <div className="screen-portraits wrap">
+        <div className={`screen-portraits wrap ${crowd(view.players.length)}`}>
           {view.players.map((p) => (
             // Nově připojený hráč se rozhoří jako uhlík (animace jen při objevení).
             <Portrait key={p.id} label={p.name} crest={p.crest} ember />
@@ -336,7 +341,7 @@ function VoteReveal({ view, name }: { view: ScreenView; name: (id: string | null
   }, [stage]);
   if (t < 0) {
     return (
-      <div className="screen-vote-cards">
+      <div className={`screen-vote-cards ${crowd(cards.length)}`}>
         {cards.slice(0, shownCards).map((c) => (
           <div key={c.voterId} className="screen-vote-card">
             <span>{name(c.voterId)}</span>
@@ -349,7 +354,7 @@ function VoteReveal({ view, name }: { view: ScreenView; name: (id: string | null
   }
   return (
     <div className="screen-vote">
-      <div className="screen-tally">
+      <div className={`screen-tally ${crowd(tally.length)}`}>
         {tally.map((r) => (
           <div key={r.id} className={['screen-bar', t > 2500 && r.id !== view.banishedId ? 'dim' : ''].join(' ')}>
             <span className="screen-bar-name">{name(r.id)}</span>
@@ -397,14 +402,14 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
     return (
       <div className="screen-recap">
         <h1>{`Vyhráli ${winnersWord(view.winner)}`}: rekapitulace večera</h1>
-        <Recap recap={view.recap} players={view.players} className="big" />
+        <Recap recap={view.recap} players={view.players} className={view.recap.rounds.length > 5 ? 'big long' : 'big'} />
       </div>
     );
   }
   return (
     <div className="screen-finale">
       {view.banishedId && t < 1500 && <p className="muted">{theme().banishedBy}: {name(view.banishedId)}</p>}
-      <div className="screen-portraits wrap">
+      <div className={`screen-portraits wrap ${crowd(view.players.length)}`}>
         {view.players.map((p, i) => (
           <Portrait
             key={p.id}

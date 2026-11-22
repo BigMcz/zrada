@@ -7,7 +7,8 @@ export function ClueView({ clues, nameOf }: { clues: Clue[]; nameOf: (id: string
       {clues.map((clue, i) => (
         <section key={i} className="clue">
           <h3>{clue.title}</h3>
-          <ul>
+          {/* Dlouhý seznam (velká skupina) si obrazovka rozloží do dvou sloupců. */}
+          <ul className={clue.rows.length > 8 ? 'long' : undefined}>
             {clue.rows.map((row, j) => (
               <li key={j}>
                 <span>{row.playerId ? nameOf(row.playerId) : row.label}</span>

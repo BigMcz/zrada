@@ -1383,3 +1383,116 @@
 .screen-hall li b {
   color: var(--gold);
 }
+
+/* Rozšíření 17: až 18 hráčů – portréty se zmenší, ať se vejdou. */
+.screen-portraits.wrap.many {
+  font-size: 1.2em;
+  gap: 0.5em;
+}
+
+.screen-portraits.wrap.crowd {
+  font-size: 1em;
+  gap: 0.45em 0.5em;
+}
+
+.screen-bottom .screen-portraits.many {
+  font-size: 0.95em;
+  gap: 0.4em;
+}
+
+.screen-bottom .screen-portraits.crowd {
+  font-size: 0.8em;
+  gap: 0.3em;
+}
+
+.screen-portraits.crowd .screen-portrait {
+  min-width: 2.6em;
+}
+
+.screen-vote-cards.many,
+.screen-vote-cards.crowd {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.3em 0.8em;
+  width: 95%;
+}
+
+.screen-vote-cards.many .screen-vote-card,
+.screen-vote-cards.crowd .screen-vote-card {
+  font-size: 0.72em;
+}
+
+.screen-tally.many {
+  gap: 0.2em;
+}
+
+.screen-tally.many .screen-bar {
+  font-size: 0.68em;
+}
+
+.screen-tally.crowd {
+  gap: 0.12em;
+}
+
+.screen-tally.crowd .screen-bar {
+  font-size: 0.62em;
+}
+
+.screen-vote-cards.many .screen-vote-card > *,
+.screen-vote-cards.crowd .screen-vote-card > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ve velké skupině místo „hlasuje pro“ jen šipka, ať se vejdou jména. */
+.screen-vote-cards.many .screen-vote-card .muted,
+.screen-vote-cards.crowd .screen-vote-card .muted {
+  display: none;
+}
+
+.screen-vote-cards.many .screen-vote-card b::before,
+.screen-vote-cards.crowd .screen-vote-card b::before {
+  content: '→ ';
+  color: var(--text-muted);
+}
+
+/* Stopa na obrazovce: tabulky vedle sebe, dlouhé seznamy ve dvou sloupcích (jinak by se 10+ hráčů nevešlo). */
+.screen-clue {
+  width: 94%;
+}
+
+.screen-clue .clues {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 0 2em;
+}
+
+.screen-clue .clue li {
+  padding: 0.2em 0;
+}
+
+.screen-clue .clue ul.long {
+  columns: 2;
+  column-gap: 1.5em;
+}
+
+.screen-clue .clue ul.long li {
+  break-inside: avoid;
+  font-size: 0.95em;
+}
+
+/* Dlouhý večer (víc než 5 kol, velká skupina): hustší rekapitulace. */
+.recap.big.long {
+  font-size: 0.6em;
+}
+
+.recap.big.long .recap-rounds {
+  gap: 0.25em;
+}
+
+.recap.big.long .recap-rounds li {
+  padding-bottom: 0.25em;
+}
