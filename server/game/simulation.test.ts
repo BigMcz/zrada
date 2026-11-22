@@ -4,11 +4,11 @@ import { aliveWithRole } from './rules.js';
 import { playRandomGame } from './testing.js';
 
 describe('simulace celé hry s boty', () => {
-  it('300 náhodných her se 4–10 hráči vždy správně skončí', () => {
+  it('300 náhodných her se 4–18 hráči vždy správně skončí', () => {
     const winners = { LOYAL: 0, TRAITOR: 0 };
 
     for (let seed = 1; seed <= 300; seed++) {
-      const playerCount = 4 + (seed % 7);
+      const playerCount = 4 + (seed % 15);
       const state = playRandomGame(playerCount, seededRng(seed));
 
       const traitors = aliveWithRole(state, 'TRAITOR').length;

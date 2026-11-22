@@ -49,7 +49,7 @@ describe('Rekapitulace a ceny', () => {
 
   it('rekapitulace jen na konci hry a nikde kompletní seznam, kdo pro koho hlasoval', () => {
     for (let seed = 1; seed <= 20; seed++) {
-      playRandomGame(4 + (seed % 7), seededRng(seed), (s) => {
+      playRandomGame(4 + (seed % 15), seededRng(seed), (s) => {
         const views = [viewForScreen(s, null), viewForModerator(s, new Set()), ...s.players.map((p) => viewForPlayer(s, p.id)!)];
         for (const v of views) {
           expect(v.recap === null).toBe(s.phase !== 'ENDED');

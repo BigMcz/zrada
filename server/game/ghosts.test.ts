@@ -103,7 +103,7 @@ describe('body za tipy', () => {
 
   it('v 300 hrách s boty mají duchové přesně tolik bodů, kolikrát tipli Zrádce', () => {
     for (let seed = 1; seed <= 300; seed++) {
-      const state = playRandomGame(4 + (seed % 7), seededRng(seed));
+      const state = playRandomGame(4 + (seed % 15), seededRng(seed));
       expect(state.ghostTips).toEqual({});
       for (const p of state.players) {
         const hits = state.ghostTipLog.filter(
@@ -120,7 +120,7 @@ describe('utajení bodů duchů', () => {
   it('během hry nikdo na telefonu nevidí body ani žebříček, na konci ano', () => {
     let sawEnded = false;
     for (let seed = 1; seed <= 60; seed++) {
-      playRandomGame(4 + (seed % 7), seededRng(seed), (state) => {
+      playRandomGame(4 + (seed % 15), seededRng(seed), (state) => {
         for (const p of state.players) {
           const view = viewForPlayer(state, p.id)!;
           if (state.phase !== 'ENDED') {

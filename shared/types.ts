@@ -58,7 +58,7 @@ export interface Recap {
 }
 
 export const MIN_PLAYERS = 4;
-export const MAX_PLAYERS = 10;
+export const MAX_PLAYERS = 18;
 export const MAX_NAME_LENGTH = 20;
 
 /** Reakce na velkou obrazovku (Rozšíření 16). */
@@ -69,7 +69,7 @@ export const REACTION_COOLDOWN_MS = 3000;
 
 /** Doporučený počet Zrádců podle SPEC: 1 při 4–7 hráčích, 2 při 8–10. */
 export function recommendedTraitors(playerCount: number): number {
-  return playerCount >= 8 ? 2 : 1;
+  return playerCount >= 13 ? 3 : playerCount >= 8 ? 2 : 1;
 }
 
 // ---------------------------------------------------------------------------

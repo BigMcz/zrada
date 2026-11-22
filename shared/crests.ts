@@ -17,6 +17,8 @@ export const CRESTS = [
   'MASK',
   'CHALICE',
   'TOWER',
+  'MOON',
+  'TREE',
 ] as const;
 
 export type Crest = (typeof CRESTS)[number];
@@ -38,6 +40,8 @@ export const CREST_LABEL: Record<Crest, string> = {
   MASK: 'Maska',
   CHALICE: 'Pohár',
   TOWER: 'Věž',
+  MOON: 'Měsíc',
+  TREE: 'Strom',
 };
 
 export function isCrest(value: unknown): value is Crest {

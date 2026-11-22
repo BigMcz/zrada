@@ -50,9 +50,10 @@ describe('připojení do lobby', () => {
     expect(rejected(state, GUEST, { type: 'join', name: 'PETRA', playerId: 'x', token: 'x' })).toMatch(/už ve hře/);
   });
 
-  it('pustí nejvýš 10 hráčů', () => {
-    const state = lobby(Array.from({ length: 10 }, (_, i) => `H${i}`));
-    expect(rejected(state, GUEST, { type: 'join', name: 'Jedenáctý', playerId: 'x', token: 'x' })).toMatch(/plná/);
+  it('pustí nejvýš 18 hráčů, každého s vlastním znakem', () => {
+    const state = lobby(Array.from({ length: 18 }, (_, i) => `H${i}`));
+    expect(new Set(state.players.map((p) => p.crest)).size).toBe(18);
+    expect(rejected(state, GUEST, { type: 'join', name: 'Devatenáctý', playerId: 'x', token: 'x' })).toMatch(/plná/);
   });
 
   it('po začátku hry se už nikdo nepřipojí', () => {

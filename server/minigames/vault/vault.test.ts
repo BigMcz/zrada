@@ -53,11 +53,11 @@ function withLocksmith(s: VaultState, locksmith: string): VaultState {
 const wrongGuess = (s: VaultState) => s.code.map((d) => (d + 1) % 10);
 
 describe('Trezor – generátor nápověd', () => {
-  it('pro 4–10 hráčů: z pravdivých nápověd jediný kód, každá číslice od 2 různých hráčů, 1–3 nápovědy na hráče', () => {
-    for (const n of [4, 5, 6, 7, 8, 10]) {
+  it('pro 4–18 hráčů: z pravdivých nápověd jediný kód, každá číslice od 2 různých hráčů, 1–3 nápovědy na hráče', () => {
+    for (const n of [4, 5, 6, 7, 8, 10, 13, 15, 18]) {
       for (let seed = 1; seed <= 25; seed++) {
         const players = Array.from({ length: n }, (_, i) => `p${i}`);
-        const traitors = n >= 7 ? ['p0', 'p1'] : ['p0'];
+        const traitors = n >= 13 ? ['p0', 'p1', 'p2'] : n >= 7 ? ['p0', 'p1'] : ['p0'];
         const digits = n <= 4 ? 3 : 4;
         const deal = dealVault(players, traitors, digits, rng(seed * 31 + n));
         const all = Object.values(deal.hints).flat();

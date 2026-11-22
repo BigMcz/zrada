@@ -4,7 +4,7 @@
 
 ## Cíl a pro koho
 
-Zrada je společenská hra pro 4–10 lidí v jedné místnosti, inspirovaná hrou Městečko Palermo. Telefony v ní nahrazují kartičky s rolemi a lístečky na hlasování. Hrát ji budou účastníci vibecoding kurzu jako krátkou ukázku na 20–30 minut. Řídí ji moderátor z notebooku a sám nehraje.
+Zrada je společenská hra pro 4–18 lidí v jedné (původně 4–10, rozšířeno v Rozšíření 17) místnosti, inspirovaná hrou Městečko Palermo. Telefony v ní nahrazují kartičky s rolemi a lístečky na hlasování. Hrát ji budou účastníci vibecoding kurzu jako krátkou ukázku na 20–30 minut. Řídí ji moderátor z notebooku a sám nehraje.
 
 Hra běží jen na místní síti (notebook a telefony na stejné Wi-Fi). Nic se nikam nenasazuje a internet není potřeba.
 
@@ -1316,3 +1316,48 @@ Pravidla hry se nemění. Rozšíření přidává atmosféru, osobnější hrá
 | Z4 | Intro a titulky |
 | Z5 | Síň slávy |
 | Z6 | Témata |
+
+## Rozšíření 17: Až 18 hráčů
+
+Hra pustí až 18 hráčů místo 10. Minimum zůstává 4, pravidla kol beze změny.
+
+### Co se mění
+
+- **Limit:** nejvýš 18 hráčů. Devatenáctý dostane „Hra je plná (nejvýš 18 hráčů).“, obrazovka schová QR kód.
+- **Doporučení Zrádců:** 4–7 hráčů 1, 8–12 hráčů 2, 13–18 hráčů 3. Moderátor to dál může změnit (platí stávající pravidlo: Zrádců je méně než Věrných).
+- **Znaky:** k 16 znakům přibudou 2 nové (Měsíc, Strom), aby měl každý z 18 hráčů vlastní.
+- **Obrazovka:** čekárna, rozdání rolí, spodní řada portrétů, hlasování a finále se vejdou i pro 18 hráčů na 1280×720 (portréty se zmenší, případně zalomí do dvou řad).
+- **Horký brambor – dvě bomby:** když minihru začíná 11 a víc hráčů, kolují v každém kole **dvě bomby**, dokud v minihře zbývá víc než 4 hráči. Pak už jen jedna.
+  - Každá bomba má vlastní rozbušku a bouchne samostatně. Kolo končí, až bouchnou obě, pak pauza 3 s.
+  - Kdo drží bombu, nemůže dostat druhou: v mřížce nejde ťuknout na druhého držitele. Zákaz vrácení platí pro každou bombu zvlášť.
+  - Ručička tlaku Zrádců ukazuje bombu, která bouchne dřív. Věrným dál kmitá.
+  - Telefon, obrazovka i konzole ukazují oba držitele („Bomby mají: Karel, Jana“), na obrazovce oba portréty „drží bombu“.
+  - Duchové tipují stejně (posledního přeživšího a prvního vyřazeného; když bouchnou dvě najednou, platí ta dřívější).
+- **Ostatní minihry** zůstávají, jen jejich testy poběží až s 18 hráči (Trezor: nápovědy dál jednoznačné).
+- Dokumentace (README, SPEC, architektura) uvádí 4–18 hráčů.
+
+### Pozor na délku
+
+Každé kolo ubere 2 hráče, takže z 18 hráčů je finále ve 4 až po 7 kolech (zhruba hodina a víc). Moderátor může minihry vynechat. Zkrácení hry pro velkou skupinu toto rozšíření neobsahuje.
+
+### Rozšíření NEobsahuje
+
+- Víc vražd za noc nebo jiné zkrácení hry
+- Víc než 18 hráčů
+- Úpravy ostatních miniher pro velké skupiny
+
+### Hotovo, když
+
+1. Do hry se připojí 18 hráčů, každý s vlastním znakem, devatenáctý ne.
+2. Moderátor dostane doporučení 3 Zrádců pro 13–18 hráčů.
+3. Obrazovka v 1280×720 ukazuje 18 hráčů bez ořezu a překrývání ve všech fázích.
+4. Horký brambor s 11+ hráči má dvě bomby podle pravidel (ověřeno testy), utajení beze změny.
+5. Simulace a testy pohledů běží se 4–18 hráči, robot `npm run e2e` odehraje i hru s 18 hráči.
+
+### Kroky vývoje
+
+| Krok | Obsah |
+| --- | --- |
+| H1 | Limit 18, doporučení Zrádců, 2 nové znaky, testy a robot s 18 hráči |
+| H2 | Obrazovka pro 18 hráčů |
+| H3 | Horký brambor se dvěma bombami |

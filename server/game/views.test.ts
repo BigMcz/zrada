@@ -4,11 +4,11 @@ import type { GameState } from './state.js';
 import { as, MOD, must, playRandomGame, startedWith } from './testing.js';
 import { viewForModerator, viewForPlayer } from './views.js';
 
-/** Všechny stavy z náhodných her se 4–10 hráči. */
+/** Všechny stavy z náhodných her se 4–18 hráči. */
 function allStates(seeds: number): GameState[] {
   const states: GameState[] = [];
   for (let seed = 1; seed <= seeds; seed++) {
-    playRandomGame(4 + (seed % 7), seededRng(seed), (s) => states.push(s));
+    playRandomGame(4 + (seed % 15), seededRng(seed), (s) => states.push(s));
   }
   return states;
 }

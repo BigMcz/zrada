@@ -20,6 +20,8 @@ const PATHS: Record<Crest, string[]> = {
   MASK: ['M3 7c3 1 6 1 9 0 3 1 6 1 9 0 0 6-3 10-6 10-1.5 0-2-2-3-2s-1.5 2-3 2c-3 0-6-4-6-10z', 'M6.8 11c1-.8 2.2-.8 3.2 0M14 11c1-.8 2.2-.8 3.2 0'],
   CHALICE: ['M6 3h12c0 6-2.5 9-6 9S6 9 6 3z', 'M12 12v6M9 18h6M8 21h8'],
   TOWER: ['M6 21V8h12v13', 'M5 8V4h2.5v2h2V4h5v2h2V4H19v4', 'M10 21v-4a2 2 0 0 1 4 0v4', 'M11 11.5h2', 'M4 21h16'],
+  MOON: ['M16 3.5a8.5 8.5 0 1 0 4.5 13A7 7 0 0 1 16 3.5z', 'M17.5 7.5l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5z'],
+  TREE: ['M12 2.5l-5 6h3l-4.5 5.5h3.5L5 19h14l-4-5h3.5L14 8.5h3z', 'M12 19v2.5M9.5 21.5h5'],
 };
 
 export function Sigil({ crest, className = '' }: { crest: Crest; className?: string }) {

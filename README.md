@@ -1,6 +1,6 @@
 # Zrada
 
-Společenská hra pro 4–10 lidí v jedné místnosti, inspirovaná Městečkem Palermo. Telefony nahrazují kartičky s rolemi a lístečky na hlasování, moderátor hru řídí z notebooku. Hra běží jen v místní síti, bez instalace a bez internetu.
+Společenská hra pro 4–18 lidí v jedné místnosti, inspirovaná Městečkem Palermo. Telefony nahrazují kartičky s rolemi a lístečky na hlasování, moderátor hru řídí z notebooku. Hra běží jen v místní síti, bez instalace a bez internetu.
 
 Ukázkový projekt pro vibecoding kurz. Zadání a návrhy jsou ve složce [DOC](DOC/):
 

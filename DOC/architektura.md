@@ -22,7 +22,7 @@ Z dokumentů ve složce DOC plynou pro architekturu tyto požadavky:
 | Požadavek | Zdroj | Dopad na architekturu |
 | --- | --- | --- |
 | Jen lokální síť, žádné nasazení, internet není potřeba | SPEC, zadání kurzu | Jeden proces na notebooku, nic z internetu (ani fonty z CDN) |
-| 4–10 hráčů, jedna hra najednou | SPEC | Stav v paměti, žádné škálování |
+| 4–18 hráčů, jedna hra najednou | SPEC | Stav v paměti, žádné škálování |
 | Hra nemusí přežít restart | SPEC | Bez databáze |
 | Všechny telefony se přepnou najednou | analýza, SPEC | Server posílá změny sám (push), ne dotazování |
 | Telefon nesmí dostat cizí role, ani skrytě | analýza, SPEC | Každý klient dostává jen svůj pohled, počítaný na serveru |

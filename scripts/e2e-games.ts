@@ -38,10 +38,11 @@ const CONFIGS: Config[] = [
   { name: 'Hra 3: 10 hráčů, 2 Zrádci, minihry + návrat hráče', players: 10, traitors: 2, minigames: true, reconnect: true },
   { name: 'Hra 4: 4 hráči, 1 Zrádce, bez miniher', players: 4, traitors: 1, minigames: false },
   { name: 'Hra 5: 7 hráčů, 2 Zrádci, minihry + návrat hráče', players: 7, traitors: 2, minigames: true, reconnect: true },
+  { name: 'Hra 6: 18 hráčů, 3 Zrádci, minihry', players: 18, traitors: 3, minigames: true },
 ];
 
 const KEY = 'e2e-klic';
-const NAMES = ['Anna', 'Bára', 'Cyril', 'Dan', 'Ema', 'Filip', 'Gita', 'Hugo', 'Ivana', 'Jan'];
+const NAMES = ['Anna', 'Bára', 'Cyril', 'Dan', 'Ema', 'Filip', 'Gita', 'Hugo', 'Ivana', 'Jan', 'Klára', 'Leoš', 'Marta', 'Nikola', 'Olga', 'Pavel', 'Radka', 'Šimon'];
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const rand = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
