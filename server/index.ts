@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types.js';
 import { attachGame } from './hub.js';
 import { loadGame, saveGame } from './persistence.js';
+import { createHallOfFame } from './hallOfFame.js';
 import { registerAllMinigames } from './minigames/modules.js';
 import { findLanIp, listLanIps } from './network.js';
 
@@ -30,9 +31,12 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   destroyUpgrade: false,
 });
 registerAllMinigames();
+// Síň slávy vedle uložené hry; s vypnutým ukládáním (STATE_FILE=, robot) se nezapisuje nikam.
+const hallFile = process.env.HALL_FILE ?? (stateFile ? path.join(rootDir, 'data', 'zrada-sin-slavy.json') : '');
 attachGame(io, {
   moderatorKey,
   joinUrl,
+  hallOfFame: createHallOfFame(hallFile || null),
   initialState: saved?.state,
   onChange: stateFile
     ? (state) => {

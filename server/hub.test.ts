@@ -316,4 +316,25 @@ describe('server přes skutečné sockety', () => {
     await new Promise((r) => setTimeout(r, 3000));
     expect(await anna.socket.emitWithAck('react', '😂')).toEqual({ ok: false, error: 'Teď reagovat nejde.' });
   }, 8000);
+  it('síň slávy: dohraná hra se zapíše, obrazovka ji ukáže v čekárně, vynulovat smí jen moderátor', async () => {
+    const { connect, moderator, player } = await startServer();
+    const mod = await moderator();
+    const screen = await connect();
+    await screen.socket.emitWithAck('hello', { screen: true });
+    const [anna] = [await player('Anna')];
+    for (const n of ['Bára', 'Cyril', 'Dan']) await player(n);
+    await mod.socket.emitWithAck('intent', { type: 'startGame', traitorCount: 1 });
+    await mod.socket.emitWithAck('intent', { type: 'startVote' });
+    const mv = await mod.waitFor((v): v is ModeratorView => isModerator(v) && v.phase === 'VOTE');
+    const traitor = mv.players.find((p) => p.role === 'TRAITOR')!;
+    expect(await mod.socket.emitWithAck('intent', { type: 'removePlayer', playerId: traitor.id })).toEqual({ ok: true });
+    await mod.waitFor((v) => isModerator(v) && v.phase === 'ENDED' && v.hallOfFameSize === 4);
+    await mod.socket.emitWithAck('intent', { type: 'newGame' });
+    const lobby = await screen.waitFor((v) => v.kind === 'screen' && v.phase === 'LOBBY' && v.hallOfFame.length > 0);
+    expect(lobby.kind === 'screen' && lobby.hallOfFame[0]).toMatchObject({ key: 'WINS', rows: expect.arrayContaining([{ name: 'Anna', count: traitor.name === 'Anna' ? 0 : 1 }].filter((r) => r.count > 0)) });
+    expect(await anna.socket.emitWithAck('resetHallOfFame')).toMatchObject({ ok: false });
+    expect(await mod.socket.emitWithAck('resetHallOfFame')).toEqual({ ok: true });
+    await screen.waitFor((v) => v.kind === 'screen' && v.hallOfFame.length === 0);
+    await mod.waitFor((v) => isModerator(v) && v.hallOfFameSize === 0);
+  });
 });

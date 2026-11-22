@@ -283,6 +283,8 @@ export interface ModeratorView {
   round: number;
   /** Reakce hráčů na obrazovku zapnuté (Rozšíření 16). */
   reactions: boolean;
+  /** Kolik jmen je v síni slávy (0 = prázdná nebo vypnutá). */
+  hallOfFameSize: number;
   traitorCount: number;
   recommendedTraitors: number;
   players: ModeratorPlayer[];
@@ -342,8 +344,17 @@ export interface ScreenMinigameView {
 }
 
 /** Pohled velké obrazovky: jen veřejné informace, nic se na ní neovládá (Rozšíření 9). */
+/** Žebříček síně slávy (Rozšíření 16). */
+export interface HallBoard {
+  key: 'WINS' | 'TRAITOR' | 'DETECTIVE';
+  title: string;
+  rows: { name: string; count: number }[];
+}
+
 export interface ScreenView {
   kind: 'screen';
+  /** Síň slávy; jen v čekárně, jinak prázdná. */
+  hallOfFame: HallBoard[];
   phase: Phase;
   round: number;
   pot: number;
@@ -464,6 +475,8 @@ export interface ClientToServerEvents {
   hello: (req: HelloRequest, reply: (res: HelloResult) => void) => void;
   join: (name: string, reply: (res: JoinResult) => void) => void;
   intent: (intent: Intent, reply: (res: Result) => void) => void;
+  /** Moderátor: vynuluje síň slávy (Rozšíření 16). */
+  resetHallOfFame: (reply: (res: Result) => void) => void;
   /** Hráč: reakce na velkou obrazovku. */
   react: (emoji: Reaction, reply: (res: Result) => void) => void;
   /** Čas serveru pro odpočty miniher (klient si spočítá rozdíl hodin). */

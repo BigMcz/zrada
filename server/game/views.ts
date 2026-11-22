@@ -180,6 +180,8 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
 
   const view: ModeratorView = {
     kind: 'moderator',
+    // Síň slávy je mimo stav hry; skutečný počet doplní hub (Rozšíření 16).
+    hallOfFameSize: 0,
     phase: state.phase,
     round: state.round,
     traitorCount: state.traitorCount,
@@ -248,6 +250,8 @@ export function viewForScreen(state: GameState, joinUrl: string | null): ScreenV
   }
   return {
     kind: 'screen',
+    // Žebříčky síně slávy doplní hub (jsou mimo stav hry).
+    hallOfFame: [],
     phase: state.phase,
     round: state.round,
     pot: state.pot,

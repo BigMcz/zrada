@@ -14,6 +14,7 @@ import {
   type View,
 } from '../shared/types.js';
 import { botAction, BOT_DELAY_MS, nextBotName } from './bots.js';
+import { createHallOfFame, hallBoards, type HallOfFame } from './hallOfFame.js';
 import { apply, type Action, type Actor } from './game/engine.js';
 import { cryptoRng, type Rng } from './game/random.js';
 import { createGame, type GameState } from './game/state.js';
@@ -36,6 +37,8 @@ export interface HubOptions {
   initialState?: GameState;
   /** Volá se po každé změně stavu (ukládání do souboru). */
   onChange?: (state: GameState) => void;
+  /** Síň slávy (Rozšíření 16); bez ní se nic nezapisuje. */
+  hallOfFame?: HallOfFame;
 }
 
 const PLAYER_INTENTS = new Set(['ackRole', 'finalVote', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick', 'setCrest']);
@@ -165,7 +168,10 @@ export function attachGame(io: GameServer, options: HubOptions) {
   const rng = options.rng ?? cryptoRng;
   let state: GameState = options.initialState ?? createGame();
   /** Nový stav: uložit (obnova po pádu) a pak rozeslat pohledy. */
+  const hall = options.hallOfFame ?? createHallOfFame(null);
   const commit = (next: GameState) => {
+    // Dohraná hra se zapíše do síně slávy jednou, při přechodu do konce hry.
+    if (state.phase !== 'ENDED' && next.phase === 'ENDED') hall.record(next);
     state = next;
     options.onChange?.(state);
   };
@@ -187,10 +193,12 @@ export function attachGame(io: GameServer, options: HubOptions) {
 
   function viewFor(session: Session): View {
     if (session.as === 'moderator') {
-      return { ...viewForModerator(state, connectedPlayerIds()), joinUrl: options.joinUrl };
+      return { ...viewForModerator(state, connectedPlayerIds()), joinUrl: options.joinUrl, hallOfFameSize: Object.keys(hall.entries()).length };
     }
     if (session.as === 'player') return viewForPlayer(state, session.playerId) ?? guestView();
-    if (session.as === 'screen') return viewForScreen(state, options.joinUrl);
+    if (session.as === 'screen') {
+      return { ...viewForScreen(state, options.joinUrl), hallOfFame: state.phase === 'LOBBY' ? hallBoards(hall.entries()) : [] };
+    }
     return guestView();
   }
 
@@ -365,6 +373,16 @@ export function attachGame(io: GameServer, options: HubOptions) {
         if (sessions.get(s.id)?.as === 'screen') s.emit('reaction', { emoji: emoji as Reaction, key: reactionKey });
       }
       respond(reply, { ok: true });
+    });
+
+    socket.on('resetHallOfFame', (reply) => {
+      if (sessions.get(socket.id)?.as !== 'moderator') {
+        respond(reply, { ok: false, error: 'Na tohle nemáš oprávnění.' });
+        return;
+      }
+      hall.reset();
+      respond(reply, { ok: true });
+      broadcast();
     });
 
     socket.on('time', (reply) => respond(reply, Date.now()));

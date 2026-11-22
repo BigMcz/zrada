@@ -1333,3 +1333,51 @@
     animation-name: reaction-fade;
   }
 }
+
+/* Rozšíření 16: síň slávy v čekárně */
+.screen-hall {
+  width: 100%;
+  min-width: 12em;
+  margin-top: 0.8em;
+  padding: 0.6em 0.9em;
+  border: 1px solid var(--gold-dim);
+  border-radius: 0.4em;
+  font-size: 0.75em;
+  animation: phase-in 0.8s ease-out both;
+}
+
+.screen-hall h2 {
+  margin: 0 0 0.4em;
+  font-family: var(--font-display);
+  font-size: 0.95em;
+  color: var(--gold);
+  text-align: center;
+}
+
+.screen-hall ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: hall;
+}
+
+.screen-hall li {
+  display: flex;
+  gap: 0.6em;
+  justify-content: space-between;
+  counter-increment: hall;
+}
+
+.screen-hall li::before {
+  content: counter(hall) '.';
+  width: 1.4em;
+  color: var(--text-muted);
+}
+
+.screen-hall li span {
+  flex: 1;
+}
+
+.screen-hall li b {
+  color: var(--gold);
+}

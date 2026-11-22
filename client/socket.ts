@@ -143,6 +143,11 @@ export function react(emoji: Reaction): Promise<Result> {
   return socket.emitWithAck('react', emoji);
 }
 
+/** Moderátor: vynuluje síň slávy (Rozšíření 16). */
+export function resetHallOfFame(): Promise<Result> {
+  return socket.emitWithAck('resetHallOfFame');
+}
+
 /** Moderátor: nový odkaz pro hráče na jiném telefonu (Rozšíření 10). */
 export function requestNewPhone(playerId: string): Promise<NewPhoneResult> {
   return socket.emitWithAck('newPhone', playerId);

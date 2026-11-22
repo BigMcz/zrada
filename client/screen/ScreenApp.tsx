@@ -268,6 +268,26 @@ function EndScene({ view, name }: { view: ScreenView; name: (id: string | null |
   return t < revealMs ? <VoteReveal view={view} name={name} /> : <Finale view={view} name={name} />;
 }
 
+/** Síň slávy v čekárně (Rozšíření 16): žebříčky se střídají po 8 s. */
+function HallOfFame({ boards }: { boards: ScreenView['hallOfFame'] }) {
+  const t = useElapsed('hall');
+  if (boards.length === 0) return null;
+  const board = boards[Math.floor(t / 8000) % boards.length];
+  return (
+    <div className="screen-hall" key={board.key}>
+      <h2>Síň slávy · {board.title}</h2>
+      <ol>
+        {board.rows.map((r) => (
+          <li key={r.name}>
+            <span>{r.name}</span>
+            <b>{r.count}</b>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 function Lobby({ view }: { view: ScreenView }) {
   return (
     <div className="screen-lobby">
@@ -275,6 +295,7 @@ function Lobby({ view }: { view: ScreenView }) {
         {view.joinUrl && <QRCodeSVG value={view.joinUrl} size={512} marginSize={2} />}
         <p>Naskenuj a připoj se</p>
         <p className="muted">{view.joinUrl}</p>
+        <HallOfFame boards={view.hallOfFame} />
       </div>
       <div className="screen-joined">
         <Crest className="big" />

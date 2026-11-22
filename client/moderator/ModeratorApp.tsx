@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { MAX_PLAYERS, MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } from '../../shared/types';
 import { GhostBoard, PlayerBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
-import { requestNewPhone, send, useConnection } from '../socket';
+import { requestNewPhone, resetHallOfFame, send, useConnection } from '../socket';
 import { ScriptHint } from './ScriptHint';
 import { MinigamePanel } from './MinigamePanel';
 
@@ -135,6 +135,18 @@ function Lobby({ view }: { view: ModeratorView }) {
           <button type="button" className="toggle" disabled={busy || n >= MAX_PLAYERS} onClick={() => run({ type: 'addBot' })}>
             🤖 Přidat bota
           </button>
+
+          {view.hallOfFameSize > 0 && (
+            <button
+              type="button"
+              className="link"
+              onClick={() => {
+                if (window.confirm(`Vynulovat síň slávy? Smaže se ${view.hallOfFameSize} jmen a jejich výsledky.`)) void resetHallOfFame();
+              }}
+            >
+              Vynulovat síň slávy ({view.hallOfFameSize})
+            </button>
+          )}
 
           <h2>Minihry</h2>
           <label className="lobby-toggle">
