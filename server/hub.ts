@@ -3,6 +3,9 @@ import { isCrest } from '../shared/crests.js';
 import type { Server, Socket } from 'socket.io';
 import {
   MAX_PLAYERS,
+  REACTION_COOLDOWN_MS,
+  REACTIONS,
+  type Reaction,
   type ClientToServerEvents,
   type GuestView,
   type Intent,
@@ -14,7 +17,7 @@ import { botAction, BOT_DELAY_MS, nextBotName } from './bots.js';
 import { apply, type Action, type Actor } from './game/engine.js';
 import { cryptoRng, type Rng } from './game/random.js';
 import { createGame, type GameState } from './game/state.js';
-import { viewForModerator, viewForPlayer, viewForScreen } from './game/views.js';
+import { canReact, viewForModerator, viewForPlayer, viewForScreen } from './game/views.js';
 
 type GameServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -49,6 +52,7 @@ const MODERATOR_INTENTS = new Set([
   'setPhysicalMission',
   'setScreenMuted',
   'setPublicVotes',
+  'setReactions',
   'setQuizSets',
   'pause',
   'resume',
@@ -135,6 +139,8 @@ export function parseIntent(raw: unknown): Intent | null {
       return typeof r.muted === 'boolean' ? { type: 'setScreenMuted', muted: r.muted } : null;
     case 'setQuizSets':
       return r.sets === null || (Array.isArray(r.sets) && r.sets.every((x) => typeof x === 'string')) ? { type: 'setQuizSets', sets: r.sets as string[] | null } : null;
+    case 'setReactions':
+      return typeof r.enabled === 'boolean' ? { type: 'setReactions', enabled: r.enabled } : null;
     case 'setPublicVotes':
       return typeof r.enabled === 'boolean' ? { type: 'setPublicVotes', enabled: r.enabled } : null;
     case 'startGame':
@@ -164,6 +170,8 @@ export function attachGame(io: GameServer, options: HubOptions) {
     options.onChange?.(state);
   };
   const sessions = new Map<string, Session>();
+  const lastReaction = new Map<string, number>();
+  let reactionKey = 0;
 
   // Boti jsou „připojení“ pořád: minihry na ně čekají stejně jako na lidi.
   const connectedPlayerIds = () =>
@@ -333,6 +341,30 @@ export function attachGame(io: GameServer, options: HubOptions) {
         return;
       }
       respond(reply, intent.type === 'addBot' ? addBot() : run(actor, intent));
+    });
+
+    // Reakce (Rozšíření 16): neukládají se, jen se přepošlou velké obrazovce. Kdo je poslal, obrazovka neví.
+    socket.on('react', (emoji, reply) => {
+      const session = sessions.get(socket.id);
+      if (session?.as !== 'player' || !(REACTIONS as readonly unknown[]).includes(emoji)) {
+        respond(reply, { ok: false, error: 'Neplatný požadavek.' });
+        return;
+      }
+      if (!canReact(state, session.playerId)) {
+        respond(reply, { ok: false, error: 'Teď reagovat nejde.' });
+        return;
+      }
+      const now = Date.now();
+      if (now - (lastReaction.get(session.playerId) ?? 0) < REACTION_COOLDOWN_MS) {
+        respond(reply, { ok: false, error: 'Chvilku počkej.' });
+        return;
+      }
+      lastReaction.set(session.playerId, now);
+      reactionKey++;
+      for (const s of io.sockets.sockets.values()) {
+        if (sessions.get(s.id)?.as === 'screen') s.emit('reaction', { emoji: emoji as Reaction, key: reactionKey });
+      }
+      respond(reply, { ok: true });
     });
 
     socket.on('time', (reply) => respond(reply, Date.now()));

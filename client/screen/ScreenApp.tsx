@@ -8,7 +8,7 @@ import type { Crest as CrestId } from '../../shared/crests';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
-import { CoinBurst, Embers } from './Effects';
+import { CoinBurst, Embers, Reactions } from './Effects';
 import { GameScene } from './GameScenes';
 import { Countdown } from '../components/Countdown';
 import { nameOf, phaseTag, ROLE_LABEL } from '../labels';
@@ -25,6 +25,7 @@ export function ScreenApp() {
     <div className="screen-root">
       {!connected && <div className="screen-offline">Obnovuji spojení…</div>}
       {screen ? <ScreenGame view={screen} /> : <p className="screen-center muted">Připojuji velkou obrazovku…</p>}
+      <Reactions />
       {screen?.paused && (
         <div className="screen-pause" role="status">
           <Candle size="big" />

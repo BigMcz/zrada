@@ -236,6 +236,12 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
       return;
     }
 
+    case 'setReactions': {
+      requireModerator(actor);
+      state.settings.reactions = action.enabled === true;
+      return;
+    }
+
     case 'setPublicVotes': {
       // Mění pravidla hlasování, proto jen před začátkem hry.
       requireModerator(actor);

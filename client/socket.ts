@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { buzz, CONFIRM_BUZZ } from './player/device';
-import type { ClientToServerEvents, Intent, JoinResult, NewPhoneResult, Result, ServerToClientEvents, View } from '../shared/types';
+import type { ClientToServerEvents, Intent, Reaction, JoinResult, NewPhoneResult, Result, ServerToClientEvents, View } from '../shared/types';
 
 // Stejná adresa a port, ze kterých přišla stránka.
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
@@ -136,6 +136,11 @@ export async function send(intent: Intent): Promise<Result> {
   // Telefon hráče krátce cukne, když server vlastní volbu přijal (Rozšíření 14).
   if (res.ok && !isModeratorPage && !isScreenPage) buzz(CONFIRM_BUZZ);
   return res;
+}
+
+/** Hráč: anonymní reakce na velkou obrazovku (Rozšíření 16). */
+export function react(emoji: Reaction): Promise<Result> {
+  return socket.emitWithAck('react', emoji);
 }
 
 /** Moderátor: nový odkaz pro hráče na jiném telefonu (Rozšíření 10). */

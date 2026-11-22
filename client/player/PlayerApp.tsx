@@ -11,7 +11,8 @@ import { CREST_LABEL, CRESTS } from '../../shared/crests';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
-import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
+import { PrimaryButton, Screen, ScreenFooter, ScreenStatus } from '../components/Screen';
+import { ReactionBar } from './ReactionBar';
 import { MinigameScreen } from '../minigames/MinigameScreen';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { join, send, useConnection } from '../socket';
@@ -193,6 +194,7 @@ function PlayerGame({ view }: { view: PlayerView }) {
   const crestOf = (id: string) => view.players.find((p) => p.id === id)?.crest;
   return (
     <CrestOf.Provider value={crestOf}>
+    <ScreenFooter.Provider value={view.canReact ? <ReactionBar /> : null}>
     <ScreenStatus.Provider value={status}>
       {screen}
       {cluesOpen && (
@@ -224,6 +226,7 @@ function PlayerGame({ view }: { view: PlayerView }) {
         </div>
       )}
     </ScreenStatus.Provider>
+    </ScreenFooter.Provider>
     </CrestOf.Provider>
   );
 }

@@ -87,6 +87,17 @@ function nightPart(state: GameState, me: Player): PlayerView['night'] {
   return { myPick: tip, blocked: [], hint: { kind: 'OWN', targetId: tip } };
 }
 
+/** Reakce smí poslat živý hráč ráno a u kulatého stolu, když je moderátor nevypnul (Rozšíření 16). */
+export function canReact(state: GameState, playerId: string): boolean {
+  const me = state.players.find((p) => p.id === playerId);
+  return (
+    state.settings.reactions &&
+    state.paused === null &&
+    (state.phase === 'MORNING' || state.phase === 'VOTE') &&
+    me?.status === 'ALIVE'
+  );
+}
+
 export function viewForPlayer(state: GameState, playerId: string): PlayerView | null {
   const me = state.players.find((p) => p.id === playerId);
   if (!me) return null;
@@ -117,6 +128,7 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
     myVote: state.phase === 'VOTE' ? (state.votes[me.id] ?? null) : null,
     paused: state.paused !== null,
     publicVotes: state.settings.publicVotes,
+    canReact: canReact(state, me.id),
     inFinale: state.finale,
     myFinalChoice: state.phase === 'FINAL_VOTE' ? (state.finalVotes[me.id] ?? null) : null,
     potShare: state.phase === 'ENDED' ? state.potShare : null,
@@ -186,6 +198,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     physicalMission: state.settings.physicalMission,
     screenMuted: state.settings.screenMuted,
     publicVotes: state.settings.publicVotes,
+    reactions: state.settings.reactions,
     quizSets: QUESTION_SETS.map((s) => ({
       set: s.set,
       name: s.name,

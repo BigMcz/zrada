@@ -60,6 +60,12 @@ export const MIN_PLAYERS = 4;
 export const MAX_PLAYERS = 10;
 export const MAX_NAME_LENGTH = 20;
 
+/** Reakce na velkou obrazovku (Rozšíření 16). */
+export const REACTIONS = ['😱', '🤔', '🙄', '😂', '👀'] as const;
+export type Reaction = (typeof REACTIONS)[number];
+/** Jeden hráč smí poslat nejvýš jednu reakci za tuto dobu. */
+export const REACTION_COOLDOWN_MS = 3000;
+
 /** Doporučený počet Zrádců podle SPEC: 1 při 4–7 hráčích, 2 při 8–10. */
 export function recommendedTraitors(playerCount: number): number {
   return playerCount >= 8 ? 2 : 1;
@@ -182,6 +188,8 @@ export interface PlayerView {
   kind: 'player';
   phase: Phase;
   round: number;
+  /** Smí teď poslat reakci na obrazovku (ráno a u kulatého stolu, živý hráč, reakce zapnuté). */
+  canReact: boolean;
   me: {
     id: string;
     name: string;
@@ -273,6 +281,8 @@ export interface ModeratorView {
   kind: 'moderator';
   phase: Phase;
   round: number;
+  /** Reakce hráčů na obrazovku zapnuté (Rozšíření 16). */
+  reactions: boolean;
   traitorCount: number;
   recommendedTraitors: number;
   players: ModeratorPlayer[];
@@ -405,6 +415,7 @@ export type Intent =
   | { type: 'setPhysicalMission'; enabled: boolean }
   | { type: 'setScreenMuted'; muted: boolean }
   | { type: 'setPublicVotes'; enabled: boolean }
+  | { type: 'setReactions'; enabled: boolean }
   | { type: 'setQuizSets'; sets: string[] | null }
   | { type: 'pause' }
   | { type: 'resume' }
@@ -445,12 +456,16 @@ export type JoinResult = { ok: true; token: string; playerId: string } | { ok: f
 
 export interface ServerToClientEvents {
   view: (view: View) => void;
+  /** Anonymní reakce hráče; dostane ji jen velká obrazovka (Rozšíření 16). */
+  reaction: (reaction: { emoji: Reaction; key: number }) => void;
 }
 
 export interface ClientToServerEvents {
   hello: (req: HelloRequest, reply: (res: HelloResult) => void) => void;
   join: (name: string, reply: (res: JoinResult) => void) => void;
   intent: (intent: Intent, reply: (res: Result) => void) => void;
+  /** Hráč: reakce na velkou obrazovku. */
+  react: (emoji: Reaction, reply: (res: Result) => void) => void;
   /** Čas serveru pro odpočty miniher (klient si spočítá rozdíl hodin). */
   time: (reply: (serverNow: number) => void) => void;
   /** Moderátor: nový odkaz pro hráče na jiném telefonu; starý telefon přestane platit (Rozšíření 10). */

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { socket } from '../socket';
 
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -110,6 +111,46 @@ export function CoinBurst({ count = 36 }: { count?: number }) {
           className="coin"
           style={{ '--dx': c.dx, '--dy': c.dy, '--spin': c.spin, animationDelay: c.delay, width: c.size, height: c.size } as React.CSSProperties}
         />
+      ))}
+    </div>
+  );
+}
+
+interface Bubble {
+  key: number;
+  emoji: string;
+  x: number;
+  drift: number;
+}
+
+/**
+ * Reakce hráčů (Rozšíření 16): anonymní bubliny vyletí zespodu obrazovky a za pár sekund zmizí.
+ * Obrazovka neví, kdo je poslal.
+ */
+export function Reactions() {
+  const [bubbles, setBubbles] = useState<Bubble[]>([]);
+  useEffect(() => {
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+    const onReaction = ({ emoji, key }: { emoji: string; key: number }) => {
+      setBubbles((b) => [...b.slice(-24), { key, emoji, x: 8 + Math.random() * 84, drift: (Math.random() - 0.5) * 8 }]);
+      const t = setTimeout(() => {
+        timers.delete(t);
+        setBubbles((b) => b.filter((x) => x.key !== key));
+      }, 3000);
+      timers.add(t);
+    };
+    socket.on('reaction', onReaction);
+    return () => {
+      socket.off('reaction', onReaction);
+      timers.forEach(clearTimeout);
+    };
+  }, []);
+  return (
+    <div className="reactions" aria-hidden="true">
+      {bubbles.map((b) => (
+        <span key={b.key} className="reaction" style={{ left: `${b.x}%`, '--drift': `${b.drift}vw` } as React.CSSProperties}>
+          {b.emoji}
+        </span>
       ))}
     </div>
   );

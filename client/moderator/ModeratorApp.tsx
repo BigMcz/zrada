@@ -68,6 +68,14 @@ function TopBar({ view, children }: { view: ModeratorView; children?: ReactNode 
         >
           {view.screenMuted ? '🔇 Obrazovka ztlumená' : '🔊 Ztlumit obrazovku'}
         </button>
+        <button
+          type="button"
+          className="console-screen-link"
+          aria-pressed={!view.reactions}
+          onClick={() => void send({ type: 'setReactions', enabled: !view.reactions })}
+        >
+          {view.reactions ? '😱 Reakce zapnuté' : '🚫 Reakce vypnuté'}
+        </button>
       </div>
     </header>
   );
