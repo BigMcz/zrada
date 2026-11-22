@@ -25,6 +25,10 @@ export interface HubOptions {
   /** Adresa pro hráče, kterou moderátor ukáže jako QR kód. */
   joinUrl: string;
   rng?: Rng;
+  /** Stav načtený po restartu serveru (Rozšíření 10); jinak nová hra. */
+  initialState?: GameState;
+  /** Volá se po každé změně stavu (ukládání do souboru). */
+  onChange?: (state: GameState) => void;
 }
 
 const PLAYER_INTENTS = new Set(['ackRole', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick']);
@@ -123,7 +127,12 @@ function respond<T>(reply: unknown, value: T): void {
 
 export function attachGame(io: GameServer, options: HubOptions) {
   const rng = options.rng ?? cryptoRng;
-  let state: GameState = createGame();
+  let state: GameState = options.initialState ?? createGame();
+  /** Nový stav: uložit (obnova po pádu) a pak rozeslat pohledy. */
+  const commit = (next: GameState) => {
+    state = next;
+    options.onChange?.(state);
+  };
   const sessions = new Map<string, Session>();
 
   const connectedPlayerIds = () =>
@@ -153,7 +162,7 @@ export function attachGame(io: GameServer, options: HubOptions) {
   function run(actor: Actor, action: Action): Result {
     const result = apply(state, actor, action, rng);
     if (!result.ok) return result;
-    state = result.state;
+    commit(result.state);
     // Odebraní hráči se stávají hosty.
     for (const [id, s] of sessions) {
       if (s.as === 'player' && !state.players.some((p) => p.id === s.playerId)) sessions.set(id, { as: 'guest' });
@@ -168,8 +177,13 @@ export function attachGame(io: GameServer, options: HubOptions) {
     const result = apply(state, { kind: 'system' }, { type: 'tick', now: Date.now(), connected: [...connectedPlayerIds()] }, rng);
     if (!result.ok) return;
     const changed = JSON.stringify(result.state.minigame) !== JSON.stringify(state.minigame);
-    state = result.state;
-    if (changed) broadcast();
+    // Ukládá se a rozesílá jen skutečná změna, ne každý tik.
+    if (changed) {
+      commit(result.state);
+      broadcast();
+    } else {
+      state = result.state;
+    }
   }, TICK_MS);
   timer.unref();
 
@@ -231,7 +245,7 @@ export function attachGame(io: GameServer, options: HubOptions) {
         respond(reply, result);
         return;
       }
-      state = result.state;
+      commit(result.state);
       sessions.set(socket.id, { as: 'player', playerId });
       // Nejdřív odpověď s tokenem, pak nový pohled; Socket.IO zachová pořadí.
       respond(reply, { ok: true, token, playerId });

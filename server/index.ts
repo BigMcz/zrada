@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { Server } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types.js';
 import { attachGame } from './hub.js';
+import { loadGame, saveGame } from './persistence.js';
 import { registerAllMinigames } from './minigames/modules.js';
 import { findLanIp, listLanIps } from './network.js';
 
@@ -15,8 +16,11 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 const lanIp = findLanIp();
 const joinUrl = `http://${lanIp}:${PORT}/`;
-// Nový klíč při každém startu, pokud ho nezadá proměnná MODERATOR_KEY.
-const moderatorKey = process.env.MODERATOR_KEY ?? randomBytes(4).toString('hex');
+// Obnova po pádu (Rozšíření 10): stav hry se ukládá do souboru; STATE_FILE= (prázdné) ukládání vypne.
+const stateFile = process.env.STATE_FILE ?? path.join(rootDir, 'data', 'zrada-stav.json');
+const saved = stateFile ? loadGame(stateFile) : null;
+// Klíč moderátora: z proměnné MODERATOR_KEY, z uložené hry (otevřená konzole funguje dál), jinak nový.
+const moderatorKey = process.env.MODERATOR_KEY ?? saved?.moderatorKey ?? randomBytes(4).toString('hex');
 
 const app = express();
 const httpServer = createServer(app);
@@ -26,7 +30,20 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   destroyUpgrade: false,
 });
 registerAllMinigames();
-attachGame(io, { moderatorKey, joinUrl });
+attachGame(io, {
+  moderatorKey,
+  joinUrl,
+  initialState: saved?.state,
+  onChange: stateFile
+    ? (state) => {
+        try {
+          saveGame(stateFile, { moderatorKey, state });
+        } catch (e) {
+          console.warn(`  Stav hry nejde uložit: ${(e as Error).message}`);
+        }
+      }
+    : undefined,
+});
 
 if (PROD) {
   const clientDir = path.join(rootDir, 'dist', 'client');
@@ -46,6 +63,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   const others = listLanIps();
   console.log('');
   console.log(`  Zrada běží (${PROD ? 'produkční build' : 'vývoj'})`);
+  if (saved) console.log(`  Pokračuje uložená hra (fáze ${saved.state.phase}, ${saved.state.players.length} hráčů).`);
   console.log('');
   console.log(`  Moderátor (jen tento počítač):  http://localhost:${PORT}/moderator?key=${moderatorKey}`);
   console.log(`  Hráči (telefony):               ${joinUrl}`);

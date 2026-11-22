@@ -11,7 +11,8 @@ import type {
   View,
 } from '../shared/types.js';
 import { seededRng } from './game/random.js';
-import { attachGame } from './hub.js';
+import type { GameState } from './game/state.js';
+import { attachGame, type HubOptions } from './hub.js';
 
 const KEY = 'tajny-klic';
 
@@ -46,10 +47,10 @@ afterEach(async () => {
   cleanup = undefined;
 });
 
-async function startServer() {
+async function startServer(extra: Partial<HubOptions> = {}) {
   const http = createServer();
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(http);
-  const hub = attachGame(io, { moderatorKey: KEY, joinUrl: 'http://192.168.0.10:3000/', rng: seededRng(7) });
+  const hub = attachGame(io, { moderatorKey: KEY, joinUrl: 'http://192.168.0.10:3000/', rng: seededRng(7), ...extra });
   await new Promise<void>((r) => http.listen(0, '127.0.0.1', r));
   const url = `http://127.0.0.1:${(http.address() as AddressInfo).port}`;
   const clients: Client[] = [];
@@ -226,5 +227,31 @@ describe('server přes skutečné sockety', () => {
       error: 'Na tohle nemáš oprávnění.',
     });
     expect(await screen.socket.emitWithAck('join', 'Vetřelec')).toEqual({ ok: false, error: 'Už jsi ve hře.' });
+  });
+
+  it('obnova po pádu: hra pokračuje z uloženého stavu, hráč se vrátí se starým tokenem, změny se ukládají', async () => {
+    // První server: připojí se hráči, rozdají se role; každá změna se „uloží“.
+    let saved: GameState | null = null;
+    const first = await startServer({ onChange: (s) => (saved = structuredClone(s)) });
+    const mod = await first.moderator();
+    const players = [];
+    for (const name of ['Petra', 'Tomáš', 'Jana', 'Karel', 'Eva']) players.push(await first.player(name));
+    expect(await mod.socket.emitWithAck('intent', { type: 'startGame', traitorCount: 1 })).toEqual({ ok: true });
+    await mod.waitFor((v): v is ModeratorView => isModerator(v) && v.phase === 'ROLES');
+    expect(saved).not.toBeNull();
+    const snapshot: GameState = saved!;
+    expect(snapshot.phase).toBe('ROLES');
+    await cleanup?.();
+
+    // Druhý server po „restartu“ začne z uloženého stavu.
+    const changes: string[] = [];
+    const second = await startServer({ initialState: snapshot, onChange: (s) => changes.push(s.phase) });
+    const petra = await second.connect();
+    expect(await petra.socket.emitWithAck('hello', { token: players[0].token })).toEqual({ as: 'player', playerId: players[0].playerId });
+    const view = await petra.waitFor(isPlayer);
+    expect(view).toMatchObject({ phase: 'ROLES', me: { name: 'Petra' } });
+    expect(view.me.role).toBeDefined();
+    expect(await petra.socket.emitWithAck('intent', { type: 'ackRole' })).toEqual({ ok: true });
+    expect(changes).toEqual(['ROLES']);
   });
 });

@@ -53,7 +53,8 @@ const chance = (p: number) => Math.random() < p;
 
 async function startServer(port: number): Promise<ChildProcess> {
   const proc = spawn('npx', ['tsx', 'server/index.ts', '--prod'], {
-    env: { ...process.env, PORT: String(port), MODERATOR_KEY: KEY },
+    // STATE_FILE prázdné: robot nesmí načíst ani přepsat uloženou hru z data/.
+    env: { ...process.env, PORT: String(port), MODERATOR_KEY: KEY, STATE_FILE: '' },
     shell: true,
     stdio: 'ignore',
   });
