@@ -132,6 +132,8 @@
 .screen-portraits.wrap {
   flex-wrap: wrap;
   justify-content: center;
+  /* Řada se zalamuje, nic nepřetéká; ořez by usekl záři rozhoření (lobby) a odhalení (finále). */
+  overflow: visible;
 }
 
 .screen-portrait {
