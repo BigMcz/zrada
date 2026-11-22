@@ -272,6 +272,22 @@ export const splitSteal: MinigameModule<SplitStealState> = {
     };
   },
 
+  // Duelista-bot rozdělí (Zrádce častěji ukradne), divák-bot vsadí, duch-bot tipne.
+  bot(state, botId, rng) {
+    if (state.stage !== 'CHOOSE') return null;
+    if (state.duelists.includes(botId)) {
+      if (botId in state.choices) return null;
+      const steal = state.traitors.includes(botId) ? rng.int(2) === 0 : rng.int(4) === 0;
+      return { choice: steal ? 'STEAL' : 'SPLIT' };
+    }
+    return botId in state.bets ? null : { bet: BETS[rng.int(BETS.length)] };
+  },
+  ghostBot(state, ghostId, rng) {
+    return (state.stage === 'TALK' || state.stage === 'CHOOSE') && !(ghostId in state.ghostBets)
+      ? { ghostBet: GHOST_BETS[rng.int(GHOST_BETS.length)] }
+      : null;
+  },
+
   viewForModerator(state): SplitStealModeratorView {
     return {
       stage: state.stage,

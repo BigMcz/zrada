@@ -246,6 +246,16 @@ export const auction: MinigameModule<AuctionState> = {
     };
   },
 
+  // Bot přihodí 0–5 žetonů; duch-bot tipne součet.
+  bot(state, botId, rng) {
+    return state.stage === 'BID' && !(botId in state.bids) ? { bid: rng.int(6) } : null;
+  },
+  ghostBot(state, ghostId, rng) {
+    return (state.stage === 'TALK' || state.stage === 'BID') && !(ghostId in state.ghostGuesses)
+      ? { guess: rng.int(MAX_BID * state.players.length + 1) }
+      : null;
+  },
+
   viewForModerator(state): AuctionModeratorView {
     return {
       stage: state.stage,

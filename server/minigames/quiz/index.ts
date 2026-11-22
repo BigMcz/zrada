@@ -406,6 +406,20 @@ export const quiz: MinigameModule<QuizState> = {
     };
   },
 
+  // Zrádce-bot se většinou řídí svíčkou, Věrný-bot ví odpověď napůl; duch-bot hraje taky.
+  bot(state, botId, rng) {
+    if (state.stage !== 'QUESTION' || state.answers[state.index]?.[botId]) return null;
+    const q = state.questions[state.index];
+    const hint = state.hintOn ? state.hints[botId] : undefined;
+    if (state.traitors.includes(botId) && hint !== undefined && rng.int(10) < 7) return { option: hint };
+    return { option: rng.int(2) === 0 ? q.correct : rng.int(q.options.length) };
+  },
+  ghostBot(state, ghostId, rng) {
+    if (state.stage !== 'QUESTION' || state.answers[state.index]?.[ghostId]) return null;
+    const q = state.questions[state.index];
+    return { option: rng.int(2) === 0 ? q.correct : rng.int(q.options.length) };
+  },
+
   viewForModerator(state): QuizModeratorView {
     return {
       stage: state.stage,

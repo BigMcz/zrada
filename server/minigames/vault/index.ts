@@ -331,6 +331,23 @@ export const vault: MinigameModule<VaultState> = {
     };
   },
 
+  // Bot volí zámečníka náhodně; zámečník-bot trefí kód napůl (Zrádce méně), jinak část číslic.
+  bot(state, botId, rng) {
+    if (state.stage === 'VOTE') {
+      if (botId in state.votes) return null;
+      const others = state.players.filter((id) => id !== botId);
+      return { vote: others[rng.int(others.length)] };
+    }
+    if (state.stage !== 'CRACK' || state.locksmithId !== botId) return null;
+    const right = rng.int(10) < (state.traitors.includes(botId) ? 3 : 5);
+    return { guess: state.code.map((d) => (right || rng.int(10) < 4 ? d : (d + 1 + rng.int(9)) % 10)) };
+  },
+  ghostBot(state, ghostId, rng) {
+    return state.stage !== 'DONE' && state.attempts.length === 0 && !(ghostId in state.ghostTips)
+      ? { tip: (1 + rng.int(4)) as VaultTip }
+      : null;
+  },
+
   viewForModerator(state): VaultModeratorView {
     return {
       stage: state.stage,

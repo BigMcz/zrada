@@ -416,6 +416,22 @@ export const bomb: MinigameModule<BombState> = {
     };
   },
 
+  // Pyrotechnik-bot udělá správnou akci s pravděpodobností 80 %; duch-bot tipne.
+  bot(state, botId, rng) {
+    if (state.stage !== 'ARMED' || state.pyroId !== botId || state.endsAt === null) return null;
+    const right = rng.int(10) < 8;
+    if (!state.wiresSolved) {
+      const wrong = state.bomb.wires.map((_, i) => i).filter((i) => i !== state.solution.wire && !state.cut.includes(i));
+      return { cut: right || wrong.length === 0 ? state.solution.wire : wrong[rng.int(wrong.length)] };
+    }
+    const next = state.solution.order[state.pressed.length];
+    const wrong = state.bomb.symbols.filter((s) => s !== next && !state.pressed.includes(s));
+    return { press: right || wrong.length === 0 ? next : wrong[rng.int(wrong.length)] };
+  },
+  ghostBot(state, ghostId, rng) {
+    return state.stage === 'READY' && !(ghostId in state.ghostTips) ? { tip: rng.int(4) as BombTip } : null;
+  },
+
   viewForModerator(state): BombModeratorView {
     return {
       stage: state.stage,

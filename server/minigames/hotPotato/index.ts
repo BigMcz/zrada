@@ -390,6 +390,18 @@ export const hotPotato: MinigameModule<HotPotatoState> = {
     };
   },
 
+  // Držitel-bot bombu po chvíli (prodleva bota) pošle náhodnému hráči; duch-bot tipne.
+  bot(state, botId, rng) {
+    if (state.stage !== 'BOMB' || state.holderId !== botId) return null;
+    const targets = passTargets(state);
+    return targets.length > 0 ? { targetId: targets[rng.int(targets.length)] } : null;
+  },
+  ghostBot(state, ghostId, rng) {
+    if (state.stage !== 'READY' || ghostId in state.ghostTips) return null;
+    const pickId = () => state.players[rng.int(state.players.length)];
+    return { survivorId: pickId(), firstId: pickId() };
+  },
+
   viewForModerator(state): HotPotatoModeratorView {
     return {
       stage: state.stage,

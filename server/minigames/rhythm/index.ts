@@ -221,6 +221,14 @@ export interface RhythmScreenView {
   groupSync: number | null;
 }
 
+/** Ťuknutí bota pro aktuální kolo (pošle je hned, server je bere i během kola). */
+function rhythmBotTaps(state: RhythmState, id: string, rng: Rng): unknown {
+  if ((state.stage !== 'ROUND' && state.stage !== 'COLLECT') || state.taps[state.round]?.[id]) return null;
+  const lag = (rng.int(2) === 0 ? 1 : -1) * (20 + rng.int(100));
+  const taps = state.beats.filter(() => rng.int(100) < 92).map((t) => t + lag + rng.int(60) - 30);
+  return { round: state.round, taps };
+}
+
 export const rhythm: MinigameModule<RhythmState> = {
   id: RHYTHM_ID,
   meta: {
@@ -398,6 +406,19 @@ export const rhythm: MinigameModule<RhythmState> = {
       beats: [...state.beats],
       groupSync: scored >= 1 ? syncOf(state, scored) : null,
     };
+  },
+
+  // Bot ťuká s chybou 20–120 ms (občas dobu vynechá) a před 2. kolem vybere náhodného hráče.
+  bot(state, botId, rng) {
+    if (state.stage === 'VOTE') {
+      if (botId in state.picks) return null;
+      const others = state.players.filter((id) => id !== botId);
+      return { pick: others[rng.int(others.length)] };
+    }
+    return rhythmBotTaps(state, botId, rng);
+  },
+  ghostBot(state, ghostId, rng) {
+    return rhythmBotTaps(state, ghostId, rng);
   },
 
   viewForModerator(state): RhythmModeratorView {
