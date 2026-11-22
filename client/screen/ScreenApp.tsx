@@ -2,6 +2,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ScreenMinigameView, ScreenView } from '../../shared/types';
 import { Candle } from '../components/Candle';
+import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { GameScene } from './GameScenes';
@@ -94,7 +95,7 @@ function ScreenGame({ view }: { view: ScreenView }) {
         <span className="screen-phase">{view.phase === 'LOBBY' ? 'Zrada' : phaseTag(view.phase, view.round)}</span>
         {view.phase !== 'LOBBY' && (
           <span className="screen-pot">
-            <small>Poklad</small> {view.pot.toLocaleString('cs')}
+            <small>Poklad</small> <PotCounter value={view.pot} />
           </span>
         )}
       </header>

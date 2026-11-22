@@ -304,3 +304,69 @@ body::after {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Poklad jako počítadlo: přírůstek zlatě zazáří, úbytek krátce zčervená. */
+.pot-counter {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.4s, text-shadow 0.4s;
+}
+
+.pot-counter.up {
+  color: #ffd76a;
+  text-shadow: 0 0 14px rgba(255, 200, 80, 0.8);
+}
+
+.pot-counter.down {
+  color: var(--error);
+  text-shadow: 0 0 12px rgba(224, 108, 95, 0.7);
+}
+
+/* Svítání: černá noční vrstva zvolna zmizí a pod ní je teplé ranní světlo. */
+@keyframes dawn-night-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.dawn,
+.phase-morning {
+  position: relative;
+  background: radial-gradient(130% 80% at 50% 0%, #4a3018 0%, #2a1c12 45%, var(--bg) 85%);
+}
+
+.dawn::before,
+.phase-morning::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #050403;
+  pointer-events: none;
+  animation: dawn-night-fade 3s ease-out forwards;
+  z-index: 0;
+}
+
+.dawn > *,
+.phase-morning > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Oběť noci pomalu vybledne do šedi. */
+@keyframes fade-to-gray {
+  from {
+    opacity: 1;
+    filter: none;
+  }
+  to {
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
+}
+
+.phase-morning .screen-portrait.dim {
+  animation: fade-to-gray 3s ease-in 1s both;
+}

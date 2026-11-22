@@ -5,6 +5,7 @@ import { GhostBoard, PlayerBoard } from '../components/GhostBoard';
 import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
 import { Candle } from '../components/Candle';
+import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
@@ -20,7 +21,14 @@ export function PlayerApp() {
   useTaskVibration(view);
 
   return (
-    <div className={view?.kind === 'player' && view.ghost && view.phase !== 'ENDED' ? 'phone ghost-mode' : 'phone'}>
+    <div
+      className={[
+        'phone',
+        view?.kind === 'player' && view.ghost && view.phase !== 'ENDED' ? 'ghost-mode' : '',
+        // Rozšíření 14: ráno telefon „svítá“ z noční tmy do teplého tónu.
+        view?.kind === 'player' && view.phase === 'MORNING' ? 'dawn' : '',
+      ].join(' ')}
+    >
       {!connected && <div className="connection-bar">Obnovuji spojení…</div>}
       {view?.kind === 'player' && view.paused && (
         <div className="pause-overlay" role="status">
@@ -140,7 +148,9 @@ function PlayerGame({ view }: { view: PlayerView }) {
   const status =
     minigamesInPlay && view.phase !== 'LOBBY' ? (
       <>
-        <span>Poklad {view.pot.toLocaleString('cs')}</span>
+        <span>
+          Poklad <PotCounter value={view.pot} />
+        </span>
         <span>Moje body {view.myPoints}</span>
         {withClues.length > 0 && (
           <button type="button" className="link-button" onClick={() => setCluesOpen(true)}>
