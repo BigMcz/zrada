@@ -1238,3 +1238,81 @@ Mimo krok hraní (los, pravidla, výsledek, stopa) se řada vrací do normálu. 
 1. Při Horkém bramboru je na obrazovce z dálky vidět, kdo vypadl a kdo drží bombu.
 2. Ostatní minihry ukazují diváky a aktéry podle tabulky.
 3. Telefony se nemění, testy a robot `npm run e2e` procházejí.
+
+## Rozšíření 16: Zážitek – znaky, reakce, návod, intro, titulky, síň slávy, témata
+
+Pravidla hry se nemění. Rozšíření přidává atmosféru, osobnější hráče a důvod hrát znovu. Utajení platí dál: nic z toho neukazuje roli hráče dřív, než je veřejná.
+
+### 1. Vlastní znak hráče
+
+- Při vstupu si hráč po zadání jména vybere znak z 16 kreslených symbolů ve stylu erbu (např. sova, klíč, havran, lilie, korunka, kotva, meč, lucerna, had, liška, růže, hvězda, oko, maska, pohár, věž).
+- Každý znak může mít ve hře jen jeden hráč. Obsazené znaky jsou šedé. Kdo nevybere, dostane volný znak náhodně.
+- Znak nahrazuje iniciály všude, kde jsou portréty: velká obrazovka, telefon (mřížka hráčů), moderátor.
+- Znak jde změnit jen v čekárně.
+
+### 2. Reakce na obrazovku
+
+- Ráno a během kulatého stolu mají živí hráči na telefonu řádek pěti reakcí: 😱 🤔 🙄 😂 👀.
+- Ťuknutí pošle anonymní bublinu, která na velké obrazovce vyletí zespodu a za 2–3 s zmizí. Kdo ji poslal, se neukazuje nikde.
+- Jeden hráč smí poslat nejvýš jednu reakci za 3 s. Server reakce neukládá.
+- Moderátor může reakce vypnout (výchozí stav: zapnuté).
+
+### 3. Krátký návod při prvním vstupu
+
+- Po vstupu do čekárny ukáže telefon tři karty: **Cíl hry** (Věrní hledají Zrádce, Zrádci zůstanou skrytí), **Den a noc** (kulatý stůl a hlasování, v noci Zrádci vraždí), **Minihry a poklad** (štít, stopy, dělení pokladu).
+- Karty jdou přeskočit. Na stejném telefonu se ukážou jen jednou. Znovu je otevře tlačítko „Jak se hraje“ v čekárně.
+
+### 4. Úvodní sekvence a závěrečné titulky (velká obrazovka)
+
+- **Intro:** po startu hry asi 12 s filmového úvodu: „Vítejte na hradě…“, pár vět o zradě a pak přechod na „Role byly rozdány“. Telefony na intro nečekají.
+- **Titulky:** po rekapitulaci na konci hry pomalu odjedou titulky: jména hráčů s rolemi, ocenění, vítěz pokladu a nakonec „Děkujeme za hru“. Pak zůstane poslední karta.
+- S „omezit pohyb“ se texty jen prolnou, bez pohybu.
+
+### 5. Síň slávy
+
+- Po každé dohrané hře se zapíše výsledek do `data/zrada-sin-slavy.json` (stejně bezpečně jako uložená hra). Hra zrušená přes Nová hra před koncem se nepočítá.
+- Hráč se pozná podle jména (bez ohledu na velká/malá písmena a diakritiku).
+- U každého jména se počítá: odehrané hry, výhry, výhry jako Zrádce a ocenění (Detektiv, Mistr klamu).
+- V čekárně velké obrazovky se střídají žebříčky: nejvíc výher, nejlepší Zrádce, nejlepší Detektiv (top 5).
+- Moderátor může síň slávy vynulovat (s potvrzením). Robot `npm run e2e` do ní nezapisuje.
+
+### 6. Témata hry
+
+- Moderátor v čekárně vybere téma. Platí pro telefony i obrazovku, ukládá se se hrou.
+
+| Téma | Název hry | Věrný / Zrádce | Noc | Kulatý stůl | Paleta |
+| --- | --- | --- | --- | --- | --- |
+| Hrad (výchozí) | Zrada | Věrný / Zrádce | Noc | Kulatý stůl | černá, zlatá, rudá (dnešní) |
+| Vesmírná loď | Sabotáž | Člen posádky / Sabotér | Spánkový cyklus | Porada na můstku | tmavě modrá, azurová |
+| Kancelář | Krtek | Kolega / Krtek | Po pracovní době | Porada | grafitová, oranžový akcent |
+| Pirátská loď | Vzpoura | Námořník / Vzbouřenec | Noční hlídka | Shromáždění na palubě | tmavé dřevo, mosaz |
+
+- Podle tématu se mění: název hry, názvy rolí (ve všech pádech a v čísle), názvy fází, texty intra a titulků, erb a barevná paleta.
+- Minihry si nechávají své názvy i pravidla.
+
+### Rozšíření NEobsahuje
+
+- Fotky hráčů
+- Texty miniher podle tématu (v pravidlech miniher zůstává „Zrádce/Věrný“)
+- Hlas vypravěče a hudbu
+- Síň slávy přes víc počítačů (jen lokální soubor)
+
+### Hotovo, když
+
+1. Hráč si vybere znak a vidí ho na obrazovce, telefonu i u moderátora. Dva hráči nemají stejný znak.
+2. Reakce létají na obrazovce, jsou anonymní a moderátor je umí vypnout.
+3. Nový telefon ukáže návod jednou, jde přeskočit a znovu otevřít.
+4. Obrazovka přehraje intro po startu a titulky na konci.
+5. Síň slávy přežije restart serveru a ukazuje se v čekárně.
+6. Každé ze 4 témat změní názvy, texty, erb a barvy. Testy a robot `npm run e2e` procházejí (utajení beze změny).
+
+### Kroky vývoje
+
+| Krok | Obsah |
+| --- | --- |
+| Z1 | Znak hráče |
+| Z2 | Reakce na obrazovku |
+| Z3 | Návod na telefonu |
+| Z4 | Intro a titulky |
+| Z5 | Síň slávy |
+| Z6 | Témata |
