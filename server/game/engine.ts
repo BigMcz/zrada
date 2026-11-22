@@ -1,5 +1,6 @@
 import { FINAL_MAX_ALIVE, GHOST_TIP_PHASES, MAX_NAME_LENGTH, MAX_PLAYERS, MIN_PLAYERS, type Intent, type Winner } from '../../shared/types.js';
 import type { Rng } from './random.js';
+import { CRESTS, isCrest } from '../../shared/crests.js';
 import {
   alive,
   aliveWithRole,
@@ -137,10 +138,12 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
         fail('Tohle jméno už ve hře někdo má.');
       }
       if (state.players.length >= MAX_PLAYERS) fail(`Hra je plná (nejvýš ${MAX_PLAYERS} hráčů).`);
+      const free = CRESTS.filter((c) => !state.players.some((p) => p.crest === c));
       state.players.push({
         id: action.playerId,
         token: action.token,
         name,
+        crest: free[rng.int(free.length)],
         status: 'ALIVE',
         sawRole: false,
         ...(action.bot ? { bot: true } : {}),
@@ -276,6 +279,15 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
       assignRoles(state.players, action.traitorCount, rng);
       state.round = 1;
       state.phase = 'ROLES';
+      return;
+    }
+
+    case 'setCrest': {
+      const player = requirePlayer(state, actor);
+      requirePhase(state, 'LOBBY');
+      if (!isCrest(action.crest)) fail('Takový znak není.');
+      if (state.players.some((p) => p.id !== player.id && p.crest === action.crest)) fail('Tenhle znak už má někdo jiný.');
+      player.crest = action.crest;
       return;
     }
 

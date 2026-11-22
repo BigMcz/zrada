@@ -6,12 +6,14 @@ import { PlayerGrid } from '../components/PlayerGrid';
 import { RoleCard } from '../components/RoleCard';
 import { Candle } from '../components/Candle';
 import { Crest } from '../components/Crest';
+import { AvatarFace, CrestOf, Sigil } from '../components/Sigil';
+import { CREST_LABEL, CRESTS } from '../../shared/crests';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { PrimaryButton, Screen, ScreenStatus } from '../components/Screen';
 import { MinigameScreen } from '../minigames/MinigameScreen';
-import { initials, nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
+import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { join, send, useConnection } from '../socket';
 import { useEventHaptics, useTaskVibration, useWakeHint, useWakeLock } from './device';
 
@@ -188,7 +190,9 @@ function PlayerGame({ view }: { view: PlayerView }) {
   else if (view.phase === 'NIGHT') screen = <Night key={view.round} view={view} tag={tag} corner={corner} />;
   else screen = <Morning view={view} tag={tag} corner={corner} />;
 
+  const crestOf = (id: string) => view.players.find((p) => p.id === id)?.crest;
   return (
+    <CrestOf.Provider value={crestOf}>
     <ScreenStatus.Provider value={status}>
       {screen}
       {cluesOpen && (
@@ -220,6 +224,7 @@ function PlayerGame({ view }: { view: PlayerView }) {
         </div>
       )}
     </ScreenStatus.Provider>
+    </CrestOf.Provider>
   );
 }
 
@@ -230,15 +235,46 @@ interface ScreenProps {
 }
 
 function Waiting({ view, tag }: ScreenProps) {
+  const myCrest = view.players.find((p) => p.id === view.me.id)?.crest;
   return (
     <Screen tag={tag}>
-      <div className="avatar big">{initials(view.me.name)}</div>
+      <div className="avatar big">
+        <AvatarFace name={view.me.name} crest={myCrest} />
+      </div>
       <p className="lead center">{view.me.name}</p>
       <p className="center">Čekáme na začátek hry</p>
+      <CrestPicker view={view} mine={myCrest} />
       <p className="muted center">Připojených hráčů: {view.players.length}</p>
       {view.publicVotes && <p className="center">Hlasování je veřejné: velká obrazovka ukáže, kdo pro koho hlasoval.</p>}
       <Candle />
     </Screen>
+  );
+}
+
+/** Výběr znaku v čekárně (Rozšíření 16): obsazené znaky jsou šedé a nejdou zmáčknout. */
+function CrestPicker({ view, mine }: { view: PlayerView; mine?: string }) {
+  const { error, run } = useSend();
+  const taken = new Set(view.players.filter((p) => p.id !== view.me.id).map((p) => p.crest));
+  return (
+    <div className="crest-picker">
+      <p className="muted center">Vyber si svůj znak</p>
+      <div className="crest-grid">
+        {CRESTS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            className={c === mine ? 'crest-option selected' : 'crest-option'}
+            disabled={taken.has(c)}
+            aria-label={CREST_LABEL[c]}
+            title={CREST_LABEL[c]}
+            onClick={() => c !== mine && run({ type: 'setCrest', crest: c })}
+          >
+            <Sigil crest={c} />
+          </button>
+        ))}
+      </div>
+      {error && <p className="error">{error}</p>}
+    </div>
   );
 }
 

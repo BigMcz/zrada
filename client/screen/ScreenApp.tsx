@@ -3,13 +3,15 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ScreenMinigameView, ScreenView } from '../../shared/types';
 import { Candle } from '../components/Candle';
 import { Crest } from '../components/Crest';
+import { AvatarFace } from '../components/Sigil';
+import type { Crest as CrestId } from '../../shared/crests';
 import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { CoinBurst, Embers } from './Effects';
 import { GameScene } from './GameScenes';
 import { Countdown } from '../components/Countdown';
-import { initials, nameOf, phaseTag, ROLE_LABEL } from '../labels';
+import { nameOf, phaseTag, ROLE_LABEL } from '../labels';
 import { useConnection } from '../socket';
 import { play, setAmbient, setMuted, startAudio } from './sounds';
 
@@ -114,7 +116,7 @@ function ScreenGame({ view }: { view: ScreenView }) {
             {view.players
               .filter((p) => p.status === 'ALIVE')
               .map((p) => (
-                <Portrait key={p.id} label={p.name} {...marks[p.id]} />
+                <Portrait key={p.id} label={p.name} crest={p.crest} {...marks[p.id]} />
               ))}
           </div>
           {view.ghostBoard.length > 0 && (
@@ -167,8 +169,10 @@ function Portrait({
   note,
   ember,
   mark,
+  crest,
 }: {
   label: string;
+  crest?: CrestId;
   dim?: boolean;
   tone?: 'loyal' | 'traitor';
   note?: string;
@@ -177,7 +181,9 @@ function Portrait({
 }) {
   return (
     <div className={['screen-portrait', dim ? 'dim' : '', tone ?? '', ember ? 'ember' : '', mark ? `mark-${mark}` : ''].join(' ')}>
-      <span className="screen-avatar">{initials(label)}</span>
+      <span className="screen-avatar">
+        <AvatarFace name={label} crest={crest} />
+      </span>
       <span className="screen-name">{label}</span>
       {note && <span className="screen-note">{note}</span>}
     </div>
@@ -233,7 +239,7 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
     case 'MORNING':
       return view.murderedId ? (
         <Title sub="Zrádci si tuto noc vybrali svou oběť.">
-          <Portrait label={name(view.murderedId)} dim />
+          <Portrait label={name(view.murderedId)} crest={view.players.find((p) => p.id === view.murderedId)?.crest} dim />
           Tuto noc zemřel/a {name(view.murderedId)}
         </Title>
       ) : (
@@ -267,7 +273,7 @@ function Lobby({ view }: { view: ScreenView }) {
         <div className="screen-portraits wrap">
           {view.players.map((p) => (
             // Nově připojený hráč se rozhoří jako uhlík (animace jen při objevení).
-            <Portrait key={p.id} label={p.name} ember />
+            <Portrait key={p.id} label={p.name} crest={p.crest} ember />
           ))}
         </div>
         <p className="muted">
@@ -369,6 +375,7 @@ function Finale({ view, name }: { view: ScreenView; name: (id: string | null | u
           <Portrait
             key={p.id}
             label={p.name}
+            crest={p.crest}
             tone={i < shown && p.revealedRole ? (p.revealedRole === 'TRAITOR' ? 'traitor' : 'loyal') : undefined}
             note={i < shown && p.revealedRole ? ROLE_LABEL[p.revealedRole] : undefined}
             dim={i >= shown}

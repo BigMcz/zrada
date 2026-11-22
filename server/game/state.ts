@@ -11,6 +11,7 @@ import type {
   Winner,
 } from '../../shared/types.js';
 import type { MinigameResult } from '../minigames/types.js';
+import type { Crest } from '../../shared/crests.js';
 
 /**
  * Úplný stav hry. Existuje jen na serveru a nikdy se neposílá klientům celý;
@@ -22,6 +23,8 @@ export interface Player {
   /** Tajný token, zná ho jen telefon hráče. */
   token: string;
   name: string;
+  /** Znak hráče (Rozšíření 16); přidělí se náhodně při vstupu, změnit jde v lobby. */
+  crest?: Crest;
   /** Přidělena při rozdání rolí, v lobby chybí. */
   role?: Role;
   status: PlayerStatus;

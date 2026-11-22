@@ -1,4 +1,5 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { isCrest } from '../shared/crests.js';
 import type { Server, Socket } from 'socket.io';
 import {
   MAX_PLAYERS,
@@ -34,7 +35,7 @@ export interface HubOptions {
   onChange?: (state: GameState) => void;
 }
 
-const PLAYER_INTENTS = new Set(['ackRole', 'finalVote', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick']);
+const PLAYER_INTENTS = new Set(['ackRole', 'finalVote', 'vote', 'nightPick', 'ghostTip', 'ackSecretCard', 'minigameInput', 'handoffPick', 'setCrest']);
 const MODERATOR_INTENTS = new Set([
   'kick',
   'addBot',
@@ -122,6 +123,8 @@ export function parseIntent(raw: unknown): Intent | null {
       return 'payload' in r && isSmallJson(r.payload) ? { type: r.type, payload: r.payload } : null;
     case 'handoffPick':
       return r.targetId === null || isId(r.targetId) ? { type: 'handoffPick', targetId: r.targetId as string | null } : null;
+    case 'setCrest':
+      return isCrest(r.crest) ? { type: 'setCrest', crest: r.crest } : null;
     case 'chooseMinigame':
       return isId(r.id) ? { type: 'chooseMinigame', id: r.id } : null;
     case 'setMinigames':

@@ -456,3 +456,56 @@ body::after {
 .crest.big {
   width: clamp(3em, 9vh, 6.5em);
 }
+
+/* Rozšíření 16: znaky hráčů */
+.sigil {
+  display: block;
+  width: 60%;
+  height: 60%;
+  color: var(--gold);
+}
+
+.sigil.inline {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  margin-right: 0.35em;
+  vertical-align: -0.2em;
+}
+
+.crest-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.crest-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-width: 280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.crest-option {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.crest-option.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px var(--gold-glow);
+  transform: scale(1.06);
+}
+
+.crest-option:disabled {
+  opacity: 0.25;
+  cursor: default;
+}

@@ -1,5 +1,5 @@
 import type { PublicPlayer } from '../../shared/types';
-import { initials } from '../labels';
+import { AvatarFace } from './Sigil';
 
 interface Props {
   players: PublicPlayer[];
@@ -27,7 +27,9 @@ export function PlayerGrid({ players, selectedId, onSelect, blocked = [], disabl
             if (!blocked.includes(p.id)) onSelect?.(p.id);
           }}
         >
-          <span className="avatar">{initials(p.name)}</span>
+          <span className="avatar">
+            <AvatarFace name={p.name} crest={p.crest} />
+          </span>
           <span className="portrait-name">{p.name}</span>
         </button>
       ))}

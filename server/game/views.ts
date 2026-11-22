@@ -60,6 +60,7 @@ function publicHistory(state: GameState): PublicRoundResult[] {
 
 function publicPlayer(state: GameState, p: Player): PublicPlayer {
   const out: PublicPlayer = { id: p.id, name: p.name, status: p.status };
+  if (p.crest) out.crest = p.crest;
   // Role je veřejná jen u vyhnaného hráče a na konci hry.
   if (p.role && (p.status === 'BANISHED' || state.phase === 'ENDED')) out.revealedRole = p.role;
   return out;
@@ -155,6 +156,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
       name: p.name,
       status: p.status,
       sawRole: p.sawRole,
+      ...(p.crest ? { crest: p.crest } : {}),
       connected: connectedIds.has(p.id),
     };
     if (p.bot) out.bot = true;

@@ -1,3 +1,4 @@
+import type { Crest } from './crests.js';
 // Typy sdílené serverem a klientem. Pohledy (co klient dostane) přibudou v kroku 3.
 
 export type Phase =
@@ -152,6 +153,8 @@ export interface PublicRoundResult {
 export interface PublicPlayer {
   id: string;
   name: string;
+  /** Znak hráče (Rozšíření 16); u starých uložených her může chybět. */
+  crest?: Crest;
   status: PlayerStatus;
   /** Jen u vyhnaných hráčů a na konci hry u všech. */
   revealedRole?: Role;
@@ -245,6 +248,7 @@ export interface PlayerView {
 export interface ModeratorPlayer {
   id: string;
   name: string;
+  crest?: Crest;
   role?: Role;
   status: PlayerStatus;
   sawRole: boolean;
@@ -387,6 +391,7 @@ export type Intent =
   | { type: 'ackSecretCard' }
   | { type: 'minigameInput'; payload: unknown }
   | { type: 'handoffPick'; targetId: string | null }
+  | { type: 'setCrest'; crest: Crest }
   // moderátor
   | { type: 'kick'; playerId: string }
   | { type: 'addBot' }

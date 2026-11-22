@@ -1,4 +1,4 @@
-import { initials } from '../labels';
+import { AvatarFace, useCrestOf } from '../components/Sigil';
 
 /** Mřížka jmen; aktivní dlaždice jdou zmáčknout, označené svítí. */
 export function NameGrid({
@@ -14,6 +14,7 @@ export function NameGrid({
   marked?: string[];
   onPick?: (id: string) => void;
 }) {
+  const crestOf = useCrestOf();
   return (
     <div className={enabled.length > 0 ? 'player-grid passing' : 'player-grid'}>
       {ids.map((id) => (
@@ -24,7 +25,9 @@ export function NameGrid({
           disabled={!enabled.includes(id)}
           onClick={() => onPick?.(id)}
         >
-          <span className="avatar">{initials(nameOf(id))}</span>
+          <span className="avatar">
+            <AvatarFace name={nameOf(id)} crest={crestOf(id)} />
+          </span>
           <span className="portrait-name">{nameOf(id)}</span>
         </button>
       ))}

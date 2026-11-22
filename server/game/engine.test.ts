@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { apply } from './engine.js';
 import { seededRng } from './random.js';
 import { createGame } from './state.js';
+import { CRESTS } from '../../shared/crests.js';
 import { as, GUEST, lobby, MOD, must, rejected, startedWith } from './testing.js';
 
 const status = (state: ReturnType<typeof createGame>, id: string) =>
@@ -11,8 +12,26 @@ describe('připojení do lobby', () => {
   it('přidá hráče a upraví mezery ve jméně', () => {
     const state = must(createGame(), GUEST, { type: 'join', name: '  Petra   Nová ', playerId: 'p1', token: 't1' });
     expect(state.players).toEqual([
-      { id: 'p1', token: 't1', name: 'Petra Nová', status: 'ALIVE', sawRole: false },
+      { id: 'p1', token: 't1', name: 'Petra Nová', status: 'ALIVE', sawRole: false, crest: expect.any(String) },
     ]);
+  });
+
+  it('každý hráč dostane při vstupu jiný znak (Rozšíření 16)', () => {
+    const state = lobby(Array.from({ length: 10 }, (_, i) => 'Hráč ' + i));
+    const crests = state.players.map((p) => p.crest);
+    expect(new Set(crests).size).toBe(10);
+    for (const c of crests) expect(CRESTS).toContain(c);
+  });
+
+  it('znak jde v lobby změnit jen na volný a platný', () => {
+    const state = lobby(['Anna', 'Bára']);
+    const taken = state.players[1].crest!;
+    expect(rejected(state, as('p1'), { type: 'setCrest', crest: taken })).toMatch(/už má někdo/);
+    expect(rejected(state, as('p1'), { type: 'setCrest', crest: 'DRAK' as never })).toMatch(/není/);
+    const free = CRESTS.find((c) => !state.players.some((p) => p.crest === c))!;
+    expect(must(state, as('p1'), { type: 'setCrest', crest: free }).players[0].crest).toBe(free);
+    const started = must(lobby(['A', 'B', 'C', 'D']), MOD, { type: 'startGame', traitorCount: 1 });
+    expect(rejected(started, as('p1'), { type: 'setCrest', crest: free })).toBeTruthy();
   });
 
   it('odmítne prázdné, dlouhé a duplicitní jméno', () => {

@@ -1,4 +1,5 @@
 import { QRCodeSVG } from 'qrcode.react';
+import { Sigil } from '../components/Sigil';
 import { useState, type ReactNode } from 'react';
 import { MAX_PLAYERS, MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } from '../../shared/types';
 import { GhostBoard, PlayerBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
@@ -112,6 +113,7 @@ function Lobby({ view }: { view: ModeratorView }) {
                 <li key={p.id}>
                   <ConnectionDot connected={p.connected} />
                   <span className="grow">
+                    {p.crest && <Sigil crest={p.crest} className="inline" />}
                     {p.bot && <span title="bot">🤖 </span>}
                     {p.name}
                   </span>
@@ -242,6 +244,7 @@ function PlayersTable({ view, hideRoles }: { view: ModeratorView; hideRoles: boo
     <li key={p.id} className={p.status === 'ALIVE' ? '' : 'out'}>
       <ConnectionDot connected={p.connected} />
       <span className="grow name">
+        {p.crest && <Sigil crest={p.crest} className="inline" />}
         {p.name}
         {view.shieldHolderId === p.id && !hideRoles && (
           <span className="shield-icon" title="drží štít">
@@ -587,7 +590,10 @@ function Ended({ view }: { view: ModeratorView }) {
         <ul className="console-players final">
           {view.players.map((p) => (
             <li key={p.id} className={p.status === 'ALIVE' ? '' : 'out'}>
-              <span className="grow name">{p.name}</span>
+              <span className="grow name">
+                {p.crest && <Sigil crest={p.crest} className="inline" />}
+                {p.name}
+              </span>
               <span className={`role-badge ${p.role === 'TRAITOR' ? 'traitor' : 'loyal'}`}>
                 {p.role === 'TRAITOR' ? 'Z' : 'V'}
               </span>
