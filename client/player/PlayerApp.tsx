@@ -219,6 +219,7 @@ function Waiting({ view, tag }: ScreenProps) {
       <p className="lead center">{view.me.name}</p>
       <p className="center">Čekáme na začátek hry</p>
       <p className="muted center">Připojených hráčů: {view.players.length}</p>
+      {view.publicVotes && <p className="center">Hlasování je veřejné: velká obrazovka ukáže, kdo pro koho hlasoval.</p>}
       <div className="candle" aria-hidden />
     </Screen>
   );
@@ -280,6 +281,7 @@ function Vote({ view, tag, corner }: ScreenProps) {
         {view.myVote
           ? `Hlas odevzdán: ${nameOf(view.players, view.myVote)}. Dokud moderátor hlasování neuzavře, můžeš ho změnit.`
           : 'Vyber jednoho hráče a potvrď.'}
+        {view.publicVotes && ' Hlasování je veřejné.'}
       </p>
       {error && <p className="error">{error}</p>}
     </Screen>

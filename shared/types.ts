@@ -211,6 +211,8 @@ export interface PlayerView {
   };
   /** Moderátor hru pozastavil (Rozšíření 10). */
   paused: boolean;
+  /** Veřejné hlasování zapnuté: obrazovka ukáže, kdo pro koho hlasoval (Rozšíření 12). */
+  publicVotes: boolean;
   /** Hra je ve finále (Rozšíření 11). */
   inFinale: boolean;
   /** Moje volba ve finálovém hlasování. */
@@ -284,6 +286,8 @@ export interface ModeratorView {
   physicalMission: boolean;
   /** Zvuky velké obrazovky ztlumené. */
   screenMuted: boolean;
+  /** Veřejné hlasování (nastavení v lobby). */
+  publicVotes: boolean;
   /** Hra je pozastavená. */
   paused: boolean;
   inFinale: boolean;
@@ -334,6 +338,8 @@ export interface ScreenView {
   voters: number | null;
   /** Po hlasování: počty hlasů u jednotlivých hráčů, bez toho, kdo hlasoval. */
   tally: { id: string; votes: number }[] | null;
+  /** Jen se zapnutým veřejným hlasováním: kdo pro koho hlasoval, v pořadí odhalování. */
+  voteCards: { voterId: string; targetId: string }[] | null;
   /** Vyhnaný v tomto kole (po hlasování), nebo null. */
   banishedId: string | null;
   /** Ráno: oběť noci, nebo null (nikdo nezemřel). */
@@ -388,6 +394,7 @@ export type Intent =
   | { type: 'setMinigames'; enabled: boolean }
   | { type: 'setPhysicalMission'; enabled: boolean }
   | { type: 'setScreenMuted'; muted: boolean }
+  | { type: 'setPublicVotes'; enabled: boolean }
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'resetVotes' }

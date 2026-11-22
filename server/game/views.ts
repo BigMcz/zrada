@@ -114,6 +114,7 @@ export function viewForPlayer(state: GameState, playerId: string): PlayerView | 
     history: publicHistory(state),
     myVote: state.phase === 'VOTE' ? (state.votes[me.id] ?? null) : null,
     paused: state.paused !== null,
+    publicVotes: state.settings.publicVotes,
     inFinale: state.finale,
     myFinalChoice: state.phase === 'FINAL_VOTE' ? (state.finalVotes[me.id] ?? null) : null,
     potShare: state.phase === 'ENDED' ? state.potShare : null,
@@ -180,6 +181,7 @@ export function viewForModerator(state: GameState, connectedIds: ReadonlySet<str
     minigamesEnabled: state.settings.minigamesEnabled,
     physicalMission: state.settings.physicalMission,
     screenMuted: state.settings.screenMuted,
+    publicVotes: state.settings.publicVotes,
     paused: state.paused !== null,
     inFinale: state.finale,
     finalAvailable: state.phase === 'MORNING' && !state.finale && state.players.filter((p) => p.status === 'ALIVE').length <= FINAL_MAX_ALIVE,
@@ -231,6 +233,11 @@ export function viewForScreen(state: GameState, joinUrl: string | null): ScreenV
     votesCast: state.phase === 'VOTE' ? alivePlayers.filter((p) => p.id in state.votes).length : null,
     voters: state.phase === 'VOTE' ? alivePlayers.length : null,
     tally,
+    // Kdo pro koho hlasoval jen se zapnutým veřejným hlasováním (Rozšíření 12), v pořadí hráčů.
+    voteCards:
+      afterVote && state.settings.publicVotes
+        ? state.players.filter((p) => p.id in state.votes).map((p) => ({ voterId: p.id, targetId: state.votes[p.id] }))
+        : null,
     banishedId: afterVote ? (round?.banishedId ?? null) : null,
     murderedId: state.phase === 'MORNING' ? (round?.murderedId ?? null) : null,
     ghostBoard: state.players

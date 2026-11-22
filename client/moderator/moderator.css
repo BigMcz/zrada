@@ -487,3 +487,26 @@ button.console-screen-link {
   background: #fff;
   border-radius: 6px;
 }
+
+/* Rozšíření 12: scénář pro moderátora */
+.script-hint {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--gold-dim);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.script-hint p {
+  margin: 6px 0 0;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.script-hint .link {
+  font-size: 12px;
+}
+
+.script-hint.hidden {
+  padding: 4px 14px;
+}

@@ -6,7 +6,7 @@ import { seededRng } from './random.js';
 import { pointsOf } from './rules.js';
 import type { GameState } from './state.js';
 import { as, GUEST, lobby, MOD, must, playRandomGame, rejected, startedWith } from './testing.js';
-import { viewForModerator, viewForScreen } from './views.js';
+import { viewForModerator, viewForPlayer, viewForScreen } from './views.js';
 
 const URL = 'http://192.168.0.10:3000/';
 
@@ -123,5 +123,42 @@ describe('Velká obrazovka – ztlumení', () => {
     g = must(g, MOD, { type: 'setScreenMuted', muted: true });
     g = must(g, MOD, { type: 'setScreenMuted', muted: false });
     expect(viewForScreen(g, URL).muted).toBe(false);
+  });
+});
+
+describe('Velká obrazovka – veřejné hlasování (Rozšíření 12)', () => {
+  const voted = (publicVotes: boolean) => {
+    let s = lobby(['A', 'B', 'C', 'D', 'E']);
+    if (publicVotes) s = must(s, MOD, { type: 'setPublicVotes', enabled: true });
+    s = must(s, MOD, { type: 'startGame', traitorCount: 1 });
+    s = must(s, MOD, { type: 'startVote' });
+    s = must(s, as('p1'), { type: 'vote', targetId: 'p2' });
+    s = must(s, as('p3'), { type: 'vote', targetId: 'p2' });
+    s = must(s, as('p4'), { type: 'vote', targetId: 'p1' });
+    return s;
+  };
+
+  it('vypnuté (výchozí): obrazovka ukáže jen sloupce, ne kdo pro koho hlasoval', () => {
+    const s = must(voted(false), MOD, { type: 'closeVote' });
+    const v = viewForScreen(s, URL);
+    expect(v.voteCards).toBeNull();
+    expect(JSON.stringify(v)).not.toContain('voterId');
+  });
+
+  it('zapnuté: po uzavření karty „kdo pro koho“ v pořadí hráčů, během hlasování nic', () => {
+    let s = voted(true);
+    expect(viewForScreen(s, URL).voteCards).toBeNull();
+    expect(viewForPlayer(s, 'p2')!.publicVotes).toBe(true);
+    s = must(s, MOD, { type: 'closeVote' });
+    expect(viewForScreen(s, URL).voteCards).toEqual([
+      { voterId: 'p1', targetId: 'p2' },
+      { voterId: 'p3', targetId: 'p2' },
+      { voterId: 'p4', targetId: 'p1' },
+    ]);
+  });
+
+  it('nastavení jde změnit jen v lobby a jen moderátorem', () => {
+    rejected(lobby(['A', 'B', 'C', 'D']), as('p1'), { type: 'setPublicVotes', enabled: true });
+    rejected(startedWith(5, ['p1']), MOD, { type: 'setPublicVotes', enabled: true });
   });
 });

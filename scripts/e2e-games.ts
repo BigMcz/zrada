@@ -119,7 +119,7 @@ async function connect(url: string): Promise<ClientSocket> {
 const FORBIDDEN_KEYS = ['"bids"', '"choices"', '"revealOrder"', '"traitors"', '"ghostGuesses"', '"ghostBets"', '"picks"', '"shieldHolderId"', '"token"', '"explodeAt"', '"fuseMs"', '"ghostTips"', '"hints"', '"hintLog"', '"answers"', '"questions"', '"code"', '"fakes"', '"votes"', '"jamTarget"', '"jammedId"', '"calib"', '"solution"', '"column"', '"finalVotes"'];
 
 /** Tajné klíče pro velkou obrazovku (sloupce hlasů tu mají legitimně pole votes). */
-const SCREEN_FORBIDDEN = [...FORBIDDEN_KEYS.filter((k) => k !== '"votes"'), '"role"', '"nightPicks"', '"secretCard"', '"handoff"', '"myVote"', '"allies"', '"pressure"', '"hint"', '"myHints"', '"device"', '"pages"', '"displayOffsetMs"', '"wires"', '"bets"', '"taps"', '"outcome"'];
+const SCREEN_FORBIDDEN = [...FORBIDDEN_KEYS.filter((k) => k !== '"votes"'), '"role"', '"nightPicks"', '"secretCard"', '"handoff"', '"myVote"', '"allies"', '"pressure"', '"hint"', '"myHints"', '"device"', '"pages"', '"displayOffsetMs"', '"wires"', '"bets"', '"taps"', '"outcome"', '"voterId"'];
 
 /** Velká obrazovka: jen veřejné informace, žádné role živých, tokeny ani tajné údaje miniher. */
 function checkScreenView(v: View, all: Bot[], report: Report) {

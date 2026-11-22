@@ -1,0 +1,18 @@
+{
+  "_info": "Scénář pro moderátora (Rozšíření 12): věty k přečtení nahlas u každé fáze a kroku minihry. Upravuj jen texty.",
+  "LOBBY": "Vítejte na hradě. Naskenujte kód na obrazovce a zadejte své jméno.",
+  "ROLES": "Podržte prst na pečeti a podívejte se, kdo jste. Nikomu neukazujte svůj telefon. Zrádci, mezi vámi jsou Věrní, kteří vás budou hledat.",
+  "VOTE": "Usaďte se ke kulatému stolu. Kdo z vás je Zrádce? Mluvte, obviňujte, hajte se. Až budete mít jasno, hlasujte na telefonu.",
+  "VOTE_RESULT": "Hlasování je uzavřeno. Kulatý stůl rozhodl. Podívejte se, koho jste vyhnali a kým doopravdy byl.",
+  "NIGHT": "Slunce zapadá. Všichni se dívejte do svých telefonů. Zrádci, otevřete oči… na telefonu, a vyberte, kdo dnes v noci zemře. Věrní, tipněte si, kdo je Zrádce.",
+  "MORNING": "Svítá. Někteří z vás se dnes ráno neprobudili. Podívejte se, kdo mezi vámi chybí.",
+  "FINAL_VOTE": "Jste ve finále. Věříte, že mezi vámi zůstali jen Věrní? Hru ukončí jen jednomyslné rozhodnutí. Pokud se mýlíte, Zrádce si odnese celý poklad.",
+  "ENDED": "Hra skončila. Podívejte se, kdo byl kým, a kdo si odnáší poklad.",
+  "MINIGAME.DRAW": "Než usednete ke kulatému stolu, čeká vás zkouška. Osud vybírá, co to bude.",
+  "MINIGAME.INTRO": "Přečtěte si pravidla a podržte pečeť: každý má na telefonu tajnou zprávu. Zrádci mají v této hře výhodu, ale může je prozradit.",
+  "MINIGAME.PLAY": "Hra běží. Sledujte nejen telefony, ale i jeden druhého. Kdo se chová podezřele?",
+  "MINIGAME.RESULT": "Zkouška skončila. Podívejte se, jak to dopadlo a kdo získal štít.",
+  "MINIGAME.CLUE": "Tohle je stopa z dnešní zkoušky. Pamatujte si ji, u kulatého stolu se bude hodit.",
+  "MINIGAME.HANDOFF": "Vítěz teď tajně rozhoduje, komu štít dá. Nikdo se nedívejte do cizího telefonu.",
+  "MINIGAME.DONE": "Štít má teď někdo z vás. Kdo, to ví jen on. Pojďte ke kulatému stolu."
+}

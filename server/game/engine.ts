@@ -232,6 +232,14 @@ function reduce(state: GameState, actor: Actor, action: Action, rng: Rng, now: n
       return;
     }
 
+    case 'setPublicVotes': {
+      // Mění pravidla hlasování, proto jen před začátkem hry.
+      requireModerator(actor);
+      requirePhase(state, 'LOBBY');
+      state.settings.publicVotes = action.enabled === true;
+      return;
+    }
+
     case 'setScreenMuted': {
       // Ztlumení velké obrazovky jde přepnout kdykoli.
       requireModerator(actor);

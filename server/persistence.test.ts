@@ -40,7 +40,7 @@ describe('Obnova po pádu – soubor se stavem', () => {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify({ version: 1, savedAt: '', moderatorKey: 'k', state: old }));
     const loaded = loadGame(file)!;
-    expect(loaded.state.settings).toEqual({ minigamesEnabled: false, physicalMission: false, screenMuted: false });
+    expect(loaded.state.settings).toEqual({ minigamesEnabled: false, physicalMission: false, screenMuted: false, publicVotes: false });
     expect(loaded.state.players).toEqual(state.players);
   });
 });

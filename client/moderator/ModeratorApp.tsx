@@ -4,6 +4,7 @@ import { MIN_PLAYERS, type Intent, type ModeratorPlayer, type ModeratorView } fr
 import { GhostBoard, PlayerBoard, pointsWord, rankGhosts } from '../components/GhostBoard';
 import { nameOf, phaseTag, ROLE_LABEL, STATUS_LABEL } from '../labels';
 import { requestNewPhone, send, useConnection } from '../socket';
+import { ScriptHint } from './ScriptHint';
 import { MinigamePanel } from './MinigamePanel';
 
 export function ModeratorApp() {
@@ -101,6 +102,7 @@ function Lobby({ view }: { view: ModeratorView }) {
         </section>
 
         <section className="lobby-side">
+          <ScriptHint view={view} />
           <h2>Připojení hráči ({n})</h2>
           {n === 0 ? (
             <p className="muted">Zatím nikdo. Hráči se připojí přes QR kód.</p>
@@ -126,6 +128,14 @@ function Lobby({ view }: { view: ModeratorView }) {
               onChange={(e) => run({ type: 'setMinigames', enabled: e.target.checked })}
             />
             {view.minigamesEnabled ? 'Minihry zapnuté' : 'Minihry vypnuté (hra jako bez miniher)'}
+          </label>
+          <label className="lobby-toggle">
+            <input
+              type="checkbox"
+              checked={view.publicVotes}
+              onChange={(e) => run({ type: 'setPublicVotes', enabled: e.target.checked })}
+            />
+            {view.publicVotes ? 'Veřejné hlasování: obrazovka ukáže, kdo pro koho hlasoval' : 'Tajné hlasování (jen výsledek)'}
           </label>
           {view.minigamesEnabled && (
             <label className="lobby-toggle">
@@ -472,6 +482,7 @@ function Control({ view }: { view: ModeratorView }) {
       <main className="control">
         <PlayersTable view={view} hideRoles={hideRoles} />
         <section className="phase-panel">
+          <ScriptHint view={view} />
           {view.paused && <p className="pause-banner">Hra je pozastavená. Odpočty stojí, hráči nemůžou nic zadávat.</p>}
           {minigame || !step ? (
             <MinigamePanel view={view} run={run} busy={busy} />
@@ -544,6 +555,7 @@ function Ended({ view }: { view: ModeratorView }) {
     <>
       <TopBar view={view} />
       <main className="ended">
+        <ScriptHint view={view} />
         <p className="muted">Vyhráli</p>
         <h1 className={view.winner === 'TRAITOR' ? 'winner traitor' : 'winner loyal'}>
           {view.winner === 'LOYAL' ? 'Věrní' : 'Zrádci'}

@@ -196,8 +196,15 @@ function Scene({ view, name }: { view: ScreenView; name: (id: string | null | un
     case 'MINIGAME':
       return view.minigame ? <MinigameScene mg={view.minigame} name={name} /> : null;
     case 'ENDED':
-      return <Finale view={view} name={name} />;
+      return <EndScene view={view} name={name} />;
   }
+}
+
+/** Skončila-li hra hlasováním, nejdřív odhalení hlasování (karty, sloupce, vyhnaný, role), pak konec hry. */
+function EndScene({ view, name }: { view: ScreenView; name: (id: string | null | undefined) => string }) {
+  const t = useElapsed('end');
+  const revealMs = view.tally ? (view.voteCards?.length ?? 0) * 1500 + 8000 : 0;
+  return t < revealMs ? <VoteReveal view={view} name={name} /> : <Finale view={view} name={name} />;
 }
 
 function Lobby({ view }: { view: ScreenView }) {
@@ -223,18 +230,38 @@ function Lobby({ view }: { view: ScreenView }) {
   );
 }
 
-/** Sloupce hlasů, pak vyhnaný a po 3 s napětí jeho role. Kdo pro koho hlasoval, se neukazuje. */
+/**
+ * Sloupce hlasů, pak vyhnaný a po 3 s napětí jeho role. Kdo pro koho hlasoval, se ukáže jen
+ * se zapnutým veřejným hlasováním (Rozšíření 12): nejdřív karty „Petra → Marek“ jedna po druhé.
+ */
 function VoteReveal({ view, name }: { view: ScreenView; name: (id: string | null | undefined) => string }) {
-  const t = useElapsed(`vote-${view.round}`);
+  const elapsed = useElapsed(`vote-${view.round}`);
+  const cards = view.voteCards ?? [];
+  const cardsMs = cards.length * 1500;
+  const shownCards = Math.min(cards.length, Math.floor(elapsed / 1500) + 1);
+  const t = elapsed - cardsMs;
   const tally = view.tally ?? [];
   const max = Math.max(1, ...tally.map((r) => r.votes));
   const banished = view.players.find((p) => p.id === view.banishedId);
-  // Zvuk ke každému kroku odhalení: sloupce, jméno, role (gong pro Zrádce, molový akord pro Věrného).
-  const stage = t < 2500 ? 0 : t < 5500 ? 1 : 2;
+  // Zvuk ke každému kroku odhalení: karty, sloupce, jméno, role (gong pro Zrádce, molový akord pro Věrného).
+  const stage = t < 0 ? -shownCards : t < 2500 ? 0 : t < 5500 ? 1 : 2;
   useEffect(() => {
     if (stage < 2) play('flip');
     else if (banished?.revealedRole) play(banished.revealedRole === 'TRAITOR' ? 'gong' : 'minor');
   }, [stage]);
+  if (t < 0) {
+    return (
+      <div className="screen-vote-cards">
+        {cards.slice(0, shownCards).map((c) => (
+          <div key={c.voterId} className="screen-vote-card">
+            <span>{name(c.voterId)}</span>
+            <span className="muted">hlasuje pro</span>
+            <b>{name(c.targetId)}</b>
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="screen-vote">
       <div className="screen-tally">

@@ -58,6 +58,8 @@ export interface GameSettings {
   physicalMission: boolean;
   /** Velká obrazovka ztlumená z konzole (Rozšíření 9). */
   screenMuted: boolean;
+  /** Veřejné hlasování: obrazovka ukáže, kdo pro koho hlasoval (Rozšíření 12); výchozí vypnuto. */
+  publicVotes: boolean;
 }
 
 /**
@@ -136,7 +138,7 @@ export function createGame(): GameState {
     ghostTips: {},
     ghostTipLog: [],
     points: [],
-    settings: { minigamesEnabled: true, physicalMission: false, screenMuted: false },
+    settings: { minigamesEnabled: true, physicalMission: false, screenMuted: false, publicVotes: false },
     minigame: null,
     minigamesPlayed: [],
     minigameMemory: {},
