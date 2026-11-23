@@ -148,7 +148,7 @@ function Lobby({ view }: { view: ModeratorView }) {
                 aria-pressed={view.theme === id}
                 onClick={() => run({ type: 'setTheme', theme: id })}
               >
-                <img src={THEME[id].crest} alt="" aria-hidden="true" />
+                <img src={THEME[id].crestArt ?? THEME[id].crest} alt="" aria-hidden="true" />
                 <span>
                   <b>{THEME[id].title}</b>
                   <small>

@@ -457,6 +457,16 @@ body::after {
   width: clamp(3em, 9vh, 6.5em);
 }
 
+/* Malovaný erb je kulatý a plný detailů: o něco větší než SVG, ať je svíce i stín dýky čitelný. */
+.crest.art {
+  width: 120px;
+  filter: drop-shadow(0 0 16px var(--gold-glow));
+}
+
+.crest.art.big {
+  width: clamp(4em, 16vh, 9em);
+}
+
 /* Rozšíření 16: znaky hráčů */
 .sigil {
   display: block;

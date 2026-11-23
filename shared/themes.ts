@@ -47,8 +47,10 @@ export interface Theme {
   night: string;
   /** První dvě věty úvodu; zbytek se složí z názvů rolí. */
   intro: [string, string];
-  /** Soubor erbu ve /public. */
+  /** Soubor erbu ve /public; slouží i jako ikona stránky (proto SVG). */
   crest: string;
+  /** Malovaný erb pro úvod a titulky (když ho téma má); ikona stránky zůstává `crest`. */
+  crestArt?: string;
 }
 
 export const THEME: Record<ThemeId, Theme> = {
@@ -68,6 +70,7 @@ export const THEME: Record<ThemeId, Theme> = {
     night: 'Noc',
     intro: ['Vítejte na hradě…', 'Dnes večer tu nejste všichni přátelé.'],
     crest: '/crest.svg',
+    crestArt: '/erb.webp',
   },
   SPACE: {
     id: 'SPACE',
