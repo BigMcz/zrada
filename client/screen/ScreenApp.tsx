@@ -9,6 +9,7 @@ import { PotCounter } from '../components/PotCounter';
 import { ClueView } from '../components/ClueView';
 import { Recap } from '../components/Recap';
 import { ShieldArt } from '../components/ShieldArt';
+import { RoleArt } from '../components/RoleArt';
 import { CoinBurst, Embers, Reactions } from './Effects';
 import { Credits, Intro, INTRO_MS } from './Cinematics';
 import { GameScene } from './GameScenes';
@@ -377,8 +378,19 @@ function VoteReveal({ view, name }: { view: ScreenView; name: (id: string | null
               className={['screen-role-card', t > 5500 ? 'flipped' : '', banished.revealedRole === 'TRAITOR' ? 'traitor' : 'loyal'].join(' ')}
             >
               <span className="role-glow" />
-              <span className="face back">?</span>
-              <span className="face front">{t > 5500 && banished.revealedRole ? ROLE_LABEL[banished.revealedRole] : ''}</span>
+              <span className="face back">
+                <span className="seal" aria-hidden>
+                  ✦
+                </span>
+              </span>
+              <span className="face front">
+                {t > 5500 && banished.revealedRole && (
+                  <>
+                    <RoleArt role={banished.revealedRole} className="screen-role-art" />
+                    {ROLE_LABEL[banished.revealedRole]}
+                  </>
+                )}
+              </span>
             </div>
           </div>
         ) : (

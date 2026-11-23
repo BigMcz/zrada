@@ -281,7 +281,7 @@
   justify-content: center;
   gap: 12px;
   /* Pevná výška: zavřená i otevřená karta obou rolí zabírá stejně místa. */
-  height: 240px;
+  height: 360px;
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -1572,4 +1572,14 @@
 .phone-shield.shield-art.small {
   width: 90px;
   height: 90px;
+}
+
+/* Motiv role na kartě (stejně velký pro obě role, ať karta nic neprozradí) */
+.role-card-art.role-art {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px var(--gold-glow));
 }

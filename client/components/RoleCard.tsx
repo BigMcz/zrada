@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Role } from '../../shared/types';
+import { RoleArt } from './RoleArt';
 import { SealCrack } from './SealCrack';
 import { theme } from '../themeStore';
 
@@ -12,7 +13,7 @@ interface Props {
 
 /**
  * Karta s pečetí: role je vidět jen po dobu, kdy hráč drží prst.
- * Obě role mají stejnou barvu, velikost i počet řádků – liší se jen text.
+ * Obě role mají stejnou barvu, velikost i počet řádků – liší se jen text a motiv (stejně velký).
  */
 export function RoleCard({ role, allies, shieldLine }: Props) {
   const [revealed, setRevealed] = useState(false);
@@ -54,6 +55,7 @@ export function RoleCard({ role, allies, shieldLine }: Props) {
       {revealed ? (
         <>
           <SealCrack />
+          <RoleArt role={role} className="role-card-art" />
           <span className="role-title">{title}</span>
           <span className="role-line">{line}</span>
           {shieldLine && <span className="role-line shield-line">{shieldLine}</span>}

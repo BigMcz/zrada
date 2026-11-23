@@ -857,8 +857,8 @@
 /* Rozšíření 14: 3D karta role vyhnaného */
 .screen-role-card {
   position: relative;
-  width: 7em;
-  height: 3em;
+  width: 8em;
+  height: 10.5em;
   margin-top: 0.4em;
   perspective: 900px;
   transform-style: preserve-3d;
@@ -880,6 +880,27 @@
 
 .screen-role-card .face.back {
   color: var(--gold-dim);
+  background:
+    radial-gradient(circle, rgba(212, 169, 60, 0.08), transparent 70%),
+    var(--surface-2);
+}
+
+/* Rub karty: pečeť jako na telefonu, jen podle velikosti písma obrazovky. */
+.screen-role-card .face.back .seal {
+  width: 3.2em;
+  height: 3.2em;
+  font-size: 1.1em;
+}
+
+.screen-role-card .face.front {
+  align-content: center;
+  gap: 0.2em;
+  padding: 0.3em;
+}
+
+.screen-role-art.role-art {
+  width: 5.4em;
+  height: 5.4em;
 }
 
 .screen-role-card .face.front {
@@ -1644,4 +1665,11 @@
   .screen-shield.shield-art {
     animation: none;
   }
+}
+
+/* Motiv role (svíce / maska) na kartě */
+.role-art {
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
 }
